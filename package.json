@@ -1,0 +1,44 @@
+{
+  "name": "mmff94-ts",
+  "version": "0.1.0-alpha.1",
+  "description": "Merck Molecular Force Field (MMFF94) in pure TypeScript — energy, gradients, and geometry optimization for the browser and Node.js",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist/"],
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "bench": "vitest bench",
+    "typecheck": "tsc --noEmit",
+    "extract-params": "python scripts/extract-openbabel-params.py",
+    "prepublishOnly": "npm run build && npm test"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0",
+    "vitest": "^2.0.0"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/exergonic/mmff94-ts"
+  },
+  "keywords": [
+    "mmff94",
+    "molecular-mechanics",
+    "force-field",
+    "chemistry",
+    "computational-chemistry",
+    "energy-minimization",
+    "conformation-search"
+  ]
+}

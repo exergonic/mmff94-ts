@@ -1,0 +1,16 @@
+dist/
+node_modules/
+*.tsbuildinfo
+
+# Local development
+.vite/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.idea/
+*.swp
+*.swo
