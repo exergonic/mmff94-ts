@@ -8,13 +8,16 @@ WebAssembly, native binaries, or external services.
 
 ## Why
 
-RDKit.js (WASM) and OpenBabel's JS bindings are large and complex
-to bundle for the browser. No existing pure-JS molecular mechanics
-library implements MMFF94 correctly — the buffered 14-7 vdW, bond
-charge increment electrostatics, stretch-bend cross term, and full
-Fourier torsion series are all missing from every JS library we found.
+A pure TypeScript force field means your molecular mechanics code
+bundles trivially with any web framework, works in sandboxed
+environments (no WASM, no native binaries), and composes naturally
+with the rest of your TypeScript toolchain.
 
-`mmff94-ts` fills that gap.
+`mmff94-ts` implements the full MMFF94 functional form — including
+the buffered 14-7 van der Waals, bond charge increment electrostatics,
+stretch-bend cross term, and Fourier-series torsion — so you can
+run energy evaluations and geometry optimizations entirely on the
+client side.
 
 ## Status
 
