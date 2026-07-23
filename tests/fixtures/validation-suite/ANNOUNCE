@@ -1,0 +1,73 @@
+From tom_halgren@merck.com  Mon Jun  1 16:03:53 1998
+Message-Id: <199806012003.QAA26291@ccl.osc.edu>
+Date: Mon, 01 Jun 1998 16:00:06 -0400
+From: "Halgren, Thomas" <tom_halgren@merck.com>
+Subject: Validation suite for MMFF94 now available
+To: "'Computational Chemistry List'" <chemistry@infomeister.osc.edu>
+
+
+Dear CCLers,
+
+Jan Labanowski has kindly posted on the Computational Chemistry List
+archives a comprehensive validation suite for MMFF94 that I prepared.  The
+suite contains a README file that defines all other files in the test suite.
+The most important are:
+
+MMFF94_dative.mol2              mol2-format input, using dative bonds for
+                                oxysulfur, etc.
+MMFF94_hypervalent.mol2 mol2    input, using "hypervalent" representations
+MMFF94.mmd                      BatchMin/MacroModel dat-format input
+MMFF94.energies                 list of BatchMin and Merck-OPTIMOL total
+                                energies
+MMFF94_bmin.log                 BatchMin output log file
+MMFF94_opti.log                 OPTIMOL output file with detailed
+                                interaction analyses
+
+These input and output files provide data for the test suite, which consists
+of 753 molecules.
+
+There is also a subsidiary file that lists the names of molecules that have
+alternative dative and hypervalent representations
+(MMFF94.dative_molecules), and a file that just lists the molecule names and
+titles (MMFF94.titles).
+
+Most of the input data is derived from CSD structures.  I wish to thank
+Steve Salisbury and the Cambridge Crystallographic Data Center for
+graciously consenting to the use of this data.  I also wish to thank Jan
+Labanowski for his encouragement in the posting of this validation suite and
+for his role in providing CCL and its archives to the community.
+
+My hope is that this data will assist members of the community who have
+independently implemented MMFF94, or who are in the process of doing so, to
+validate their efforts (I am aware of four such initiatives, in addition to
+the BatchMin and CHARMm implementations to which Merck has contributed); it
+is always difficult to work from published accounts and to be sure you know
+where you stand.
+
+This validation suite should also allow individuals who use an independently
+developed commercial implementation of MMFF94 to carry out their own
+validation and to satisfy themselves as to the authenticity of the
+commercial implementation.
+
+Others who are not interested in pursuing MMFF94 per se might view the suite
+as a source of input data that could be useful in developing and testing
+other force fields.
+
+The MMFF94 validation suite can be accessed at:
+
+ftp://ccl.osc.edu/pub/chemistry/data/MMFF94
+
+or at:
+
+http://ccl.osc.edu/cca/data/MMFF94
+
+I would be pleased to hear of any uses made of this data.
+
+                                                        Best regards,
+
+
+                                                        Tom Halgren
+
+                                                        voice: 732-594-7735
+                                                        fax: 732-594-4224
+                                                        halgren@merck.com

@@ -20,7 +20,7 @@
     "test:watch": "vitest",
     "bench": "vitest bench",
     "typecheck": "tsc --noEmit",
-    "extract-params": "python scripts/extract-openbabel-params.py",
+    "extract-params": "python scripts/extract-mmff94-par.py",
     "prepublishOnly": "npm run build && npm test"
   },
   "devDependencies": {

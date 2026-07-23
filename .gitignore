@@ -1,6 +1,7 @@
 dist/
 node_modules/
 *.tsbuildinfo
+package-lock.json
 
 # Local development
 .vite/
@@ -14,3 +15,13 @@ Thumbs.db
 .idea/
 *.swp
 *.swo
+
+# Local project guide — not for GitHub
+AGENTS.md
+
+# OpenBabel sources — reference only, not part of the library
+temp_ob/
+data/
+
+# Local opencode configuration
+.opencode/
