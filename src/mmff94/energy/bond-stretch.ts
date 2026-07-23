@@ -23,23 +23,38 @@
  */
 
 import type { TypedMolecule } from '../../types';
-
-// Placeholder: import { BOND_PARAMS } from '../parameters/bond';
+import { BOND_PARAMS, lookup_param } from '../parameters';
+import { distance, Vec3 } from '../../utils/vector';
 
 /**
  * Calculate the total bond stretching energy for all bonds in a molecule.
  */
 export function calc_bond_stretch_energy(molecule: TypedMolecule): number {
-  // TODO: implement bond stretching energy calculation.
-  //
-  // For each bond in molecule.bonds:
-  //   1. Get the two atoms and their current positions.
-  //   2. Compute r = distance between them.
-  //   3. Look up (k_b, r₀) from BOND_PARAMS by (type_i, type_j).
-  //      - Try (type_i, type_j) in both orders.
-  //      - Fall back to wildcard '*' if no exact match.
-  //   4. Accumulate: E += 143.88 * k_b * (r - r₀)²
-  //
-  // Return the sum in kcal/mol.
-  return 0.0;
+  let total_energy = 0.0;
+
+  for (const bond of molecule.bonds) {
+    const a1 = molecule.atoms[bond.atom1];
+    const a2 = molecule.atoms[bond.atom2];
+    const t1 = molecule.atom_types[bond.atom1];
+    const t2 = molecule.atom_types[bond.atom2];
+
+    const pos1: Vec3 = [a1.x, a1.y, a1.z];
+    const pos2: Vec3 = [a2.x, a2.y, a2.z];
+    const r = distance(pos1, pos2);
+
+    const t_min = Math.min(t1, t2);
+    const t_max = Math.max(t1, t2);
+
+    const params = lookup_param(BOND_PARAMS, [t_min, t_max]);
+    if (params) {
+      const { k_b, r0 } = params;
+      const dr = r - r0;
+      total_energy += 143.88 * k_b * dr * dr;
+    } else {
+      // Fallback: If no parameters exist, we could add a zero contribution or throw an error.
+      // For now, we just skip (add 0).
+    }
+  }
+
+  return total_energy;
 }
