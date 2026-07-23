@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use this software in your work, please cite it."
+title: "mmff94-ts: Merck Molecular Force Field in pure TypeScript"
+version: 0.1.0-alpha.1
+date-released: 2026-07-22
+authors:
+  - family-names: McCann
+    given-names: Billy Wayne
+    email: thebillywayne@gmail.com
+repository-code: "https://github.com/exergonic/mmff94-ts"
+license: MIT
+keywords:
+  - molecular-mechanics
+  - mmff94
+  - computational-chemistry
+  - force-field
+  - typescript

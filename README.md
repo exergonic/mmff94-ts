@@ -48,46 +48,22 @@ console.log(energy.bond_stretch);    // per-component breakdown
 console.log(energy.torsion);
 ```
 
-Every function is pure — no hidden state, no global setup, no
-`new ForceField()`. Data flows through a pipeline:
+See [`examples/quickstart.ts`](examples/quickstart.ts) for a complete
+walkthrough — parsing SDF, assigning types, computing BCI charges,
+and printing per-term energies.
 
-```
-SDF → parse_sdf() → Molecule → assign_atom_types() → TypedMolecule
-                                                         ↓
-                                                    calc_energy()
-                                                         ↓
-                                                  EnergyComponents
-```
+## Documentation
 
-## Validation
-
-Tested against **OpenBabel 3.1.1** (`obenergy -ff MMFF94`) and
-**Dr. Halgren's MMFF94 Validation Suite** (753 structures from the
-Cambridge Structural Database + small molecules/ions) which lives at
-`tests/fixtures/validation-suite/`.
-
-## Installation
-
-```bash
-npm install mmff94-ts
-# or
-bun add mmff94-ts
-```
-
-## Development
-
-```bash
-# Install dependencies
-npm install
-
-# Run tests
-npm test
-
-# Regenerate parameter tables from OpenBabel .par files
-python scripts/extract-mmff94-par.py
-```
+- **[`docs/walkthrough.md`](docs/walkthrough.md)** — traces the full
+  pipeline from raw SDF to energy components: data model, geometry
+  primitives, atom typing, parameter lookup, every energy term's
+  functional form, gradient layout, and optimization strategy.
+- **[`docs/numerical-precision.md`](docs/numerical-precision.md)** —
+  addresses whether a JavaScript MMFF94 can match C++ reference
+  energies. Contains the error-budget math (IEEE 754 doubles,
+  accumulation analysis, Kahan summation) and recommended validation
+  tolerances.
 
 ## License
 
-MIT. Parameter data extracted from OpenBabel `.par` files which
-contain only numerical facts from Halgren's published papers.
+MIT.
