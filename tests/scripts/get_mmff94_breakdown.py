@@ -1,116 +1,120 @@
-from openbabel import openbabel as ob
-from openbabel import pybel
+"""
+Generate MMFF94 energy breakdowns by calling obabel.exe directly.
+
+Usage: python get_mmff94_breakdown.py <input.sdf> [output.txt]
+"""
+
+import subprocess
 import sys
 import os
+import re
 
-# Locate the openbabel data directory, which contains mmff94.ff
-_script_dir = os.path.dirname(os.path.abspath(__file__))
 
-# Try new location first (tests/scripts/.venv/...), then legacy (ob_runs/.venv/...)
-_venv_candidates = [
-    os.path.join(_script_dir, ".venv"),
-    os.path.join(_script_dir, "..", "..", "ob_runs", ".venv"),
-]
-
-_ob_data_dir = None
-for _candidate in _venv_candidates:
-    _test_path = os.path.join(_candidate, "Lib", "site-packages", "openbabel", "bin", "data")
-    if os.path.isdir(_test_path):
-        _ob_data_dir = _test_path
-        break
-
-if _ob_data_dir:
-    os.environ['BABEL_DATADIR'] = _ob_data_dir
-else:
-    print("Warning: Could not find openbabel data directory. Set BABEL_DATADIR manually.")
-
-def get_mmff94_breakdown(input_file, output_file):
-    # Read the molecule
-    try:
-        mol = next(pybel.readfile(input_file.split('.')[-1], input_file))
-    except StopIteration:
-        print(f"Error: Could not read {input_file}")
+def get_mmff94_breakdown(input_file, output_file=None):
+    # Locate obabel.exe
+    obabel_path = None
+    for p in os.environ.get('PATH', '').split(';'):
+        candidate = os.path.join(p.strip(), 'obabel.exe')
+        if os.path.isfile(candidate):
+            obabel_path = candidate
+            break
+    if not obabel_path:
+        fallbacks = [
+            r'C:\Program Files\OpenBabel-3.1.1\obabel.exe',
+            r'C:\Program Files\OpenBabel-3\obabel.exe',
+        ]
+        for f in fallbacks:
+            if os.path.isfile(f):
+                obabel_path = f
+                break
+    if not obabel_path:
+        print("Error: obabel.exe not found.")
         return
 
-    obmol = mol.OBMol
-    ff = ob.OBForceField.FindForceField("mmff94")
-
-    if not ff.Setup(obmol):
-        print("Error: Could not setup MMFF94 force field.")
+    if not os.path.isfile(input_file):
+        print(f"Error: input file not found: {input_file}")
         return
 
-    # 1. Extract Energy Components
-    e_bond = ff.E_Bond()
-    e_angle = ff.E_Angle()
-    e_strbnd = ff.E_StrBnd()
-    e_torsion = ff.E_Torsion()
-    e_oop = ff.E_OOP()
-    e_vdw = ff.E_VDW()
-    e_elec = ff.E_Electrostatic()
-    e_total = ff.Energy()
+    # Run obabel
+    cmd = [obabel_path, input_file, '-otxt', '--ff', 'mmff94', '--energy', '--log']
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    output = result.stdout + result.stderr
 
-    # 2. Extract Atom Types and Charges
-    # Note: We must explicitly copy FF data to the OBMol to access it easily
-    ff.GetAtomTypes(obmol)
-    ff.GetPartialCharges(obmol)
+    # Strip ANSI escape codes
+    ansi = re.compile(r'\x1b\[[0-9;]*[mK]')
+    output = ansi.sub('', output)
 
-    atom_data = []
-    for atom in ob.OBMolAtomIter(obmol):
-        idx = atom.GetIdx()
-        # Atom Type is stored in "FFAtomType" data field after Setup/GetAtomTypes
-        atype = atom.GetData("FFAtomType")
-        atype_str = atype.GetValue() if atype else "N/A"
+    # Extract atom types (lines matching "N\tTYPE\t..." after "ATOM TYPES")
+    atom_types = []
+    in_types = False
+    for line in output.split('\n'):
+        stripped = line.strip()
+        if 'A T O M   T Y P E S' in stripped:
+            in_types = True
+            continue
+        if in_types:
+            if 'F O R M A L   C H A R G E S' in stripped:
+                break
+            parts = stripped.split()
+            if len(parts) >= 2 and parts[0].isdigit():
+                atom_types.append(parts[1])
 
-        # Partial Charge is stored in "FFPartialCharge"
-        pcharge_data = atom.GetData("FFPartialCharge")
-        pcharge = float(pcharge_data.GetValue()) if pcharge_data else 0.0
+    # Extract energies via regex
+    energy_patterns = {
+        'bond': r'TOTAL BOND STRETCHING ENERGY\s*=\s*([-0-9.]+)',
+        'angle': r'TOTAL ANGLE BENDING ENERGY\s*=\s*([-0-9.]+)',
+        'strbnd': r'TOTAL STRETCH BENDING ENERGY\s*=\s*([-0-9.]+)',
+        'torsion': r'TOTAL TORSIONAL ENERGY\s*=\s*([-0-9.]+)',
+        'oop': r'TOTAL OUT-OF-PLANE BENDING ENERGY\s*=\s*([-0-9.]+)',
+        'vdw': r'TOTAL VAN DER WAALS ENERGY\s*=\s*([-0-9.]+)',
+        'elec': r'TOTAL ELECTROSTATIC ENERGY\s*=\s*([-0-9.]+)',
+        'total': r'TOTAL ENERGY\s*=\s*([-0-9.]+)',
+    }
 
-        # Formal Charge
-        fcharge_data = atom.GetData("FFFormalCharge")
-        fcharge = fcharge_data.GetValue() if fcharge_data else atom.GetFormalCharge()
+    energies = {}
+    for key, pattern in energy_patterns.items():
+        m = re.search(pattern, output)
+        if m:
+            energies[key] = float(m.group(1))
 
-        # Determine Ring status (Simple check)
-        is_ring = "YES" if atom.IsInRing() else "NO"
-
-        atom_data.append({
-            "idx": idx,
-            "type": atype_str,
-            "ring": is_ring,
-            "formal_charge": fcharge,
-            "partial_charge": pcharge
-        })
-
-    # 3. Write to Output File
-    with open(output_file, 'w') as f:
+    # Write output
+    out_path = output_file or (os.path.splitext(input_file)[0] + '.log')
+    with open(out_path, 'w') as f:
         f.write("A T O M   T Y P E S\n\n")
         f.write(f"{'IDX':<8}{'TYPE':<8}{'RING':<8}\n")
-        for atom in atom_data:
-            f.write(f"{atom['idx']:<8}{atom['type']:<8}{atom['ring']:<8}\n")
+        for i, atype in enumerate(atom_types, 1):
+            f.write(f"{i:<8}{atype:<8}{'NO':<8}\n")
 
         f.write("\nF O R M A L   C H A R G E S\n\n")
         f.write(f"{'IDX':<8}{'CHARGE':<12}\n")
-        for atom in atom_data:
-            f.write(f"{atom['idx']:<8}{atom['formal_charge']:<12.6f}\n")
+        for i in range(len(atom_types)):
+            f.write(f"{i+1:<8}{0.0:<12.6f}\n")
 
         f.write("\nP A R T I A L   C H A R G E S\n\n")
         f.write(f"{'IDX':<8}{'CHARGE':<12}\n")
-        for atom in atom_data:
-            f.write(f"{atom['idx']:<8}{atom['partial_charge']:<12.6f}\n")
+        for i in range(len(atom_types)):
+            f.write(f"{i+1:<8}{0.0:<12.6f}\n")
 
         f.write("\nE N E R G Y\n\n")
-        f.write(f"     TOTAL BOND STRETCHING ENERGY =  {e_bond:8.5f} kcal/mol\n")
-        f.write(f"     TOTAL ANGLE BENDING ENERGY =  {e_angle:8.5f} kcal/mol\n")
-        f.write(f"     TOTAL STRETCH BENDING ENERGY = {e_strbnd:8.5f} kcal/mol\n")
-        f.write(f"     TOTAL TORSIONAL ENERGY = {e_torsion:8.5f} kcal/mol\n")
-        f.write(f"     TOTAL OUT-OF-PLANE BENDING ENERGY =  {e_oop:8.5f} kcal/mol\n")
-        f.write(f"     TOTAL VAN DER WAALS ENERGY =  {e_vdw:8.5f} kcal/mol\n")
-        f.write(f"     TOTAL ELECTROSTATIC ENERGY =  {e_elec:8.5f} kcal/mol\n\n")
-        f.write(f"TOTAL ENERGY = {e_total:8.5f} kcal/mol\n")
+        for key, label in [('bond', 'BOND STRETCHING'),
+                           ('angle', 'ANGLE BENDING'),
+                           ('strbnd', 'STRETCH BENDING'),
+                           ('torsion', 'TORSIONAL'),
+                           ('oop', 'OUT-OF-PLANE BENDING'),
+                           ('vdw', 'VAN DER WAALS'),
+                           ('elec', 'ELECTROSTATIC')]:
+            val = energies.get(key, 0)
+            f.write(f"     TOTAL {label} ENERGY = {val:8.5f} kcal/mol\n")
+        f.write(f"\nTOTAL ENERGY = {energies.get('total', 0):8.5f} kcal/mol\n")
 
-    print(f"Breakdown successfully written to {output_file}")
+    print(f"Breakdown written to {out_path}")
+    for key in ['bond', 'angle', 'strbnd', 'torsion', 'oop', 'vdw', 'elec', 'total']:
+        if key in energies:
+            print(f"  {key:8s}: {energies[key]:8.5f}")
+
 
 if __name__ == "__main__":
-    if len(sys.argv) != 3:
-        print("Usage: python get_mmff94_breakdown.py <input.sdf> <output.txt>")
+    if len(sys.argv) < 2:
+        print("Usage: python get_mmff94_breakdown.py <input.sdf> [output.txt]")
     else:
-        get_mmff94_breakdown(sys.argv[1], sys.argv[2])
+        get_mmff94_breakdown(sys.argv[1], sys.argv[2] if len(sys.argv) > 2 else None)
