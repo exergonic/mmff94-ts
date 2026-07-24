@@ -1,0 +1,47 @@
+A T O M   T Y P E S
+
+IDX     TYPE    RING    
+1       1       NO      
+2       1       NO      
+3       5       NO      
+4       5       NO      
+5       5       NO      
+6       5       NO      
+7       5       NO      
+8       5       NO      
+
+F O R M A L   C H A R G E S
+
+IDX     CHARGE      
+1       0.000000    
+2       0.000000    
+3       0.000000    
+4       0.000000    
+5       0.000000    
+6       0.000000    
+7       0.000000    
+8       0.000000    
+
+P A R T I A L   C H A R G E S
+
+IDX     CHARGE      
+1       0.000000    
+2       0.000000    
+3       0.000000    
+4       0.000000    
+5       0.000000    
+6       0.000000    
+7       0.000000    
+8       0.000000    
+
+E N E R G Y
+
+     TOTAL BOND STRETCHING ENERGY =  0.00743 kcal/mol
+     TOTAL ANGLE BENDING ENERGY =  0.01601 kcal/mol
+     TOTAL STRETCH BENDING ENERGY = -0.00158 kcal/mol
+     TOTAL TORSIONAL ENERGY = -4.95900 kcal/mol
+     TOTAL OUT-OF-PLANE BENDING ENERGY =  0.00000 kcal/mol
+     TOTAL VAN DER WAALS ENERGY =  0.20278 kcal/mol
+     TOTAL ELECTROSTATIC ENERGY =  0.00000 kcal/mol
+
+TOTAL ENERGY = -4.73436 kcal/mol

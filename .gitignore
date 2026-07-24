@@ -5,7 +5,10 @@ package-lock.json
 
 # Local development
 .vite/
+
+# Build and log files (but not tracked reference logs)
 *.log
+!tests/references/*.log
 
 # OS
 .DS_Store
