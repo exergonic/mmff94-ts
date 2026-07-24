@@ -44,7 +44,7 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
   for (let i = 0; i < n; i++) {
     const atom = molecule.atoms[i];
     const neighbors = adj[i];
-    const coord = neighbors.length;
+    const n_neighbors = neighbors.length;
 
     // Check bond orders going out from this atom
     const has_double = neighbors.some(nb => nb.order === 2);
@@ -57,12 +57,12 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
       // ── Carbon ──────────────────────────────────────────────────────
       case 'C': {
         // Acetylenic: 2 neighbors, triple bond → type 4 (CSP)
-        if (coord <= 2 && has_triple) {
+        if (n_neighbors <= 2 && has_triple) {
           atom_types[i] = 4;
           break;
         }
 
-        if (coord === 3) {
+        if (n_neighbors === 3) {
           // Trigonal planar (sp²): 3 neighbors, at least one double/aromatic
 
           if (is_ring[i] && (has_aromatic || is_aromatic_ring(i, adj, molecule))) {
@@ -100,7 +100,7 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
           break;
         }
 
-        if (coord === 4) {
+        if (n_neighbors === 4) {
           // Tetrahedral (sp³): 4 single bonds
 
           if (is_ring[i]) {
@@ -123,7 +123,7 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
           break;
         }
 
-        // Fallback for unusual coordination
+        // Fallback for unusual n_neighborsination
         atom_types[i] = 1;
         break;
       }
@@ -131,7 +131,7 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
       // ── Hydrogen ────────────────────────────────────────────────────
       case 'H': {
         // Determine what the H is bonded to (should have exactly 1 neighbor)
-        if (coord === 0) {
+        if (n_neighbors === 0) {
           atom_types[i] = 5; // isolated H — safe guess
           break;
         }
@@ -167,10 +167,10 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
         if (has_double) {
           // Carbonyl oxygen O=C → type 7 (O=C)
           atom_types[i] = 7;
-        } else if (coord === 2) {
+        } else if (n_neighbors === 2) {
           // Divalent oxygen (ether, alcohol, water) → type 6 (OR)
           atom_types[i] = 6;
-        } else if (coord === 1) {
+        } else if (n_neighbors === 1) {
           // Terminal oxygen, often anionic or radical — check later
           atom_types[i] = 6;
         } else {
@@ -181,21 +181,21 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
 
       // ── Nitrogen ────────────────────────────────────────────────────
       case 'N': {
-        if (coord === 3 && !has_double && !has_aromatic) {
+        if (n_neighbors === 3 && !has_double && !has_aromatic) {
           // Amine N: 3 single bonds → type 8 (NR)
           atom_types[i] = 8;
-        } else if (coord === 2 && has_double) {
+        } else if (n_neighbors === 2 && has_double) {
           // Imine N=C → type 9 (N=C)
           // (nitrogen with a double bond and one other neighbor)
           atom_types[i] = 9;
-        } else if (coord === 3 && has_double) {
+        } else if (n_neighbors === 3 && has_double) {
           // Check if the double goes to C or O
           const dbl_to_O = double_nbrs.some(nb => {
             const target = molecule.atoms[nb.nbr];
             return target.element === 'O';
           });
           if (dbl_to_O) {
-            // N-oxide (N→O) — check coordination
+            // N-oxide (N→O) — check n_neighborsination
             atom_types[i] = 67; // N2OX (placeholder for N-oxide)
           } else {
             // Amide N (N-C=O) with delocalized lone pair → type 10 (NC=O)
@@ -214,13 +214,13 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
 
       // ── Sulfur ──────────────────────────────────────────────────────
       case 'S': {
-        if (has_double && coord >= 3) {
+        if (has_double && n_neighbors >= 3) {
           // Check for S=O / SO₂
           const dbl_to_O = double_nbrs.some(nb => {
             const target = molecule.atoms[nb.nbr];
             return target.element === 'O';
           });
-          if (dbl_to_O && coord >= 4) {
+          if (dbl_to_O && n_neighbors >= 4) {
             atom_types[i] = 18; // SO2 (sulfone)
           } else if (dbl_to_O) {
             atom_types[i] = 17; // S=O (sulfoxide)

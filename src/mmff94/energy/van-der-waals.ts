@@ -56,22 +56,23 @@ export function calc_vdw_energy(molecule: TypedMolecule): number {
     adj[bond.atom2].push(bond.atom1);
   }
 
-  const adj2: Set<number>[] = Array.from({ length: molecule.atoms.length }, () => new Set());
+  // Build 1-3 pair map: atoms sharing a common neighbor (angle pairs)
+  const pairs_1_3: Set<number>[] = Array.from({ length: molecule.atoms.length }, () => new Set());
   for (let i = 0; i < molecule.atoms.length; i++) {
     for (const n1 of adj[i]) {
       for (const n2 of adj[n1]) {
-        if (n2 !== i) adj2[i].add(n2);
+        if (n2 !== i) pairs_1_3[i].add(n2);
       }
     }
   }
 
   for (let i = 0; i < molecule.atoms.length; i++) {
-    const pi = VDW_PARAMS[molecule.atom_types[i]];
-    if (!pi) continue;
+    const param_i = VDW_PARAMS[molecule.atom_types[i]];
+    if (!param_i) continue;
 
     // Per-atom reduced radius
-    const R_i = pi.A_i * Math.pow(pi.alpha_i, 0.25);
-    const sqrt_alpha_over_N_i = Math.sqrt(pi.alpha_i / pi.N_i);
+    const R_i = param_i.A_i * Math.pow(param_i.alpha_i, 0.25);
+    const sqrt_alpha_over_N_i = Math.sqrt(param_i.alpha_i / param_i.N_i);
 
     const posI: Vec3 = [molecule.atoms[i].x, molecule.atoms[i].y, molecule.atoms[i].z];
 
@@ -79,58 +80,53 @@ export function calc_vdw_energy(molecule: TypedMolecule): number {
 
       // Skip 1-2 (bonded) and 1-3 (share a common neighbor)
       if (adj[i].includes(j)) continue;
-      if (adj2[i].has(j)) continue;
+      if (pairs_1_3[i].has(j)) continue;
 
-      const pj = VDW_PARAMS[molecule.atom_types[j]];
-      if (!pj) continue;
+      const param_j = VDW_PARAMS[molecule.atom_types[j]];
+      if (!param_j) continue;
 
       const posJ: Vec3 = [molecule.atoms[j].x, molecule.atoms[j].y, molecule.atoms[j].z];
       const r = distance(posI, posJ);
 
       // Per-atom reduced radius for j
-      const R_j = pj.A_i * Math.pow(pj.alpha_i, 0.25);
-      const sqrt_alpha_over_N_j = Math.sqrt(pj.alpha_i / pj.N_i);
+      const R_j = param_j.A_i * Math.pow(param_j.alpha_i, 0.25);
+      const sqrt_alpha_over_N_j = Math.sqrt(param_j.alpha_i / param_j.N_i);
 
-      // Combination rules
+      const isDonor = param_i.DA === 1 || param_j.DA === 1;
+      const isAcceptor = param_i.DA === 2 || param_j.DA === 2;
+
+      // Combined radius and well depth
       let R_ij: number;
       let epsilon_ij: number;
-      let R_ij6: number;
-
-      const isDonor = pi.DA === 1 || pj.DA === 1;
-      const isAcceptor = pi.DA === 2 || pj.DA === 2;
 
       if (isDonor && isAcceptor) {
-        // Hydrogen bond donor-acceptor pair: arithmetic mean, epsilon halved,
-        // R_AB further scaled by 0.8
-        R_ij = 0.5 * (R_i + R_j);
-        R_ij6 = Math.pow(R_ij, 6);
-        epsilon_ij = 0.5 * (181.16 * pi.G_i * pj.G_i * pi.alpha_i * pj.alpha_i) /
-                     (sqrt_alpha_over_N_i + sqrt_alpha_over_N_j) / R_ij6;
-        R_ij = 0.8 * R_ij;
+        // Hydrogen bond donor-acceptor: arithmetic mean, epsilon halved,
+        // R_ij further scaled by 0.8
+        const R_ij_unscaled = 0.5 * (R_i + R_j);
+        const R_ij6_unscaled = Math.pow(R_ij_unscaled, 6);
+        epsilon_ij = 0.5 * (181.16 * param_i.G_i * param_j.G_i * param_i.alpha_i * param_j.alpha_i) /
+                     (sqrt_alpha_over_N_i + sqrt_alpha_over_N_j) / R_ij6_unscaled;
+        R_ij = 0.8 * R_ij_unscaled;
       } else {
         // Non-hydrogen-bond: Waldman-Hagler combination
-        const g = (R_i - R_j) / (R_i + R_j);
-        const g2 = g * g;
-        R_ij = 0.5 * (R_i + R_j) * (1.0 + 0.2 * (1.0 - Math.exp(-12.0 * g2)));
-        R_ij6 = Math.pow(R_ij, 6);
-        epsilon_ij = (181.16 * pi.G_i * pj.G_i * pi.alpha_i * pj.alpha_i) /
+        const asymmetry = (R_i - R_j) / (R_i + R_j);
+        const asymmetry2 = asymmetry * asymmetry;
+        R_ij = 0.5 * (R_i + R_j) * (1.0 + 0.2 * (1.0 - Math.exp(-12.0 * asymmetry2)));
+        const R_ij6 = Math.pow(R_ij, 6);
+        epsilon_ij = (181.16 * param_i.G_i * param_j.G_i * param_i.alpha_i * param_j.alpha_i) /
                      (sqrt_alpha_over_N_i + sqrt_alpha_over_N_j) / R_ij6;
-      }
-
-      // Recompute R_ij6 if it was modified (for H-bond case)
-      if (isDonor && isAcceptor) {
-        R_ij6 = Math.pow(R_ij, 6);
       }
 
       // Buffered 14-7 expression
-      const buff_r_plus = r + 0.07 * R_ij;
-      const term1 = Math.pow(1.07 * R_ij / buff_r_plus, 7);
-
-      const r7 = Math.pow(r, 7);
+      const R_ij6 = Math.pow(R_ij, 6);
       const R_ij7 = R_ij6 * R_ij;
-      const term2 = 1.12 * R_ij7 / (r7 + 0.12 * R_ij7) - 2;
+      const buff_r_plus = r + 0.07 * R_ij;
+      const buff_r7_plus = Math.pow(r, 7) + 0.12 * R_ij7;
 
-      total_energy += epsilon_ij * term1 * term2;
+      const repulsive_term = Math.pow(1.07 * R_ij / buff_r_plus, 7);
+      const attractive_term = 1.12 * R_ij7 / buff_r7_plus - 2;
+
+      total_energy += epsilon_ij * repulsive_term * attractive_term;
     }
   }
 
