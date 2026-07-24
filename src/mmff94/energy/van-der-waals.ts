@@ -118,14 +118,12 @@ export function calc_vdw_energy(molecule: TypedMolecule): number {
                      (sqrt_alpha_over_N_i + sqrt_alpha_over_N_j) / R_ij6;
       }
 
-      // Buffered 14-7 expression
-      const R_ij6 = Math.pow(R_ij, 6);
-      const R_ij7 = R_ij6 * R_ij;
-      const buff_r_plus = r + 0.07 * R_ij;
-      const buff_r7_plus = Math.pow(r, 7) + 0.12 * R_ij7;
+      // Buffered 14-7 expression, Halgren1996 eq. (8)
+      const r7 = Math.pow(r, 7);
+      const R_ij7 = Math.pow(R_ij, 7);
 
-      const repulsive_term = Math.pow(1.07 * R_ij / buff_r_plus, 7);
-      const attractive_term = 1.12 * R_ij7 / buff_r7_plus - 2;
+      const repulsive_term = Math.pow(1.07 * R_ij / (r + 0.07 * R_ij), 7);
+      const attractive_term = 1.12 * R_ij7 / (r7 + 0.12 * R_ij7) - 2;
 
       total_energy += epsilon_ij * repulsive_term * attractive_term;
     }
