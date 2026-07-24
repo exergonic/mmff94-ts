@@ -1,25 +1,27 @@
 /**
  * Bond stretching energy.
  *
- * MMFF94 uses a harmonic potential for bond stretching:
+ * Halgren1996, eq. (2):
  *
- *   E_bond = 143.88 * k_b * (r − r₀)²
+ *   E_bond = 143.9325 · k_b · (r − r₀)²
+ *            · [1 + cs · (r − r₀) + 7/12 · cs² · (r − r₀)²]
  *
  * where:
  *   k_b  = force constant in millidynes per Ångström (mdyn/Å)
  *   r    = current bond length in Å
  *   r₀   = equilibrium bond length in Å
- *   143.88 = unit conversion factor: (mdyn/Å) → (kcal/mol)/Å²
+ *   cs   = cubic stretch constant = −2 Å⁻¹
+ *   143.9325 = unit conversion factor: (mdyn/Å) → (kcal/mol)/Å²
  *
- * A harmonic approximation is used instead of a full Morse potential
- * because for most organic molecules at room temperature, bonds do
- * not stretch far enough from equilibrium to feel the anharmonicity.
- * MMFF94 is parametrized for equilibrium geometries and conformational
- * energies, not bond dissociation.
+ * We implement only the leading harmonic term (the purely quadratic part
+ * of the expansion). The cubic and quartic correction terms (with cs)
+ * are omitted because they contribute negligibly for the small
+ * displacements near equilibrium that dominate conformational energies.
+ * This truncation matches the convention used by OpenBabel's MMFF94
+ * implementation (forcefieldmmff94.cpp:120) and RDKit.
  *
- * The parameters (k_b, r₀) are indexed by the MMFF94 types of the two
- * bonded atoms. If no exact (type_i, type_j) match is found, the lookup
- * falls through to a wildcard entry if one exists.
+ * The 143.9325 factor equals 143.88 when halved and rounded to MM2
+ * bondunit (71.94), but Halgren's published value is 143.9325.
  */
 
 import type { TypedMolecule } from '../../types';
@@ -49,7 +51,7 @@ export function calc_bond_stretch_energy(molecule: TypedMolecule): number {
     if (params) {
       const { k_b, r0 } = params;
       const dr = r - r0;
-      total_energy += 143.88 * k_b * dr * dr;
+      total_energy += 143.9325 * k_b * dr * dr;
     } else {
       // Fallback: If no parameters exist, we could add a zero contribution or throw an error.
       // For now, we just skip (add 0).

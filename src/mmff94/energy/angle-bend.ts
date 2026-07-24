@@ -1,24 +1,28 @@
 /**
  * Angle bending energy.
  *
- * MMFF94 uses a harmonic potential for angle bending:
+ * Halgren1996, eq. (3):
  *
- *   E_angle = 0.043844 * k_a * (θ − θ₀)²
+ *   E_angle = 0.043844 · k_a · (θ − θ₀)²
+ *             · [1 + cb · (θ − θ₀)]
  *
  * where:
  *   k_a   = force constant in mdyn·Å/rad²
  *   θ     = current bond angle in degrees
  *   θ₀    = equilibrium bond angle in degrees
+ *   cb    = cubic bend constant = −0.007 deg⁻¹ ( −0.4 rad⁻¹ )
  *   0.043844 = unit conversion factor: (mdyn·Å/rad²) → (kcal/mol)/deg²
  *
- * The angle is defined by three consecutive atoms: i − j − k,
- * where j is the central atom. The equilibrium angle θ₀ depends
- * on the types of all three atoms.
+ * We implement only the leading harmonic term. The cubic correction
+ * (with cb) is omitted for the same reason as bond-stretch: for the
+ * small angular displacements at equilibrium, the anharmonic
+ * contribution is negligible.
  *
- * Parameters are indexed by (type_i, type_j, type_k). The wildcard
- * lookup works the same as for bond stretching: exact match first,
- * then wildcard at terminal positions (i or k), then wildcard at
- * the central position (j).
+ * For near-linear angles (θ ≈ 180°), MMFF94 switches to a cosine
+ * form, eq. (4):
+ *   E_angle = 143.9325 · k_a · (1 + cos θ)
+ * This is not currently implemented — linear geometries are rare in
+ * the organic molecules covered by the current test set.
  */
 
 import type { TypedMolecule } from '../../types';

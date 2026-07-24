@@ -1,28 +1,21 @@
 /**
  * Stretch-bend cross term energy.
  *
+ * Halgren1996, eq. (5):
+ *
+ *   E_sb = 2.51210 · [k_sb_IJK · (r_IJ − r_IJ0)
+ *                     + k_sb_KJI · (r_KJ − r_KJ0)]
+ *                    · (θ − θ₀)
+ *
  * This is a CLASS II force field term — it couples bond stretching with
  * angle bending. Most force fields (UFF, GAFF, MM2/3) omit this term, but
  * MMFF94 includes it because bond lengths and angles are physically coupled:
  * when an H-C-H angle in methane closes, the C-H bonds shorten slightly.
  *
- *   E_sb = 2.51210 * [k_sb_IJK * (r_IJ - r_IJ0) + k_sb_KJI * (r_KJ - r_KJ0)]
- *                   * (theta - theta0)
- *
- * where:
- *   k_sb_IJK = stretch-bend force constant for the I-J bond side
- *   k_sb_KJI = stretch-bend force constant for the K-J bond side
- *   r_IJ     = length of bond i-j (one side of the angle)
- *   r_KJ     = length of bond k-j (the other side)
- *   r_IJ0    = equilibrium length of bond i-j (from BOND_PARAMS)
- *   r_KJ0    = equilibrium length of bond k-j (from BOND_PARAMS)
- *   theta    = current angle i-j-k
- *   theta0   = equilibrium angle i-j-k (from ANGLE_PARAMS)
- *   2.51210  = unit conversion factor
- *
- * The two k_sb values are indexed by (type_i, type_j, type_k). Many entries
- * have k_sb_IJK == k_sb_KJI (symmetric angles), but asymmetric environments
- * (e.g., C-C-O) can have different values.
+ * Two separate k_sb values are used because asymmetric environments
+ * (e.g., C-C-O vs O-C-C) have different coupling strengths for the two
+ * sides of the angle. Many entries have k_sb_IJK = k_sb_KJI (symmetric
+ * angles), but the parameter table stores both independently.
  */
 
 import type { TypedMolecule } from '../../types';

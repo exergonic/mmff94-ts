@@ -1,15 +1,24 @@
 /**
  * Torsion (dihedral) energy.
  *
- * MMFF94 uses a Fourier series for each dihedral angle:
+ * Halgren1996, eq. (7):
  *
- *   E_tors = Σ (V_n / 2) * [1 + cos(n * τ − γ_n)]   for n = 1, 2, 3
+ *   E_tors = ½ · [V₁ · (1 + cos τ) + V₂ · (1 − cos 2τ) + V₃ · (1 + cos 3τ)]
+ *
+ * Written more compactly using our stored phases γ_n:
+ *
+ *   E_tors = Σ (V_n / 2) · [1 + cos(n · τ − γ_n)]   for n = 1, 2, 3
  *
  * where:
  *   V_n    = barrier height for the n-th term (kcal/mol)
  *   n      = periodicity (1, 2, or 3)
  *   τ      = current dihedral angle (degrees)
  *   γ_n    = phase shift for the n-th term (degrees)
+ *
+ * The two forms are equivalent when:
+ *   γ₁ = 0°    →  1 + cos τ        (n=1)
+ *   γ₂ = 180°  →  1 − cos 2τ       (n=2, since cos(2τ−180°) = −cos 2τ)
+ *   γ₃ = 0°    →  1 + cos 3τ       (n=3)
  *
  * Convention: τ = 0° when i−j and k−l bonds are eclipsed (cis).
  * τ = 180° when staggered (trans). Sign follows IUPAC right-hand rule.
