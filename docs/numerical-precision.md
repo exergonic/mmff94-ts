@@ -61,9 +61,13 @@ With Kahan compensated summation, the accumulation error drops to:
 
 Angles and dihedrals use `acos`, `atan2`, `cos`, and `sin`. These are
 implemented in the CPU microcode (x87 `FSINCOS`, SSE2 `PSINCOS`) or in the
-JavaScript engine's Math library (typically fdlibm or a derivative). The
-implementations are IEEE 754 compliant and produce correctly-rounded results
-for all inputs. Maximum error is ≤ 1 ULP (~2 × 10⁻¹⁶ relative).
+JavaScript engine's Math library (typically fdlibm or a derivative).
+Unlike the basic arithmetic operations (+, −, ×, ÷, √), IEEE 754 does not
+mandate correctly-rounded transcendental functions — the "table maker's
+dilemma" makes this an open problem in general. Real implementations target
+sub-ULP accuracy: typical error ≤ 1 ULP, worst-case bounded by a few ULPs.
+This is sufficient for our error budget; the headroom is large enough that
+a 1-2 ULP trig term does not move the needle.
 
 ### Edge-case: near-0° angles
 
@@ -115,7 +119,9 @@ thresholds against Halgren's validation suite:
 | Per-component energy vs OPTIMOL | 0.01 kcal/mol | Individual terms cancel in the total; looser tolerance accounts for partial cancellation |
 | Per-term breakdown vs OPTIMOL log | 0.001 kcal/mol | Individual interactions are smaller and more sensitive to rounding |
 | Gradient vs finite difference | 1 × 10⁻⁵ relative | δ = 10⁻⁶ Å, limited by the geometry perturbation, not arithmetic |
-| Cross-platform (Node.js vs browser) | 1 × 10⁻¹² | Same engine family (V8); differences come from OS math library variants |
+| Cross-engine (Node.js ↔ Chrome) | 1 × 10⁻¹² | Both V8; OS math library the only variable |
+| Cross-engine (Chrome ↔ Firefox) | 1 × 10⁻¹⁰ | Different math libraries (V8 fdlibm vs SpiderMonkey) |
+| Cross-engine (Chrome ↔ Safari) | 1 × 10⁻¹⁰ | Different math libraries (V8 fdlibm vs JavaScriptCore) |
 
 These tolerances are achievable with IEEE 754 doubles and straightforward
 JavaScript code. No WebAssembly, no native addons, no special precision
