@@ -27,7 +27,7 @@ client side.
 | Angle bend | ✅ |
 | Stretch-bend (class-II cross term) | ✅ |
 | Torsion (Fourier series) | ✅ |
-| Van der Waals (buffered 14-7) | ⬜ |
+| Van der Waals (buffered 14-7) | ✅ |
 | Electrostatic (BCI model) | ⬜ |
 | Out-of-plane bending | ⬜ |
 | 1-4 scaling | ⬜ |

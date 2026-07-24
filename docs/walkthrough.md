@@ -304,7 +304,7 @@ vs O-C-C) have different coupling strengths for the two sides of the angle. Many
 entries have k_sb_IJK = k_sb_KJI (symmetric angles), but the parameter table
 stores both independently.
 
-### 7.4 Torsion (dihedral) — `torsion.ts` (stub)
+### 7.4 Torsion (dihedral) — `torsion.ts`
 
 ```
 E_tors = Σ (V_n / 2) · [1 + cos(n · τ − γ_n)]   for n = 1, 2, 3
@@ -316,12 +316,11 @@ periodicities. The parameter table stores V₁, V₂, V₃ with fixed phase shif
 in kcal/mol.
 
 The function evaluates every dihedral i-j-k-l where the central bond j-k is a
-single bond. Double and triple bonds have no torsion potential — their planarity
-is enforced by the angle bend and out-of-plane terms.
+single bond. If the forward type order (i, j, k, l) doesn't match, the reverse
+(l, k, j, i) is tried as fallback. Double and triple bonds have no torsion
+potential — their planarity is enforced by the angle bend and out-of-plane terms.
 
-Current status: **stub** (returns 0).
-
-### 7.5 Van der Waals — `van-der-waals.ts` (stub)
+### 7.5 Van der Waals — `van-der-waals.ts`
 
 ```
 E_vdw = ε_ij · [ (1.07·R* / (r + 0.07·R*))⁷ · (1.12·R*⁷ / (r⁷ + 0.12·R*⁷) − 2) ]
@@ -337,7 +336,8 @@ Combination rules for mixed-atom pairs:
 - R*_ij = 0.5 × (R*_i + R*_j) (arithmetic mean)
 - ε_ij = 181.16 × G_i × G_j × α_i × α_j / [α_i / √N_i + α_j / √N_j] (Slater-Kirkwood)
 
-Current status: **stub** (returns 0).
+At r = R*, the expression simplifies to E = −ε — the well depth — because both
+buffer fractions become exactly 1. This property is verified in the test suite.
 
 ### 7.6 Electrostatic — `electrostatic.ts` (stub)
 
@@ -662,8 +662,8 @@ Every energy term is tested **in isolation** before it is tested in combination.
 | Bond stretch | ✅ Implemented | 2 tests |
 | Angle bend | ✅ Implemented | 1 test |
 | Stretch-bend | ✅ Implemented | 2 tests |
-| Torsion | ❌ Stub (returns 0) | 0 tests |
-| Van der Waals | ❌ Stub (returns 0) | 0 tests |
+| Torsion | ✅ Implemented | 3 tests |
+| Van der Waals | ✅ Implemented | 4 tests |
 | Electrostatic | ❌ Stub (returns 0) | 0 tests |
 | Out-of-plane | ❌ Stub (returns 0) | 0 tests |
 | 1-4 scaling | ❌ Not implemented | 0 tests |
@@ -671,4 +671,4 @@ Every energy term is tested **in isolation** before it is tested in combination.
 | Gradients | ❌ Stub | 0 tests |
 | L-BFGS | ❌ Stub | 0 tests |
 | Steepest descent | ❌ Stub | 0 tests |
-| **All tests** | **23 passing** | **5 files** |
+| **All tests** | **30 passing** | **7 files** |
