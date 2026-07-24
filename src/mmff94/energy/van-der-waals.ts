@@ -7,26 +7,33 @@
  *   E_vdw = ε_ij · [ (1.07·R* / (r + 0.07·R*))⁷ ·
  *                    (1.12·R*⁷ / (r⁷ + 0.12·R*⁷) − 2) ]
  *
+ * where R* and ε are derived from the per-atom parameters A_i, α_i, N_i,
+ * G_i, and DA via Waldman-Hagler combination rules with 1/r⁶ damping.
+ *
  * The buffer terms (0.07·R* and 0.12·R*⁷) eliminate the singularity at
  * r = 0 that plagues the standard Lennard-Jones potential, giving a finite
- * repulsive wall. This makes MMFF94 more numerically stable during
- * optimization when atoms may approach very closely.
+ * repulsive wall.
  *
- * At r = R* (the equilibrium distance), the expression simplifies to
- * E = −ε — the well depth — because both buffer fractions become exactly 1.
+ * At r = R*, the expression simplifies to E = −ε — the well depth.
  *
- * COMBINATION RULES:
- *   R*_ij = 0.5 · (R*_i + R*_j)                     (arithmetic mean)
+ * PER-ATOM REDUCED RADIUS:
+ *   R_i = A_i · α_i^0.25
+ *
+ * COMBINATION RULES (non-hydrogen-bond pairs):
+ *   g = (R_i − R_j) / (R_i + R_j)
+ *   R_ij = 0.5 · (R_i + R_j) · [1 + 0.2 · (1 − exp(−12 · g²))]
  *   ε_ij  = 181.16 · G_i · G_j · α_i · α_j /
- *           [ α_i / √(N_i) + α_j / √(N_j) ]         (Slater-Kirkwood)
+ *           [α_i / √(N_i) + α_j / √(N_j)] / R_ij⁶
  *
- * Slater-Kirkwood is used instead of the geometric-mean combination
- * found in simpler force fields because geometric-mean systematically
- * overestimates well depths for heteronuclear pairs (Halgren 1996, §III.C).
+ * The Waldman-Hagler combination (with B = 0.2, Beta = 12) accounts for
+ * the different sizes of heteronuclear pairs. The 1/R_ij⁶ damping of the
+ * well depth is part of the MMFF94 vdW model.
  *
- * 1-4 SCALING: For atoms exactly three bonds apart, the vdW energy
- * is multiplied by 0.5. This is applied in total.ts, not here.
- * This function computes the FULL unscaled energy for every pair.
+ * For hydrogen-bond donor-acceptor pairs, R_ij is a simple arithmetic
+ * mean and is further scaled by 0.8; ε is halved.
+ *
+ * 1-4 SCALING: vdW is multiplied by 0.5 for atoms exactly three bonds
+ * apart. This is applied in total.ts, not here.
  */
 
 import type { TypedMolecule } from '../../types';
@@ -37,23 +44,18 @@ import { distance, Vec3 } from '../../utils/vector';
  * Calculate the total van der Waals energy between all non-bonded atom pairs.
  *
  * Excludes 1-2 (bonded) and 1-3 (angle) pairs. 1-4 pairs are included
- * at full strength (scaling applied externally in total.ts).
- *
- * Direct O(n²) pair loop — fine for molecules under ~100 atoms.
- * Swap to a neighbor-list when benchmarking shows the need.
+ * at full strength (0.5 scaling applied externally in total.ts).
  */
 export function calc_vdw_energy(molecule: TypedMolecule): number {
   let total_energy = 0.0;
 
-  // Build adjacency: for each atom, which other atoms is it bonded to?
+  // Build adjacency and 2-away sets for pair exclusions
   const adj: number[][] = Array.from({ length: molecule.atoms.length }, () => []);
   for (const bond of molecule.bonds) {
     adj[bond.atom1].push(bond.atom2);
     adj[bond.atom2].push(bond.atom1);
   }
 
-  // For each atom i, collect all atoms j that are 1-3 (share a common neighbor)
-  // so we can skip them in the pair loop.
   const adj2: Set<number>[] = Array.from({ length: molecule.atoms.length }, () => new Set());
   for (let i = 0; i < molecule.atoms.length; i++) {
     for (const n1 of adj[i]) {
@@ -64,45 +66,69 @@ export function calc_vdw_energy(molecule: TypedMolecule): number {
   }
 
   for (let i = 0; i < molecule.atoms.length; i++) {
-    const ti = molecule.atom_types[i];
-    const params_i = VDW_PARAMS[ti];
-    if (!params_i) continue;
+    const pi = VDW_PARAMS[molecule.atom_types[i]];
+    if (!pi) continue;
+
+    // Per-atom reduced radius
+    const R_i = pi.A_i * Math.pow(pi.alpha_i, 0.25);
+    const sqrt_alpha_over_N_i = Math.sqrt(pi.alpha_i / pi.N_i);
 
     const posI: Vec3 = [molecule.atoms[i].x, molecule.atoms[i].y, molecule.atoms[i].z];
 
     for (let j = i + 1; j < molecule.atoms.length; j++) {
 
-      // Skip 1-2 pairs (bonded)
+      // Skip 1-2 (bonded) and 1-3 (share a common neighbor)
       if (adj[i].includes(j)) continue;
-
-      // Skip 1-3 pairs (share a common neighbor)
       if (adj2[i].has(j)) continue;
 
-      const tj = molecule.atom_types[j];
-      const params_j = VDW_PARAMS[tj];
-      if (!params_j) continue;
+      const pj = VDW_PARAMS[molecule.atom_types[j]];
+      if (!pj) continue;
 
       const posJ: Vec3 = [molecule.atoms[j].x, molecule.atoms[j].y, molecule.atoms[j].z];
       const r = distance(posI, posJ);
 
-      // Combination rules
-      const R_star_ij = 0.5 * (params_i.R_star + params_j.R_star);
+      // Per-atom reduced radius for j
+      const R_j = pj.A_i * Math.pow(pj.alpha_i, 0.25);
+      const sqrt_alpha_over_N_j = Math.sqrt(pj.alpha_i / pj.N_i);
 
-      // Slater-Kirkwood combination for well depth
-      const alpha_over_sqrt_N_i = params_i.alpha_i / Math.sqrt(params_i.N_i);
-      const alpha_over_sqrt_N_j = params_j.alpha_i / Math.sqrt(params_j.N_i);
-      const epsilon_ij = 181.16 * params_i.G_i * params_j.G_i *
-                         params_i.alpha_i * params_j.alpha_i /
-                         (alpha_over_sqrt_N_i + alpha_over_sqrt_N_j);
+      // Combination rules
+      let R_ij: number;
+      let epsilon_ij: number;
+      let R_ij6: number;
+
+      const isDonor = pi.DA === 1 || pj.DA === 1;
+      const isAcceptor = pi.DA === 2 || pj.DA === 2;
+
+      if (isDonor && isAcceptor) {
+        // Hydrogen bond donor-acceptor pair: arithmetic mean, epsilon halved,
+        // R_AB further scaled by 0.8
+        R_ij = 0.5 * (R_i + R_j);
+        R_ij6 = Math.pow(R_ij, 6);
+        epsilon_ij = 0.5 * (181.16 * pi.G_i * pj.G_i * pi.alpha_i * pj.alpha_i) /
+                     (sqrt_alpha_over_N_i + sqrt_alpha_over_N_j) / R_ij6;
+        R_ij = 0.8 * R_ij;
+      } else {
+        // Non-hydrogen-bond: Waldman-Hagler combination
+        const g = (R_i - R_j) / (R_i + R_j);
+        const g2 = g * g;
+        R_ij = 0.5 * (R_i + R_j) * (1.0 + 0.2 * (1.0 - Math.exp(-12.0 * g2)));
+        R_ij6 = Math.pow(R_ij, 6);
+        epsilon_ij = (181.16 * pi.G_i * pj.G_i * pi.alpha_i * pj.alpha_i) /
+                     (sqrt_alpha_over_N_i + sqrt_alpha_over_N_j) / R_ij6;
+      }
+
+      // Recompute R_ij6 if it was modified (for H-bond case)
+      if (isDonor && isAcceptor) {
+        R_ij6 = Math.pow(R_ij, 6);
+      }
 
       // Buffered 14-7 expression
-      const buff_r_plus = r + 0.07 * R_star_ij;
-      const term1 = Math.pow(1.07 * R_star_ij / buff_r_plus, 7);
+      const buff_r_plus = r + 0.07 * R_ij;
+      const term1 = Math.pow(1.07 * R_ij / buff_r_plus, 7);
 
       const r7 = Math.pow(r, 7);
-      const R_star_ij_7 = Math.pow(R_star_ij, 7);
-      const buff_r7_plus = r7 + 0.12 * R_star_ij_7;
-      const term2 = 1.12 * R_star_ij_7 / buff_r7_plus - 2;
+      const R_ij7 = R_ij6 * R_ij;
+      const term2 = 1.12 * R_ij7 / (r7 + 0.12 * R_ij7) - 2;
 
       total_energy += epsilon_ij * term1 * term2;
     }

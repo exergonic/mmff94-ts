@@ -163,26 +163,34 @@ def generate_torsion():
 
 # ── Van der Waals parameters ───────────────────────────────────────────
 # Format: type alpha_i N_i A_i G_i DA Symb Origin
-# A_i is R* (Angstrom). No priority column — per-atom table.
+# A_i is used to compute R* = A_i * alpha_i^0.25 (see van-der-waals.ts).
+# DA: 0 = neither, 1 = hydrogen bond donor, 2 = hydrogen bond acceptor
 
 def generate_vdw():
     lines = parse_par('mmffvdw.par')
     with open(os.path.join(OUT_DIR, 'van-der-waals.ts'), 'w') as f:
         write_ts_header(f, "Van der Waals parameters per atom type.")
         f.write("export interface VdwParams {\n")
-        f.write("  R_star: number;   // A (Angstrom)\n")
-        f.write("  alpha_i: number;  // polarizability (A^3)\n")
-        f.write("  N_i: number;      // effective number of valence electrons\n")
-        f.write("  G_i: number;      // dimensionless factor\n")
+        f.write("  A_i: number;       // from .par file; R* = A_i * alpha_i^0.25\n")
+        f.write("  alpha_i: number;   // polarizability (A^3)\n")
+        f.write("  N_i: number;       // effective number of valence electrons\n")
+        f.write("  G_i: number;       // dimensionless factor\n")
+        f.write("  DA: number;        // hydrogen bond: 0=none, 1=donor, 2=acceptor\n")
         f.write("}\n\n")
+
+        def parse_da(s: str) -> int:
+            if s == 'D': return 1
+            if s == 'A': return 2
+            return 0
+
         f.write("export const VDW_PARAMS: Record<number, VdwParams> = {\n")
         for line in lines:
             parts = line.split()
             if len(parts) < 7:
                 continue
             t = parts[0]
-            alpha, N, A, G = parts[1], parts[2], parts[3], parts[4]
-            f.write(f"  {t}: {{ R_star: {value(A)}, alpha_i: {value(alpha)}, N_i: {value(N)}, G_i: {value(G)} }},\n")
+            alpha, N, A, G, da = parts[1], parts[2], parts[3], parts[4], parts[5]
+            f.write(f"  {t}: {{ A_i: {value(A)}, alpha_i: {value(alpha)}, N_i: {value(N)}, G_i: {value(G)}, DA: {parse_da(da)} }},\n")
         f.write("};\n")
     print(f"  [write] van-der-waals.ts ({len(lines)} entries)")
 
