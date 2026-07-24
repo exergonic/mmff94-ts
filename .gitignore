@@ -25,3 +25,9 @@ data/
 
 # Local opencode configuration
 .opencode/
+
+# OpenBabel Python virtual environment for reference generation
+tests/scripts/.venv/
+
+# temporary ob runs (legacy)
+ob_runs
