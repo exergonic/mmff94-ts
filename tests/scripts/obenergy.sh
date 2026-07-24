@@ -11,6 +11,6 @@ base="$(basename "$input" .sdf)"
 base="${base%.SDF}"
 ref_dir="$script_dir/../references"
 mkdir -p "$ref_dir"
-output="$ref_dir/${base}.log"
+output="$ref_dir/${base}.mmff94.log"
 
 obabel "$input" -otxt --ff mmff94 --energy --log > "$output" 2>&1

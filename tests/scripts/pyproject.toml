@@ -1,7 +1,0 @@
-[project]
-name = "mmff94-ts-references"
-description = "Generate OpenBabel MMFF94 reference energies for regression testing"
-requires-python = ">=3.10"
-
-[tool.uv]
-dev-dependencies = ["openbabel-wheel"]
