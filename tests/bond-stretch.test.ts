@@ -4,7 +4,6 @@ import type { TypedMolecule } from '../src/types';
 
 describe('Bond Stretch Energy', () => {
   it('calculates energy for a simple 2-atom system', () => {
-    // Using parameter: '0-1-1': { k_b: 4.258, r0: 1.508 }
     const mol: TypedMolecule = {
       atoms: [
         { index: 0, element: 'C', x: 0, y: 0, z: 0 },
@@ -17,12 +16,12 @@ describe('Bond Stretch Energy', () => {
     };
 
     const energy = calc_bond_stretch_energy(mol);
-    // r = 1.6, r0 = 1.508, dr = 0.092
-    // Harmonic:    143.9325 * 4.258 * 0.092^2 = 5.1875
-    // Anharmonic:  1 + cs*dr + 7/12*cs^2*dr^2  with cs=-2
-    //            = 1 - 0.184 + 0.01975 = 0.83575
-    // E = 5.1875 * 0.83575 = 4.3353
-    expect(energy).toBeCloseTo(4.3353, 3);
+    // r = 1.6, r0 = 1.508, dr = 0.092, k_b = 4.258, cs = -2
+    // ½k_b        = 2.129
+    // Harmonic:   143.9325 * 2.129 * 0.092^2 = 2.5938
+    // Anharmonic: 1 + (-2)*0.092 + 7/12*4*0.092^2 = 0.83575
+    // E = 2.5938 * 0.83575 = 2.1677
+    expect(energy).toBeCloseTo(2.1677, 3);
   });
 
   it('handles reversed type keys (min-max ordering)', () => {
@@ -34,15 +33,15 @@ describe('Bond Stretch Energy', () => {
       bonds: [
         { atom1: 0, atom2: 1, bond_order: 1 }
       ],
-      atom_types: [2, 1] // Deliberately reversed
+      atom_types: [2, 1]
     };
 
     const energy = calc_bond_stretch_energy(mol);
-    // r = 1.582, r0 = 1.482, dr = 0.1
-    // Harmonic:    143.9325 * 4.539 * 0.1^2 = 6.5330
-    // Anharmonic:  1 + cs*dr + 7/12*cs^2*dr^2  with cs=-2
-    //            = 1 - 0.2 + 0.02333 = 0.82333
-    // E = 6.5330 * 0.82333 = 5.3789
-    expect(energy).toBeCloseTo(5.3789, 3);
+    // r = 1.582, r0 = 1.482, dr = 0.1, k_b = 4.539, cs = -2
+    // ½k_b        = 2.2695
+    // Harmonic:   143.9325 * 2.2695 * 0.1^2 = 3.2665
+    // Anharmonic: 1 + (-2)*0.1 + 7/12*4*0.01 = 0.82333
+    // E = 3.2665 * 0.82333 = 2.6895
+    expect(energy).toBeCloseTo(2.6895, 3);
   });
 });

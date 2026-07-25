@@ -13,13 +13,12 @@
  *   cs   = cubic stretch constant = −2 Å⁻¹
  *   143.9325 = unit conversion factor: (mdyn/Å) → (kcal/mol)/Å²
  *
- * Note: there is no ½ factor in front of k_b. The force constants in the
- * MMFF94 parameter tables are already the full (non-half) values, consistent
- * with Halgren's definition. The ½ appears only in force fields that follow
- * the MM2 convention (UFF, GAFF) where E = ½kΔ². MMFF94 instead uses
- * E = kΔ² with the same k, effectively doubling the contribution relative
- * to MM2 for an identical Δr and nominal k_b. OpenBabel applies the ½ at
- * report time via its MM2-style output layer (forcefieldmmff94.cpp:183).
+ * Note: the factor ½ appears explicitly in Halgren's eq. (2) as k_b/2.
+ * This is the standard harmonic oscillator convention E = ½k·Δr².
+ * The k_b values in the MMFF94 parameter table are ordinary force
+ * constants (mdyn/Å); the ½ is applied here in the formula, not baked
+ * into the stored value. OpenBabel stores the same k_b and applies the
+ * ½ at report time (forcefieldmmff94.cpp:183).
  */
 
 import type { TypedMolecule } from '../../types';
@@ -51,8 +50,9 @@ export function calc_bond_stretch_energy(molecule: TypedMolecule): number {
       const dr = r - r0;
       const cs = -2.0; // cubic stretch constant, Halgren1996 eq. (2)
 
-      // Full cubic expansion: harmonic term × anharmonic correction
-      const harmonic = 143.9325 * k_b * dr * dr;
+      // Halgren1996 eq. (2): E = 143.9325 · (k_b/2) · Δr² · [1 + cs·Δr + 7/12·cs²·Δr²]
+      const half_kb = 0.5 * k_b;
+      const harmonic = 143.9325 * half_kb * dr * dr;
       const anharmonic = 1.0 + cs * dr + (7.0 / 12.0) * cs * cs * dr * dr;
       total_energy += harmonic * anharmonic;
     } else {
