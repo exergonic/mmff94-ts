@@ -251,17 +251,26 @@ testable in isolation.
 ### 7.1 Bond stretching — `bond-stretch.ts`
 
 ```
-E_bond = 143.88 · k_b · (r − r₀)²
+E_bond = 143.9325 · (k_b / 2) · (r − r₀)² · [1 + cs · (r − r₀) + 7/12 · cs² · (r − r₀)²]
 ```
+
+where `cs = −2 Å⁻¹` is the cubic stretch constant (Halgren1996, eq. (2)).
 
 For every bond in the molecule:
 1. Look up k_b and r₀ from `BOND_PARAMS` by the pair of atom types
 2. Compute the current bond length r from atomic coordinates
-3. Accumulate: `E += 143.88 * k_b * (r - r₀)²`
+3. Compute the harmonic term (leading quadratic) and the anharmonic correction
+   (cubic and quartic terms from the Morse expansion), then multiply them:
+   ```
+   harmonic     = 143.9325 · (k_b / 2) · (r − r₀)²
+   anharmonic   = 1 + cs · (r − r₀) + 7/12 · cs² · (r − r₀)²
+   E           += harmonic · anharmonic
+   ```
 
-The factor 143.88 converts from mdyn/Å to kcal/mol/Å². The harmonic approximation
-is used instead of a Morse potential because most organic molecules at room
-temperature do not stretch bonds far from equilibrium.
+The factor 143.9325 converts from mdyn/Å to kcal/mol/Å². The ½ is the
+standard harmonic oscillator prefactor — the parameter table stores the
+full force constant k_b, not k_b/2 (see note in source). The cubic expansion
+through fourth order approximates a Morse potential with alpha = 2 Å⁻¹.
 
 ### 7.2 Angle bending — `angle-bend.ts`
 
@@ -657,7 +666,7 @@ Every energy term is tested **in isolation** before it is tested in combination.
 | Data types | ✅ Complete | — |
 | SDF parser | ✅ Complete | 5 tests |
 | Vector math | ✅ Complete | 12 tests |
-| Atom typing | ⚠️ Stub (element-only) | 0 tests |
+| Atom typing | ✅ Implemented | 9 tests |
 | BCI charges | ⚠️ Stub | 0 tests |
 | Bond stretch | ✅ Implemented | 2 tests |
 | Angle bend | ✅ Implemented | 1 test |
@@ -671,4 +680,5 @@ Every energy term is tested **in isolation** before it is tested in combination.
 | Gradients | ❌ Stub | 0 tests |
 | L-BFGS | ❌ Stub | 0 tests |
 | Steepest descent | ❌ Stub | 0 tests |
-| **All tests** | **30 passing** | **7 files** |
+| MMD parser (Halgren suite) | ✅ Complete | 4 tests |
+| **All tests** | **44 passing** | **9 files** |
