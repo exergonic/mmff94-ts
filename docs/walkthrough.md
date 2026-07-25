@@ -157,9 +157,12 @@ the chemical reason for the branch:
 // If the double bond goes to carbon  → type 2 (alkene sp² C).
 ```
 
-The current implementation is a stub that only distinguishes by element (type 1 for
-C, type 5 for H, type 8 for N, type 6 for O, etc.) — the full decision tree is a
-work-in-progress.
+The current implementation covers the common organic elements: carbon (sp³, sp²,
+carbonyl, acetylenic, cyclopropyl, cyclobutyl, aromatic), hydrogen (bonded to C,
+O, N, S), oxygen (divalent, carbonyl), nitrogen (amine, imine, amide, aromatic),
+sulfur (thiol/sulfide, thiocarbonyl, sulfoxide, sulfone), halogens, silicon, and
+phosphorus. Ring detection uses iterative leaf-stripping; aromaticity is detected
+via the Kekulé alternating-bond pattern.
 
 Also in this file: `compute_bci_charges()`, which computes partial charges using
 the Bond Charge Increment model. Each bond contributes a fixed increment to both of
@@ -274,21 +277,38 @@ through fourth order approximates a Morse potential with alpha = 2 Å⁻¹.
 
 ### 7.2 Angle bending — `angle-bend.ts`
 
+Halgren1996, eq. (3) — for conventional bond angles:
+
 ```
-E_angle = 0.043844 · k_a · (θ − θ₀)²
+E_angle = 0.043844 · (k_a / 2) · Δθ² · (1 + cb · Δθ)
 ```
+
+where `Δθ = θ − θ₀`, and `cb = −0.007 deg⁻¹` is the cubic bend constant.
+
+For near-linear angles (θ₀ > 150°), eq. (3) is replaced by eq. (4):
+
+```
+E_angle = 143.9325 · k_a · (1 + cos θ)
+```
+
+which avoids the singularity of the cubic expansion at θ = 180°.
 
 For every angle i-j-k (where j is the central atom):
 
-The function identifies angles by walking the adjacency list: for each atom j
-with N neighbors, there are N×(N−1)/2 angle pairs (i, k).
-
 1. Look up k_a and θ₀ from `ANGLE_PARAMS` by the triplet of types (i, j, k)
-2. Compute the current angle θ using `angle_in_radians()`
-3. Accumulate: `E += 0.043844 * k_a * (θ_deg − θ₀)²`
+2. Compute the current angle θ
+3. If `θ₀ > 150°`: use the cosine form (eq. 4)
+4. Otherwise: compute the harmonic term and the anharmonic correction:
+   ```
+   harmonic     = 0.043844 · (k_a / 2) · Δθ²
+   anharmonic   = 1 + cb · Δθ
+   E           += harmonic · anharmonic
+   ```
 
-The factor 0.043844 converts from mdyn·Å/rad² to kcal/mol/deg². The angle is
-converted to degrees for the computation because θ₀ is stored in degrees.
+The factor 0.043844 converts from mdyn·Å/rad² to kcal/mol/deg². The ½
+prefactor follows the same convention as bond stretch — the parameter table
+stores the full k_a. The cubic correction with cb = −0.007 breaks the
+symmetry of the harmonic well (compression stiffer than extension).
 
 ### 7.3 Stretch-bend cross term — `stretch-bend.ts`
 
@@ -488,7 +508,7 @@ the build process.
 OpenBabel .par files
   │
   ▼
-scripts/extract-params.ps1      ← PowerShell, reads fixed-width columns
+scripts/extract-mmff94-par.py   ← Python, reads fixed-width columns
   │
   ▼
 src/mmff94/parameters/*.ts       ← Auto-generated TypeScript files
@@ -653,7 +673,7 @@ Every energy term is tested **in isolation** before it is tested in combination.
 | Test | What it checks | How |
 |---|---|---|
 | **Unit** | Single energy function returns the right value for a known geometry | Compute by hand or with a reference for a 2-3 atom test case (H₂ for bond stretch, H₂O for angle bend) |
-| **Regression** | Total energy matches OpenBabel/RDKit for ~20 molecules | `.sdf` fixture files with sidecar `.json` reference energies; assert `|computed − reference| < 0.01 kcal/mol` |
+| **Regression** | Total and per-component energies match Halgren suite | OPTIMOL totals from `MMFF94.energies`, component breakdowns from `MMFF94_bmin.log`; assert `|computed − reference| < 0.01 kcal/mol` |
 | **Gradient** | Analytical dE/dx matches (E(x+δ) − E(x−δ)) / (2δ) | Finite-difference on every coordinate of every atom in every fixture: δ = 10⁻⁶ Å, relative error < 10⁻⁵ |
 | **Optimization** | After minimization, max gradient < threshold and energy is lower | Run L-BFGS on each fixture from the SDF geometry and from a perturbed geometry |
 
@@ -669,7 +689,7 @@ Every energy term is tested **in isolation** before it is tested in combination.
 | Atom typing | ✅ Implemented | 9 tests |
 | BCI charges | ⚠️ Stub | 0 tests |
 | Bond stretch | ✅ Implemented | 2 tests |
-| Angle bend | ✅ Implemented | 1 test |
+| Angle bend | ✅ Implemented | 2 tests |
 | Stretch-bend | ✅ Implemented | 2 tests |
 | Torsion | ✅ Implemented | 3 tests |
 | Van der Waals | ✅ Implemented | 4 tests |
@@ -681,4 +701,4 @@ Every energy term is tested **in isolation** before it is tested in combination.
 | L-BFGS | ❌ Stub | 0 tests |
 | Steepest descent | ❌ Stub | 0 tests |
 | MMD parser (Halgren suite) | ✅ Complete | 4 tests |
-| **All tests** | **44 passing** | **9 files** |
+| **All tests** | **45 passing** | **9 files** |
