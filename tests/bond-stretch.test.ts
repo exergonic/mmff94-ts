@@ -18,8 +18,11 @@ describe('Bond Stretch Energy', () => {
 
     const energy = calc_bond_stretch_energy(mol);
     // r = 1.6, r0 = 1.508, dr = 0.092
-    // E = 143.9325 * 4.258 * (0.092)^2 = 5.1875
-    expect(energy).toBeCloseTo(5.1875, 3);
+    // Harmonic:    143.9325 * 4.258 * 0.092^2 = 5.1875
+    // Anharmonic:  1 + cs*dr + 7/12*cs^2*dr^2  with cs=-2
+    //            = 1 - 0.184 + 0.01975 = 0.83575
+    // E = 5.1875 * 0.83575 = 4.3353
+    expect(energy).toBeCloseTo(4.3353, 3);
   });
 
   it('handles reversed type keys (min-max ordering)', () => {
@@ -36,7 +39,10 @@ describe('Bond Stretch Energy', () => {
 
     const energy = calc_bond_stretch_energy(mol);
     // r = 1.582, r0 = 1.482, dr = 0.1
-    // E = 143.9325 * 4.539 * (0.1)^2 = 6.5330
-    expect(energy).toBeCloseTo(6.5330, 3);
+    // Harmonic:    143.9325 * 4.539 * 0.1^2 = 6.5330
+    // Anharmonic:  1 + cs*dr + 7/12*cs^2*dr^2  with cs=-2
+    //            = 1 - 0.2 + 0.02333 = 0.82333
+    // E = 6.5330 * 0.82333 = 5.3789
+    expect(energy).toBeCloseTo(5.3789, 3);
   });
 });

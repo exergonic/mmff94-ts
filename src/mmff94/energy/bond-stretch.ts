@@ -12,16 +12,6 @@
  *   r₀   = equilibrium bond length in Å
  *   cs   = cubic stretch constant = −2 Å⁻¹
  *   143.9325 = unit conversion factor: (mdyn/Å) → (kcal/mol)/Å²
- *
- * We implement only the leading harmonic term (the purely quadratic part
- * of the expansion). The cubic and quartic correction terms (with cs)
- * are omitted because they contribute negligibly for the small
- * displacements near equilibrium that dominate conformational energies.
- * This truncation matches the convention used by OpenBabel's MMFF94
- * implementation (forcefieldmmff94.cpp:120) and RDKit.
- *
- * The 143.9325 factor equals 143.88 when halved and rounded to MM2
- * bondunit (71.94), but Halgren's published value is 143.9325.
  */
 
 import type { TypedMolecule } from '../../types';
@@ -51,7 +41,12 @@ export function calc_bond_stretch_energy(molecule: TypedMolecule): number {
     if (params) {
       const { k_b, r0 } = params;
       const dr = r - r0;
-      total_energy += 143.9325 * k_b * dr * dr;
+      const cs = -2.0; // cubic stretch constant, Halgren1996 eq. (2)
+
+      // Full cubic expansion: harmonic term × anharmonic correction
+      const harmonic = 143.9325 * k_b * dr * dr;
+      const anharmonic = 1.0 + cs * dr + (7.0 / 12.0) * cs * cs * dr * dr;
+      total_energy += harmonic * anharmonic;
     } else {
       // Fallback: If no parameters exist, we could add a zero contribution or throw an error.
       // For now, we just skip (add 0).
