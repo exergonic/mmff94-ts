@@ -1,19 +1,19 @@
 /**
  * Validation against Halgren's MMFF94 suite.
  *
- * Reads molecules from MMFF94.mmd (pre-assigned OPTIMOL types), computes our
- * energies, and compares per-component against BatchMin 5.5 references from
- * MMFF94_bmin.log.
+ * Reads molecules from MMFF94.mmd (coordinates and connectivity only),
+ * assigns atom types via our own assign_atom_types(), computes energies,
+ * and reports per-component comparison against BatchMin 5.5 references.
  *
- * Currently informational: many terms are stubs (electrostatic, oop) and some
- * atom types fall outside our current parameter coverage. As terms are
- * implemented, tighten these tolerances toward the 0.01 kcal/mol target.
+ * Currently informational: many terms are stubs and atom typing coverage
+ * is limited. As terms and types are implemented, tighten tolerances.
  */
 
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { parse_mmd } from '../src/utils/mmd-parser';
+import { assign_atom_types } from '../src/mmff94/atom-types';
 import { calc_energy } from '../src/mmff94/energy/total';
 
 const suiteDir = join(__dirname, 'fixtures', 'validation-suite');
@@ -64,19 +64,22 @@ describe('Halgren MMFF94 suite validation', () => {
   });
 
   it('reports per-component comparison for AGLYSL01', () => {
-    const mol = molecules.find(m => m.name === 'AGLYSL01')!;
+    const raw = molecules.find(m => m.name === 'AGLYSL01')!;
+    const typed = assign_atom_types(raw);
     const ref = refEnergies.get('AGLYSL01')!;
-    const got = calc_energy(mol);
+    const got = calc_energy(typed);
+
+    const stat = (v: number, r: number) => Math.abs(v - r) < 0.1 ? '✓' : '✗';
 
     const lines = [
       `\nAGLYSL01 — ammonium glycinium sulfate`,
       `  Term            Reference     Computed      Status`,
       `  ───────────────────────────────────────────────────`,
-      `  Bond stretch    ${ref.stretch.toFixed(5).padStart(10)}  ${got.bond_stretch.toFixed(5).padStart(10)}  ${Math.abs(got.bond_stretch - ref.stretch) < 0.1 ? '✓' : '✗'}`,
-      `  Angle bend      ${ref.bend.toFixed(5).padStart(10)}  ${got.angle_bend.toFixed(5).padStart(10)}  ${Math.abs(got.angle_bend - ref.bend) < 0.1 ? '✓' : '✗'}`,
-      `  Stretch-bend    ${ref.strbnd.toFixed(5).padStart(10)}  ${got.stretch_bend.toFixed(5).padStart(10)}  ${Math.abs(got.stretch_bend - ref.strbnd) < 0.1 ? '✓' : '✗'}`,
-      `  Torsion         ${ref.torsion.toFixed(5).padStart(10)}  ${got.torsion.toFixed(5).padStart(10)}  ${Math.abs(got.torsion - ref.torsion) < 0.1 ? '✓' : '✗'}`,
-      `  VDW             ${ref.vdw.toFixed(5).padStart(10)}  ${got.van_der_waals.toFixed(5).padStart(10)}  ${Math.abs(got.van_der_waals - ref.vdw) < 0.1 ? '✓' : '✗'}`,
+      `  Bond stretch    ${ref.stretch.toFixed(5).padStart(10)}  ${got.bond_stretch.toFixed(5).padStart(10)}  ${stat(got.bond_stretch, ref.stretch)}`,
+      `  Angle bend      ${ref.bend.toFixed(5).padStart(10)}  ${got.angle_bend.toFixed(5).padStart(10)}  ${stat(got.angle_bend, ref.bend)}`,
+      `  Stretch-bend    ${ref.strbnd.toFixed(5).padStart(10)}  ${got.stretch_bend.toFixed(5).padStart(10)}  ${stat(got.stretch_bend, ref.strbnd)}`,
+      `  Torsion         ${ref.torsion.toFixed(5).padStart(10)}  ${got.torsion.toFixed(5).padStart(10)}  ${stat(got.torsion, ref.torsion)}`,
+      `  VDW             ${ref.vdw.toFixed(5).padStart(10)}  ${got.van_der_waals.toFixed(5).padStart(10)}  ${stat(got.van_der_waals, ref.vdw)}`,
       `  Electrostatic   ${ref.elec.toFixed(5).padStart(10)}  ${got.electrostatic.toFixed(5).padStart(10)}  STUB`,
       `  OOP             ${ref.oop.toFixed(5).padStart(10)}  ${got.out_of_plane.toFixed(5).padStart(10)}  STUB`,
       `  ───────────────────────────────────────────────────`,

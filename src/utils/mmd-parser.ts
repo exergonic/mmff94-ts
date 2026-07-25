@@ -17,16 +17,20 @@
  *   21+    atom name fragments + trailing serial number
  */
 
-import type { TypedMolecule } from '../types';
-import { ATOM_TYPES } from '../mmff94/parameters';
+import type { Atom, Bond, Molecule } from '../types';
 
 /**
- * Parse a complete .mmd file into an array of TypedMolecules.
- * Each molecule carries pre-assigned atom_types and partial_charges
- * from the OPTIMOL reference computation.
+ * Parse a complete .mmd file into an array of Molecules.
+ *
+ * The .mmd file stores coordinates, connectivity, formal charges, and
+ * partial charges from the OPTIMOL reference computation. The first
+ * numeric field per atom line is an internal BatchMin/OPTIMOL index,
+ * NOT the MMFF94 atom type — so this function returns plain Molecules
+ * without pre-assigned types. Atom typing is done separately via
+ * assign_atom_types().
  */
-export function parse_mmd(mmd_text: string): TypedMolecule[] {
-  const molecules: TypedMolecule[] = [];
+export function parse_mmd(mmd_text: string): Molecule[] {
+  const molecules: Molecule[] = [];
   const lines = mmd_text.split('\n');
 
   let i = 0;
@@ -41,32 +45,27 @@ export function parse_mmd(mmd_text: string): TypedMolecule[] {
     const code = headerMatch[2];
     i++;
 
-    // Track bonds as "a1-a2" → bond_order, to deduplicate while keeping order
     const bondMap = new Map<string, number>();
 
-    const atoms: TypedMolecule['atoms'] = [];
-    const atom_types: number[] = [];
-    const partial_charges: number[] = [];
+    const atoms: Atom[] = [];
 
     for (let a = 0; a < numAtoms; a++) {
       if (i >= lines.length) break;
-      const parts = lines[i++].trim().split(/\s+/);
+      const parts = lines[i++].trim().split(/\s+/, 30);
       if (parts.length < 16) continue;
 
-      const mmff_type = parseInt(parts[0]);
+      // Skip the first field (internal BatchMin type index, not MMFF94 type)
 
       // Read (neighbor, bond_order) pairs up to 6 pairs
-      // Stop when we hit a field containing a decimal (the x coordinate)
       let cursor = 1;
       for (let pair = 0; pair < 6; pair++) {
-        if (cursor >= parts.length - 9) break; // need 9 fields for xyz+metadata
+        if (cursor >= parts.length - 9) break;
         const nbr_raw = parts[cursor];
-        // Coordinates have decimal points; neighbor indices don't
         if (nbr_raw.includes('.')) break;
         const nbr = parseInt(nbr_raw);
         const order = parseInt(parts[cursor + 1]);
         if (nbr > 0 && order > 0) {
-          const a1 = a; // 0-based atom index
+          const a1 = a;
           const a2 = nbr - 1;
           const key = a1 < a2 ? `${a1}-${a2}` : `${a2}-${a1}`;
           bondMap.set(key, order);
@@ -84,34 +83,32 @@ export function parse_mmd(mmd_text: string): TypedMolecule[] {
       // Formal charge (not stored, just consume)
       cursor++;
 
-      // Partial charge
-      const pchg = parseFloat(parts[cursor++]);
-      partial_charges.push(pchg);
+      // Partial charge (not stored, just consume)
+      cursor++;
 
-      // Derive element from MMFF94 type
-      const typeDef = ATOM_TYPES[mmff_type];
-      const element = typeDef ? typeDef.element : '?';
+      // Extract element from the atom name (last several fields).
+      // The atom name typically starts with the molecule prefix followed
+      // by the element symbol and index, e.g. "FORM C1" → "C".
+      const nameFields = parts.slice(cursor);
+      let element = '?';
+      for (const field of nameFields) {
+        const match = field.match(/^([A-Z][a-z]?)\d*$/);
+        if (match) { element = match[1]; break; }
+      }
 
       atoms.push({ index: a, element, x, y, z });
-      atom_types.push(mmff_type);
     }
 
     if (atoms.length === 0) continue;
 
     // Build bond list
-    const bonds: TypedMolecule['bonds'] = [];
+    const bonds: Bond[] = [];
     for (const [key, order] of bondMap) {
       const [a1, a2] = key.split('-').map(Number);
       bonds.push({ atom1: a1, atom2: a2, bond_order: order });
     }
 
-    molecules.push({
-      name: code,
-      atoms,
-      bonds,
-      atom_types,
-      partial_charges,
-    });
+    molecules.push({ name: code, atoms, bonds });
   }
 
   return molecules;

@@ -15,12 +15,6 @@ describe('MMD Parser', () => {
     expect(mol.name).toBe('AGLYSL01');
     expect(mol.atoms.length).toBe(10);
     expect(mol.bonds.length).toBeGreaterThan(0);
-    expect(mol.atom_types.length).toBe(10);
-    expect(mol.partial_charges?.length).toBe(10);
-
-    // First atom: should be a carbon (type 3, carbonyl C)
-    expect(mol.atom_types[0]).toBe(3);
-    expect(mol.atoms[0].element).toBe('C');
   });
 
   it('parses second molecule (AMHTAR01)', () => {
