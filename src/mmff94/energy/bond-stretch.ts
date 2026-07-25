@@ -17,8 +17,8 @@
  * This is the standard harmonic oscillator convention E = ½k·Δr².
  * The k_b values in the MMFF94 parameter table are ordinary force
  * constants (mdyn/Å); the ½ is applied here in the formula, not baked
- * into the stored value. OpenBabel stores the same k_b and applies the
- * ½ at report time (forcefieldmmff94.cpp:183).
+ * into the stored value. The parameter file stores the full k_b; the
+ * ½ is applied at formula time per Halgren's definition.
  */
 
 import type { TypedMolecule } from '../../types';
