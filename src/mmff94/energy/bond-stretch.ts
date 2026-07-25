@@ -12,6 +12,14 @@
  *   r₀   = equilibrium bond length in Å
  *   cs   = cubic stretch constant = −2 Å⁻¹
  *   143.9325 = unit conversion factor: (mdyn/Å) → (kcal/mol)/Å²
+ *
+ * Note: there is no ½ factor in front of k_b. The force constants in the
+ * MMFF94 parameter tables are already the full (non-half) values, consistent
+ * with Halgren's definition. The ½ appears only in force fields that follow
+ * the MM2 convention (UFF, GAFF) where E = ½kΔ². MMFF94 instead uses
+ * E = kΔ² with the same k, effectively doubling the contribution relative
+ * to MM2 for an identical Δr and nominal k_b. OpenBabel applies the ½ at
+ * report time via its MM2-style output layer (forcefieldmmff94.cpp:183).
  */
 
 import type { TypedMolecule } from '../../types';
