@@ -81,10 +81,35 @@ describe('Halgren MMFF94 suite validation', () => {
       `  Torsion         ${ref.torsion.toFixed(5).padStart(10)}  ${got.torsion.toFixed(5).padStart(10)}  ${stat(got.torsion, ref.torsion)}`,
       `  VDW             ${ref.vdw.toFixed(5).padStart(10)}  ${got.van_der_waals.toFixed(5).padStart(10)}  ${stat(got.van_der_waals, ref.vdw)}`,
       `  Electrostatic   ${ref.elec.toFixed(5).padStart(10)}  ${got.electrostatic.toFixed(5).padStart(10)}  STUB`,
-      `  OOP             ${ref.oop.toFixed(5).padStart(10)}  ${got.out_of_plane.toFixed(5).padStart(10)}  STUB`,
+      `  OOP             ${ref.oop.toFixed(5).padStart(10)}  ${got.out_of_plane.toFixed(5).padStart(10)}  ${stat(got.out_of_plane, ref.oop)}`,
       `  ───────────────────────────────────────────────────`,
       `  TOTAL           ${ref.total.toFixed(5).padStart(10)}  ${got.total.toFixed(5).padStart(10)}`,
     ];
     console.log(lines.join('\n'));
+  });
+
+  it('out-of-plane term matches BatchMin on molecules with complete typing', () => {
+    // The oop term is validated against Halgren's own BatchMin energies.
+    // These molecules are chosen because our atom typing reproduces the
+    // reference types exactly, so the oop comparison isolates the term
+    // itself — the residual differences elsewhere in the suite are atom
+    // typing gaps, not oop errors. Several match to ~1e-3 kcal/mol.
+    const cases: [string, number][] = [
+      ['DADDAN', 0.05],     // exact match (Δ ≈ 0.0000)
+      ['GIDJUY', 0.05],     // exact match (Δ ≈ 0.0000)
+      ['VEJWOW', 0.05],     // exact match (Δ ≈ 0.0003)
+      ['DIKGAF', 0.05],     // exact match (Δ ≈ 0.001)
+      ['FAXVAB', 0.05],
+      ['GEXGIZ', 0.05],
+      ['VIRBON', 0.05],
+      ['AMHTAR01', 0.05],   // Δ ≈ 0.02 — ester/carboxyl pyramidalization
+    ];
+    for (const [code, tol] of cases) {
+      const raw = molecules.find(m => m.name === code)!;
+      const typed = assign_atom_types(raw);
+      const ref = refEnergies.get(code)!;
+      const got = calc_energy(typed);
+      expect(Math.abs(got.out_of_plane - ref.oop)).toBeLessThan(tol);
+    }
   });
 });

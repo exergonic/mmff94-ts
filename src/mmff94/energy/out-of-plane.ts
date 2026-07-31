@@ -1,61 +1,126 @@
 /**
  * Out-of-plane bending energy.
  *
- * MMFF94 uses a dedicated out-of-plane bending term for sp²-hybridized
- * (trigonal planar) centers, rather than the "improper torsion" approach
- * used by UFF and GAFF. These are NOT the same thing:
+ * Halgren1996, eq. (6):
  *
- *   An improper torsion (UFF/GAFF) treats the oop deformation as a
- *   dihedral rotation, which couples it with the true torsion term.
- *
- *   MMFF94's oop term is a PURE out-of-plane bending — it measures
- *   the distance of the central atom from the plane defined by its
- *   three substituents, independent of any dihedral rotation.
- *
- *   E_oop = 0.043844 * k_oop/2 * χ²
+ *   E_oop = 0.043844 · (k_oop / 2) · χ²
  *
  * where:
- *   k_oop  = out-of-plane force constant
- *   χ      = out-of-plane deformation angle (degrees)
- *           (the angle between the vector from the central atom to
- *            any one substituent and the plane defined by the other
- *            two substituents and the central atom)
+ *   k_oop  = out-of-plane force constant (mdyn·Å/rad²)
+ *   χ      = Wilson out-of-plane angle (degrees) between the bond j→l
+ *            and the plane through (i, j, k) — see wilson_oop_angle()
  *   0.043844 = unit conversion factor: same as angle bending
  *
- * This term applies to:
- *   - Carbonyl carbon (C=O)
- *   - Olefinic carbon (C=C, both sp² carbons)
- *   - Aromatic carbon (in benzene rings)
- *   - Trigonal planar nitrogen (amide N, pyridine N)
- *   - Trigonal planar oxygen (carbonyl-like? — check parameter table)
+ * MMFF94 uses this dedicated term for TRICOORDINATE centers, not the
+ * "improper torsion" approach used by UFF and GAFF. Those are NOT the
+ * same thing: an improper torsion treats the deformation as a dihedral
+ * rotation, which couples it with the true torsion term, while the oop
+ * term measures how far one bond sticks out of the plane of the other
+ * two — a pure bending coordinate.
  *
- * The parameter k_oop is indexed by the type of the CENTRAL atom only.
+ * The term is NOT restricted to planar (sp²) centers. The three angles
+ * at a given center all share one force constant, and the angle-bending
+ * term uses reference values that may average less than 120°; together
+ * these let MMFF94 represent pyramidal equilibrium geometries and fit
+ * inversion barriers (Halgren 1996). What actually decides whether a
+ * center contributes is the parameter table:
+ *
+ *   - Planar sp² centers (carbonyl C, vinylic C, aromatic C) have
+ *     substantial positive k_oop that keeps them planar.
+ *   - Amine N (type 8) has k_oop = 0: pyramidalization is handled
+ *     entirely by the angle-bend reference angles.
+ *   - Amide N (type 10) has NEGATIVE k_oop, which actively favors the
+ *     nonplanar geometry — this is why MMFF94 (unlike MMFF94s) gives
+ *     pyramidal delocalized trigonal nitrogens.
+ *   - Tetravalent atoms (e.g. alkane C) have no oop parameters at all.
+ *
+ * The force constant is keyed by the central atom type AND the three
+ * substituent types (key i-j-k-l, central j in the second position).
+ * The three substituent types are interchangeable — the same k applies
+ * to all three angles at the center — so the lookup matches the sorted
+ * multiset of substituent types, falling back to the per-central-type
+ * wildcard entry ("0-j-0-0") when no specific entry exists.
  */
 
 import type { TypedMolecule } from '../../types';
+import { OOP_PARAMS } from '../parameters';
+import { wilson_oop_angle, Vec3 } from '../../utils/vector';
+
+const OOP_UNIT = 0.043844; // (mdyn·Å/rad²)·deg² → kcal/mol, same as angle bending
+
+/**
+ * Normalized k_oop lookup, built once from the parameter table.
+ *
+ * Keys are "centralType:peripheralTypes" with the three peripheral
+ * types sorted, so the lookup is order-independent in the substituents.
+ * The wildcard defaults ("0-j-0-0") normalize to "j:0-0-0". First entry
+ * in file order wins; the table carries no duplicate multisets, so this
+ * only matters for robustness against future parameter edits.
+ */
+const OOP_LOOKUP: Map<string, number> = (() => {
+  const map = new Map<string, number>();
+  for (const [key, params] of Object.entries(OOP_PARAMS)) {
+    const [i, j, k, l] = key.split('-').map(Number);
+    const sorted = [i, k, l].sort((a, b) => a - b).join('-');
+    const norm_key = `${j}:${sorted}`;
+    if (!map.has(norm_key)) map.set(norm_key, params.k_oop);
+  }
+  return map;
+})();
+
+function lookup_oop_k(central_type: number, neighbor_types: number[]): number | undefined {
+  const sorted = [...neighbor_types].sort((a, b) => a - b).join('-');
+  const exact = OOP_LOOKUP.get(`${central_type}:${sorted}`);
+  if (exact !== undefined) return exact;
+  return OOP_LOOKUP.get(`${central_type}:0-0-0`);
+}
 
 /**
  * Calculate the total out-of-plane bending energy.
  *
- * Evaluated for every sp² center where the central atom has exactly
- * three bonded neighbors.
+ * Evaluated for every tri-coordinate center (exactly three bonded
+ * neighbors). Each center contributes three Wilson angles — one for
+ * each substituent taking its turn as the out-of-plane atom l, with
+ * the plane defined by the other two — all sharing one k_oop.
  */
 export function calc_oop_energy(molecule: TypedMolecule): number {
-  // TODO: implement out-of-plane bending energy.
-  //
-  // For each atom j (the central atom) with exactly 3 bonded neighbors
-  // (i, k, l):
-  //   1. Check if atom j's type is a known sp² center:
-  //      - Look at the atom type, or check by element and coordination.
-  //   2. Compute χ: the oop deformation angle.
-  //      - Let (i, k, l) be the three neighbors of j.
-  //      - Compute the plane through (i, k, l).
-  //      - Compute the angle between the normal of that plane and the
-  //        vector from the plane's centroid to j.
-  //      - Alternatively: the Wilson out-of-plane angle.
-  //   3. Look up k_oop from OOP_PARAMS by atom type of j.
-  //   4. Accumulate: E += 0.043844 * k_oop/2 * χ².
-  //
-  // Return the sum in kcal/mol.
-  return 0.0;
+  let total_energy = 0.0;
+
+  // Build adjacency list
+  const adj: number[][] = Array.from({ length: molecule.atoms.length }, () => []);
+  for (const bond of molecule.bonds) {
+    adj[bond.atom1].push(bond.atom2);
+    adj[bond.atom2].push(bond.atom1);
+  }
+
+  for (let j = 0; j < molecule.atoms.length; j++) {
+    const neighbors = adj[j];
+    if (neighbors.length !== 3) continue;
+
+    const [a, c, d] = neighbors;
+    const tj = molecule.atom_types[j];
+
+    const k_oop = lookup_oop_k(tj, [
+      molecule.atom_types[a],
+      molecule.atom_types[c],
+      molecule.atom_types[d],
+    ]);
+    if (k_oop === undefined) continue;
+
+    const posJ: Vec3 = [molecule.atoms[j].x, molecule.atoms[j].y, molecule.atoms[j].z];
+    const posA: Vec3 = [molecule.atoms[a].x, molecule.atoms[a].y, molecule.atoms[a].z];
+    const posC: Vec3 = [molecule.atoms[c].x, molecule.atoms[c].y, molecule.atoms[c].z];
+    const posD: Vec3 = [molecule.atoms[d].x, molecule.atoms[d].y, molecule.atoms[d].z];
+
+    // The three Wilson angles at j: each substituent takes a turn as
+    // the out-of-plane atom, with the plane through j and the other two.
+    const chi1 = wilson_oop_angle(posA, posJ, posC, posD);
+    const chi2 = wilson_oop_angle(posD, posJ, posC, posA);
+    const chi3 = wilson_oop_angle(posA, posJ, posD, posC);
+
+    total_energy +=
+      OOP_UNIT * (k_oop / 2.0) * (chi1 * chi1 + chi2 * chi2 + chi3 * chi3);
+  }
+
+  return total_energy;
 }

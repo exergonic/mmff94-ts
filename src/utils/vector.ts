@@ -104,3 +104,34 @@ export function rotate_around_axis(
 
   return vec_add(vec_add(term1, term2), term3);
 }
+
+/**
+ * Wilson out-of-plane angle in degrees for the tri-coordinate center j.
+ *
+ * χ is the angle between the bond j→l and the plane through (i, j, k),
+ * i.e. how far the bond to l sticks out of the plane of the other two.
+ * χ = 0 for a planar center, ±90° when j→l is perpendicular to the plane.
+ *
+ * The sine of χ is the projection of the unit bond vector j→l onto the
+ * unit normal of the plane; the sign records which side of the plane l
+ * sits on (energy only needs χ², but gradients need the sign).
+ *
+ * This is the angle used by Halgren's out-of-plane term (eq. 6), which
+ * is a genuine bending coordinate — distinct from an improper torsion,
+ * which measures a rotation about the j→l axis instead.
+ */
+export function wilson_oop_angle(
+  i: Vec3, j: Vec3, k: Vec3, l: Vec3
+): number {
+  const ji = vec_normalize(vec_sub(i, j));
+  const jk = vec_normalize(vec_sub(k, j));
+  const jl = vec_normalize(vec_sub(l, j));
+
+  // Unit normal to the plane (i, j, k). Zero if i and k are collinear
+  // with j, in which case every point is "in the plane" and χ = 0.
+  const normal = vec_normalize(vec_cross(ji, jk));
+
+  const sin_chi = vec_dot(normal, jl);
+  // Clamp to [-1, 1] to avoid NaN from floating-point rounding
+  return Math.asin(Math.max(-1, Math.min(1, sin_chi))) * (180.0 / Math.PI);
+}
