@@ -21,7 +21,8 @@
  *   γ₃ = 0°    →  1 + cos 3τ       (n=3)
  *
  * Convention: τ = 0° when i−j and k−l bonds are eclipsed (cis).
- * τ = 180° when staggered (trans). Sign follows IUPAC right-hand rule.
+ * τ = 180° when anti (trans); staggered ethane is ±60° (gauche).
+ * Sign follows IUPAC right-hand rule.
  *
  * Only single bonds (bond_order === 1) are evaluated for torsional
  * strain. Double and triple bonds are kept planar by angle bend and

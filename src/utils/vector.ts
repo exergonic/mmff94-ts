@@ -63,9 +63,11 @@ export function angle_in_radians(b: Vec3, a: Vec3, c: Vec3): number {
 /**
  * Dihedral (torsion) angle in radians for four consecutive atoms i−j−k−l.
  *
- * Returns the angle between the plane (i, j, k) and the plane (j, k, l).
+ * Returns the angle between the plane (i, j, k) and the plane (j, k, l),
+ * measured as a rotation about the j→k axis.
  * Sign follows the right-hand rule about the j→k axis.
- * τ = 0 when i−j and k−l are eclipsed (cis), τ = π when staggered (trans).
+ * τ = 0 when i−j and k−l are eclipsed (cis), τ = ±π/3 for gauche
+ * (staggered ethane), τ = π when anti (trans).
  */
 export function dihedral_angle(
   i: Vec3, j: Vec3, k: Vec3, l: Vec3
@@ -75,7 +77,9 @@ export function dihedral_angle(
   const v3 = vec_sub(l, k);
 
   const n1 = vec_cross(v1, v2);
-  const n2 = vec_cross(v2, v3);
+  // Both normals must be built with the same handedness (v3 × v2, not
+  // v2 × v3) or every dihedral comes out shifted by 180°.
+  const n2 = vec_cross(v3, v2);
 
   const n1_norm = vec_normalize(n1);
   const n2_norm = vec_normalize(n2);

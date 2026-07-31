@@ -1,14 +1,20 @@
 /**
- * mmff94-ts quickstart — complete pipeline from SDF to minimized energy.
+ * mmff94-ts quickstart — the full pipeline from SDF to per-term MMFF94 energy.
  *
  * Run with: npx tsx examples/quickstart.ts
  * (Requires tsx: npm install -g tsx or npx tsx)
+ *
+ * Geometry optimization is not shown yet: the optimizers (optimize_lbfgs,
+ * optimize_steepest_descent) land in Phase 6, and the pipeline will extend
+ * to minimization once they do.
  */
 
 import { parse_sdf, assign_atom_types, compute_bci_charges, calc_energy } from '../src/index';
 
-// A minimal ethane molecule in V2000 MOL format.
-// This is the simplest test case: 2 carbons, 6 hydrogens, one C–C bond.
+// A minimal ethane molecule in V2000 MOL format: 2 carbons, 6 hydrogens,
+// one C–C bond. The geometry is the STAGGERED (gauche 60°) global minimum,
+// MMFF94-optimized — the torsion term is still nonzero here, because
+// MMFF94's H-C-C-H Fourier terms (V1/V2) don't vanish at 60°.
 const ETHANE_SDF = `ethane
   produced by Avogadro 07242607333D; MMFF94 optimized
 
@@ -41,6 +47,7 @@ function main() {
   console.log(`Atom types: ${typed.atom_types.join(', ')}`);
 
   // Step 3: compute partial charges from bond charge increments
+  // (compute_bci_charges is still a stub — charges are zeros until Phase 4)
   compute_bci_charges(typed);
 
   // Step 4: calculate the full MMFF94 energy
