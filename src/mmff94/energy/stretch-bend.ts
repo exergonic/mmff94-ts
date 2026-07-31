@@ -57,9 +57,17 @@ export function calc_stretch_bend_energy(molecule: TypedMolecule): number {
         const sb_params = lookup_param(STRETCH_BEND_PARAMS, [t_min, tj, t_max]);
         if (!sb_params) continue;
 
-        // 2. Look up equilibrium bond lengths from bond parameters
-        const bond_ij = lookup_param(BOND_PARAMS, [t_min, tj]);
-        const bond_kj = lookup_param(BOND_PARAMS, [t_max, tj]);
+        // The table stores terminal types sorted (I ≤ K), so k_sb_IJK
+        // belongs to the bond on the min-type side and k_sb_KJI to the
+        // bond on the max-type side — whichever of i and k that is.
+        const k_ij = ti <= tk ? sb_params.k_sb_IJK : sb_params.k_sb_KJI;
+        const k_kj = ti <= tk ? sb_params.k_sb_KJI : sb_params.k_sb_IJK;
+
+        // 2. Look up equilibrium bond lengths from bond parameters —
+        //    each bond uses its own type pair (sorted), not the angle's
+        //    sorted terminal types.
+        const bond_ij = lookup_param(BOND_PARAMS, [Math.min(ti, tj), Math.max(ti, tj)]);
+        const bond_kj = lookup_param(BOND_PARAMS, [Math.min(tk, tj), Math.max(tk, tj)]);
         if (!bond_ij || !bond_kj) continue;
 
         // 3. Look up equilibrium angle from angle parameters
@@ -80,7 +88,7 @@ export function calc_stretch_bend_energy(molecule: TypedMolecule): number {
         const dr_KJ = r_KJ - bond_kj.r0;
         const d_theta = theta_deg - ang_params.theta0;
 
-        total_energy += 2.51210 * (sb_params.k_sb_IJK * dr_IJ + sb_params.k_sb_KJI * dr_KJ) * d_theta;
+        total_energy += 2.51210 * (k_ij * dr_IJ + k_kj * dr_KJ) * d_theta;
       }
     }
   }

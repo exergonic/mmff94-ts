@@ -57,4 +57,39 @@ describe('Stretch-Bend Energy', () => {
     //            = 2.51210 * 0.0412 * (-10) = -1.0350
     expect(energy).toBeCloseTo(-1.035, 2);
   });
+
+  it('calculates energy for an asymmetric H-C-C angle', () => {
+    // Regression test: the bond r₀ lookups must use each bond's OWN type
+    // pair (sorted). The old code looked up [t_min, tj] and [t_max, tj],
+    // which missed for H-C (types [5,1] stored as '0-1-5') and silently
+    // skipped the angle — ethane's stretch-bend came out 0.0000.
+    //
+    // Parameter '0-1-1-5': k_sb_IJK = 0.227 (min-type side = C, i.e. the
+    // C-C bond), k_sb_KJI = 0.070 (max-type side = H, the C-H bond).
+    // θ₀ = 110.549° for H-C-C (not the 109.608° of C-C-C).
+    // H at 1.193 Å (dr = +0.1), C-C at 1.608 Å (dr = +0.1), θ = 120.549°
+    // (dθ = +10°).
+    // E = 2.51210 * (0.070*0.1 + 0.227*0.1) * 10 = 2.51210 * 0.0297 * 10
+    //   = 0.7461
+    const rCH = 1.093 + 0.1;
+    const rCC = 1.508 + 0.1;
+    const theta_deg = 110.549 + 10.0;
+    const theta_rad = theta_deg * Math.PI / 180;
+
+    const mol: TypedMolecule = {
+      atoms: [
+        { index: 0, element: 'H', x: rCH * Math.cos(theta_rad), y: rCH * Math.sin(theta_rad), z: 0 },
+        { index: 1, element: 'C', x: 0, y: 0, z: 0 },
+        { index: 2, element: 'C', x: rCC, y: 0, z: 0 },
+      ],
+      bonds: [
+        { atom1: 0, atom2: 1, bond_order: 1 },
+        { atom1: 1, atom2: 2, bond_order: 1 },
+      ],
+      atom_types: [5, 1, 1],
+    };
+
+    const energy = calc_stretch_bend_energy(mol);
+    expect(energy).toBeCloseTo(0.7461, 3);
+  });
 });

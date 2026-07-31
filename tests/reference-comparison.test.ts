@@ -59,7 +59,7 @@ describe('All benchmark molecules vs OpenBabel references', () => {
       continue;
     }
 
-    it(`${name}: bond stretch, angle bend, VDW match reference`, () => {
+    it(`${name}: bond stretch, angle bend, stretch-bend, VDW match reference`, () => {
       const sdfText = readFileSync(join(SDF_DIR, sdfFile), 'utf-8');
       const ref = parse_reference_log(refFile);
 
@@ -72,6 +72,11 @@ describe('All benchmark molecules vs OpenBabel references', () => {
       if (Math.abs(ref.angle) > 0.001) {
         expect(Math.abs(energy.angle_bend - ref.angle)).toBeLessThan(0.02);
       }
+      // Regression guard: the stretch-bend bond lookups once used the
+      // angle's sorted terminal types instead of each bond's own pair,
+      // silently skipping every angle with an H on one side (ethane read
+      // 0.0000 instead of -0.00158).
+      expect(Math.abs(energy.stretch_bend - ref.strbnd)).toBeLessThan(0.02);
       expect(Math.abs(energy.van_der_waals - ref.vdw)).toBeLessThan(0.02);
     });
 
