@@ -2,9 +2,20 @@
 
 **Merck Molecular Force Field (MMFF94) — pure TypeScript, zero runtime dependencies.**
 
-Energy evaluation, analytical gradients, and geometry optimization
-for organic molecules, running in the browser or Node.js without
-WebAssembly, native binaries, or external services.
+> ⚠️ **Work in progress — pre-alpha.**
+>
+> The six implemented energy terms (bond stretch, angle bend,
+> stretch-bend, torsion, buffered 14-7 van der Waals, out-of-plane) are
+> validated against OpenBabel `obenergy` logs and Halgren's 753-molecule
+> validation suite. The remaining pieces — the electrostatic (BCI) term,
+> 1-4 scaling, analytical gradients, and geometry optimization — are
+> stubs that return zeros. The public API is not yet stable and may
+> change before 0.1.0. See the [Status](#status) table for the full
+> picture.
+
+Energy evaluation for organic molecules, running in the browser or
+Node.js without WebAssembly, native binaries, or external services.
+Analytical gradients and geometry optimization are in progress.
 
 ## Why
 
@@ -13,11 +24,12 @@ bundles trivially with any web framework, works in sandboxed
 environments (no WASM, no native binaries), and composes naturally
 with the rest of your TypeScript toolchain.
 
-`mmff94-ts` implements the full MMFF94 functional form — including
-the buffered 14-7 van der Waals, bond charge increment electrostatics,
-stretch-bend cross term, and Fourier-series torsion — so you can
-run energy evaluations and geometry optimizations entirely on the
-client side.
+`mmff94-ts` implements the MMFF94 energy functional form — the
+buffered 14-7 van der Waals, stretch-bend cross term, Fourier-series
+torsion, and the rest of the six implemented terms — so you can run
+energy evaluations entirely on the client side. Bond charge increment
+electrostatics, 1-4 scaling, analytical gradients, and geometry
+optimization are still in progress (see [Status](#status)).
 
 ## Status
 
