@@ -43,37 +43,10 @@
  */
 
 import type { TypedMolecule } from '../../types';
-import { OOP_PARAMS } from '../parameters';
+import { OOP_PARAMS, lookup_param } from '../parameters';
 import { wilson_oop_angle, Vec3 } from '../../utils/vector';
 
 const OOP_UNIT = 0.043844; // (mdyn·Å/rad²)·deg² → kcal/mol, same as angle bending
-
-/**
- * Normalized k_oop lookup, built once from the parameter table.
- *
- * Keys are "centralType:peripheralTypes" with the three peripheral
- * types sorted, so the lookup is order-independent in the substituents.
- * The wildcard defaults ("0-j-0-0") normalize to "j:0-0-0". First entry
- * in file order wins; the table carries no duplicate multisets, so this
- * only matters for robustness against future parameter edits.
- */
-const OOP_LOOKUP: Map<string, number> = (() => {
-  const map = new Map<string, number>();
-  for (const [key, params] of Object.entries(OOP_PARAMS)) {
-    const [i, j, k, l] = key.split('-').map(Number);
-    const sorted = [i, k, l].sort((a, b) => a - b).join('-');
-    const norm_key = `${j}:${sorted}`;
-    if (!map.has(norm_key)) map.set(norm_key, params.k_oop);
-  }
-  return map;
-})();
-
-function lookup_oop_k(central_type: number, neighbor_types: number[]): number | undefined {
-  const sorted = [...neighbor_types].sort((a, b) => a - b).join('-');
-  const exact = OOP_LOOKUP.get(`${central_type}:${sorted}`);
-  if (exact !== undefined) return exact;
-  return OOP_LOOKUP.get(`${central_type}:0-0-0`);
-}
 
 /**
  * Calculate the total out-of-plane bending energy.
@@ -100,12 +73,25 @@ export function calc_oop_energy(molecule: TypedMolecule): number {
     const [a, c, d] = neighbors;
     const tj = molecule.atom_types[j];
 
-    const k_oop = lookup_oop_k(tj, [
+    // The three substituents are interchangeable — the same k_oop
+    // applies to all three Wilson angles at the center — so sort their
+    // types before lookup. The table stores each combination once,
+    // keyed i-j-k-l with the central atom second.
+    const sorted = [
       molecule.atom_types[a],
       molecule.atom_types[c],
       molecule.atom_types[d],
-    ]);
-    if (k_oop === undefined) continue;
+    ].sort((x, y) => x - y);
+    let params = lookup_param(OOP_PARAMS, [sorted[0], tj, sorted[1], sorted[2]]);
+
+    // No specific entry: fall back to the per-central-type wildcard
+    // ("0-j-0-0"). This is what applies amine N's explicit zero and
+    // amide N's negative constant to every substituent combination.
+    if (!params) {
+      params = lookup_param(OOP_PARAMS, [0, tj, 0, 0]);
+    }
+    if (!params) continue;
+    const k_oop = params.k_oop;
 
     const posJ: Vec3 = [molecule.atoms[j].x, molecule.atoms[j].y, molecule.atoms[j].z];
     const posA: Vec3 = [molecule.atoms[a].x, molecule.atoms[a].y, molecule.atoms[a].z];

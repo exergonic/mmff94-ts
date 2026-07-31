@@ -239,6 +239,8 @@ def generate_bci():
 # Format: type_i type_j type_k type_l k_oop source [comment]
 # Central atom is type_j. Entries with 0 are wildcards.
 # NOTE: OOP has NO priority column — first field is type_i directly.
+# Emit an explicit priority-0 prefix so the table matches every other
+# table's "priority-type1-..." key convention and lookup_param() works.
 
 def generate_oop():
     lines = parse_par('mmffoop.par')
@@ -254,7 +256,7 @@ def generate_oop():
                 continue
             t1, t2, t3, t4 = parts[0], parts[1], parts[2], parts[3]
             k_oop = parts[4]
-            f.write(f"  '{t1}-{t2}-{t3}-{t4}': {{ k_oop: {value(k_oop)} }},\n")
+            f.write(f"  '0-{t1}-{t2}-{t3}-{t4}': {{ k_oop: {value(k_oop)} }},\n")
         f.write("};\n")
     print(f"  [write] out-of-plane.ts ({len(lines)} entries)")
 
