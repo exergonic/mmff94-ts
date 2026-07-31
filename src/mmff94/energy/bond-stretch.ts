@@ -3,7 +3,7 @@
  *
  * Halgren1996, eq. (2):
  *
- *   E_bond = 143.9325 · k_b · (r − r₀)²
+ *   E_bond = 143.9325 · k_b/2 · (r − r₀)²
  *            · [1 + cs · (r − r₀) + 7/12 · cs² · (r − r₀)²]
  *
  * where:
@@ -13,12 +13,6 @@
  *   cs   = cubic stretch constant = −2 Å⁻¹
  *   143.9325 = unit conversion factor: (mdyn/Å) → (kcal/mol)/Å²
  *
- * Note: the factor ½ appears explicitly in Halgren's eq. (2) as k_b/2.
- * This is the standard harmonic oscillator convention E = ½k·Δr².
- * The k_b values in the MMFF94 parameter table are ordinary force
- * constants (mdyn/Å); the ½ is applied here in the formula, not baked
- * into the stored value. The parameter file stores the full k_b; the
- * ½ is applied at formula time per Halgren's definition.
  */
 
 import type { TypedMolecule } from '../../types';
@@ -48,7 +42,7 @@ export function calc_bond_stretch_energy(molecule: TypedMolecule): number {
     if (params) {
       const { k_b, r0 } = params;
       const dr = r - r0;
-      const cs = -2.0; // cubic stretch constant, Halgren1996 eq. (2)
+      const cs = -2.0;
 
       // Halgren1996 eq. (2): E = 143.9325 · (k_b/2) · Δr² · [1 + cs·Δr + 7/12·cs²·Δr²]
       const half_kb = 0.5 * k_b;
