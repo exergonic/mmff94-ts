@@ -82,7 +82,6 @@ describe('All benchmark molecules vs OpenBabel references', () => {
       const typed = assign_atom_types(mol);
       const energy = calc_energy(typed);
 
-      // Determine which of our atom types are wrong (can't match ref)
       const check = (v: number, r: number, tol: number) =>
         Math.abs(v - r) < tol ? '✓' : `✗ (${(v / r).toFixed(2)}×)` ;
 

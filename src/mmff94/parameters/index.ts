@@ -9,7 +9,7 @@
  * Use the lookup_param() helper for correct priority-ordered lookup.
  */
 
-export { lookup_param, lookup_all } from './lookup';
+export { lookup_param } from './lookup';
 export { ATOM_TYPES } from './atom-types';
 export { BOND_PARAMS } from './bond';
 export { ANGLE_PARAMS } from './angle';

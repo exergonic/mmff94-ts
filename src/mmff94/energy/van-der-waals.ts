@@ -94,14 +94,14 @@ export function calc_vdw_energy(molecule: TypedMolecule): number {
       const R_j = param_j.A_i * Math.pow(param_j.alpha_i, 0.25);
       const sqrt_alpha_over_N_j = Math.sqrt(param_j.alpha_i / param_j.N_i);
 
-      const isDonor = param_i.DA === 1 || param_j.DA === 1;
-      const isAcceptor = param_i.DA === 2 || param_j.DA === 2;
+      const is_donor = param_i.DA === 1 || param_j.DA === 1;    // DA flag: 1 = H-bond donor
+      const is_acceptor = param_i.DA === 2 || param_j.DA === 2; //          2 = H-bond acceptor
 
       // Combined radius and well depth
       let R_ij: number;
       let epsilon_ij: number;
 
-      if (isDonor && isAcceptor) {
+      if (is_donor && is_acceptor) {
         // Hydrogen bond donor-acceptor: arithmetic mean, epsilon halved,
         // R_ij further scaled by 0.8
         const R_ij_unscaled = 0.5 * (R_i + R_j);

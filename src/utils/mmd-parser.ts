@@ -1,13 +1,12 @@
 /**
- * Parse an MMFF94 Validation Suite .mmd (MacroModel/BatchMin dat) file
- * into TypedMolecule objects with pre-assigned MMFF94 types and charges.
+ * Parse a MacroModel/BatchMin .mmd structure file into Molecule objects.
  *
  * Layout per molecule:
  *   Header:  N    [CODE,N,N,S,k] FF=mmff EM=default ...
- *   Atoms:   mmff_type  nbr1 bo1  nbr2 bo2  ...  x y z  label idx fchg pchg name serial
+ *   Atoms:   bmin_type  nbr1 bo1  nbr2 bo2  ...  x y z  label idx fchg pchg name serial
  *
  * Each atom line:
- *   1      MMFF94 type (integer)
+ *   1      internal BatchMin type index — NOT the canonical MMFF94 type, skipped
  *   2-13   6 pairs of (neighbor_idx, bond_order), "0 0" = unused
  *   14-16  x, y, z coordinates
  *   17     label (e.g. "1XA")

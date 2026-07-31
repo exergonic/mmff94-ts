@@ -39,20 +39,17 @@ export function calc_bond_stretch_energy(molecule: TypedMolecule): number {
     const t_max = Math.max(t1, t2);
 
     const params = lookup_param(BOND_PARAMS, [t_min, t_max]);
-    if (params) {
-      const { k_b, r0 } = params;
-      const dr = r - r0;
-      const cs = -2.0;
+    if (!params) continue;
 
-      // Halgren1996 eq. (2): E = 143.9325 · (k_b/2) · Δr² · [1 + cs·Δr + 7/12·cs²·Δr²]
-      const half_kb = 0.5 * k_b;
-      const harmonic = 143.9325 * half_kb * dr * dr;
-      const anharmonic = 1.0 + cs * dr + (7.0 / 12.0) * cs * cs * dr * dr;
-      total_energy += harmonic * anharmonic;
-    } else {
-      // Fallback: If no parameters exist, we could add a zero contribution or throw an error.
-      // For now, we just skip (add 0).
-    }
+    const { k_b, r0 } = params;
+    const dr = r - r0;
+    const cs = -2.0;
+
+    // Halgren1996 eq. (2): E = 143.9325 · (k_b/2) · Δr² · [1 + cs·Δr + 7/12·cs²·Δr²]
+    const half_k_b = 0.5 * k_b;
+    const harmonic = 143.9325 * half_k_b * dr * dr;
+    const anharmonic = 1.0 + cs * dr + (7.0 / 12.0) * cs * cs * dr * dr;
+    total_energy += harmonic * anharmonic;
   }
 
   return total_energy;

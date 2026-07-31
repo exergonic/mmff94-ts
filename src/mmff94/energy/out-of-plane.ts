@@ -100,12 +100,12 @@ export function calc_oop_energy(molecule: TypedMolecule): number {
 
     // The three Wilson angles at j: each substituent takes a turn as
     // the out-of-plane atom, with the plane through j and the other two.
-    const chi1 = wilson_oop_angle(posA, posJ, posC, posD);
-    const chi2 = wilson_oop_angle(posD, posJ, posC, posA);
-    const chi3 = wilson_oop_angle(posA, posJ, posD, posC);
+    const chi_a = wilson_oop_angle(posD, posJ, posC, posA);  // a out of plane (d, c)
+    const chi_c = wilson_oop_angle(posA, posJ, posD, posC);  // c out of plane (a, d)
+    const chi_d = wilson_oop_angle(posA, posJ, posC, posD);  // d out of plane (a, c)
 
     total_energy +=
-      OOP_UNIT * (k_oop / 2.0) * (chi1 * chi1 + chi2 * chi2 + chi3 * chi3);
+      OOP_UNIT * (k_oop / 2.0) * (chi_a * chi_a + chi_c * chi_c + chi_d * chi_d);
   }
 
   return total_energy;

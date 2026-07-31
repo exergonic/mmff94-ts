@@ -24,7 +24,6 @@
  */
 
 import type { Molecule, EnergyComponents, OptimizationResult } from '../types';
-import { vec_scale } from '../utils/vector';
 
 export interface SteepestDescentOptions {
   max_iterations?: number;

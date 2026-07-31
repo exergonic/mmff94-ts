@@ -44,6 +44,7 @@ export function parse_sdf(sdf_text: string): Molecule {
   // Parse atom block: lines 4 through 4 + num_atoms - 1
   const atoms: Atom[] = [];
   const atom_start = 4;
+  let next_index = 0;   // real atom counter — a skipped line must not shift indices
   for (let i = 0; i < num_atoms; i++) {
     const line = lines[atom_start + i];
     if (!line || line.length < 34) continue;
@@ -53,24 +54,12 @@ export function parse_sdf(sdf_text: string): Molecule {
     const z = parse_float(line, 20, 30);
     const element = line.substring(31, 34).trim();
 
-    if (!element) continue;      // No element symbol — malformed line, skip
-    if (element === 'H' || element === 'C' || element === 'N' || element === 'O' ||
-        element === 'S' || element === 'P' || element === 'F' || element === 'Cl' ||
-        element === 'Br' || element === 'I' || element === 'Si' || element === 'B' ||
-        element === 'Fe' || element === 'Cu' || element === 'Zn' || element === 'Mn') {
-      // Known element — proceed
-    } else if (element.length === 1 && element >= 'A' && element <= 'Z') {
-      // Single uppercase letter that isn't in our list — still a valid element
-    } else if (element.length === 2 && element[0] >= 'A' && element[0] <= 'Z' &&
-               element[1] >= 'a' && element[1] <= 'z') {
-      // Two-character element symbol — still valid
-    } else {
-      // Not a recognizable element symbol — skip the atom (malformed line)
-      continue;
-    }
+    // Accept any valid element symbol (one uppercase letter, optionally
+    // followed by a lowercase one); anything else is a malformed line.
+    if (!element || !/^[A-Z][a-z]?$/.test(element)) continue;
 
     atoms.push({
-      index: i,
+      index: next_index++,
       element,
       x: isNaN(x) ? 0 : x,
       y: isNaN(y) ? 0 : y,

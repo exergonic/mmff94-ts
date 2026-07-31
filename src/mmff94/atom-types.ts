@@ -49,6 +49,7 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
     // Check bond orders going out from this atom
     const has_double = neighbors.some(nb => nb.order === 2);
     const has_triple = neighbors.some(nb => nb.order === 3);
+    // V2000 stores aromatic bonds as order 4; the SDF parser passes them through
     const has_aromatic = neighbors.some(nb => nb.order >= 4);
     const double_nbrs = neighbors.filter(nb => nb.order === 2);
 
@@ -167,13 +168,9 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
         if (has_double) {
           // Carbonyl oxygen O=C → type 7 (O=C)
           atom_types[i] = 7;
-        } else if (n_neighbors === 2) {
-          // Divalent oxygen (ether, alcohol, water) → type 6 (OR)
-          atom_types[i] = 6;
-        } else if (n_neighbors === 1) {
-          // Terminal oxygen, often anionic or radical — check later
-          atom_types[i] = 6;
         } else {
+          // Ether, alcohol, water, and terminal O are all type 6 for now;
+          // the carboxylate (32) and oxide (35) distinctions are not yet typed.
           atom_types[i] = 6;
         }
         break;
@@ -242,6 +239,7 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
 
       // ── Silicon, phosphorus ─────────────────────────────────────────
       case 'Si': atom_types[i] = 19; break;
+      // All P → 26 for now (placeholder; phosphate P, type 25, not yet handled)
       case 'P':  atom_types[i] = 26; break;
 
       default:
