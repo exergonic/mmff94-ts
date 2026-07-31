@@ -12,7 +12,7 @@
  *   the distance of the central atom from the plane defined by its
  *   three substituents, independent of any dihedral rotation.
  *
- *   E_oop = 0.043844 * k_oop * χ²
+ *   E_oop = 0.043844 * k_oop/2 * χ²
  *
  * where:
  *   k_oop  = out-of-plane force constant
@@ -54,7 +54,7 @@ export function calc_oop_energy(molecule: TypedMolecule): number {
   //        vector from the plane's centroid to j.
   //      - Alternatively: the Wilson out-of-plane angle.
   //   3. Look up k_oop from OOP_PARAMS by atom type of j.
-  //   4. Accumulate: E += 0.043844 * k_oop * χ².
+  //   4. Accumulate: E += 0.043844 * k_oop/2 * χ².
   //
   // Return the sum in kcal/mol.
   return 0.0;
