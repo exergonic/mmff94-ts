@@ -52,6 +52,7 @@ export function optimize_lbfgs(
   calc_energy_gradient: (mol: Molecule) => { energy: EnergyComponents; gradient: number[][] },
   options?: LbfgsOptions
 ): OptimizationResult {
+  void options;  // part of the Phase 6 API; unused until the algorithm lands
   // TODO: implement the L-BFGS algorithm.
   //
   // This is a textbook implementation following Nocedal & Wright.

@@ -41,6 +41,7 @@ export function optimize_steepest_descent(
   calc_energy_gradient: (mol: Molecule) => { energy: EnergyComponents; gradient: number[][] },
   options?: SteepestDescentOptions
 ): OptimizationResult {
+  void options;  // part of the Phase 6 API; unused until the algorithm lands
   // TODO: implement steepest descent with Armijo line search.
   //
   // For each iteration:

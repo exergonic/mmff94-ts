@@ -36,6 +36,8 @@ export function build_pair_list(
   molecule: Molecule,
   cutoff: number = 12.0
 ): PairInfo[] {
+  void molecule;  // accepted for the planned API; unused until implemented
+  void cutoff;
   // TODO: implement pair list generation.
   //
   // Steps:
@@ -59,6 +61,7 @@ export function build_pair_list(
  * (1-4 pairs). Used for 1-4 scaling in total.ts.
  */
 export function find_1_4_pairs(molecule: Molecule): Set<string> {
+  void molecule;  // accepted for the planned API; unused until implemented
   // Use a BFS from each atom to depth 3. Atoms reached at exactly
   // depth 3 are 1-4 pairs.
   // Return a Set of "i-j" strings (with i < j) for O(1) lookup.

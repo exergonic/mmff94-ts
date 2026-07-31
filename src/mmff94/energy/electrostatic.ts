@@ -42,6 +42,7 @@ import type { TypedMolecule } from '../../types';
  * electrostatic energy; the 0.75 scaling factor is applied in total.ts.
  */
 export function calc_electrostatic_energy(molecule: TypedMolecule): number {
+  void molecule;  // accepted for the planned API; unused until implemented
   // TODO: implement electrostatic energy.
   //
   // This function must run AFTER compute_bci_charges() fills in

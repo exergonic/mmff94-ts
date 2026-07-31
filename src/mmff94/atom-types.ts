@@ -362,6 +362,7 @@ function estimate_ring_size(
   adj: { nbr: number; order: number }[][],
   molecule: Molecule,
 ): number {
+  void molecule;  // accepted for the planned API; unused until implemented
   // BFS limited to depth 6
   const visited = new Set<number>();
   const queue: { node: number; depth: number; parent: number }[] = [];
