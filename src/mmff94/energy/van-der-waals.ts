@@ -34,7 +34,8 @@
  * arithmetic mean and is further scaled by 0.8; ε is halved.
  *
  * 1-4 SCALING: vdW is multiplied by 0.5 for atoms exactly three bonds
- * apart. This is applied in total.ts, not here.
+ * apart. To be applied in total.ts (not yet implemented — see its TODO),
+ * not here.
  */
 
 import type { TypedMolecule } from '../../types';

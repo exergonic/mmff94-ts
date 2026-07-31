@@ -4,6 +4,10 @@
  * Limited-memory Broyden–Fletcher–Goldfarb–Shanno algorithm, following
  * the description in Nocedal & Wright (Numerical Optimization, 2nd ed.).
  *
+ * STATUS: NOT YET IMPLEMENTED — returns the input geometry with
+ * converged: false (placeholder). The algorithm outline below is the
+ * design for the real implementation (AGENTS.md Phase 6).
+ *
  * L-BFGS is a quasi-Newton method that builds an approximation of the
  * inverse Hessian from a limited history (m = 5 to 20) of gradient
  * and position changes. It requires only the energy and gradient at

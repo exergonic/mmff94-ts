@@ -7,15 +7,10 @@
  * The gradient is the negative of the force on each atom:
  *   F_i = −∇_i E
  *
- * Each energy term contributes its own analytical derivative.
- * The gradient files in this directory mirror the energy/ layout:
- * one file per term, each exporting a function that returns the
- * gradient contribution for that term.
- *
- * Analytical gradients are derived from the same functional forms
- * documented in the corresponding energy/ files. They are
- * cross-checked against finite-difference calculations in the
- * test suite (tests/gradient.test.ts).
+ * STATUS: NOT YET IMPLEMENTED — returns a zero gradient for every atom.
+ * The plan (AGENTS.md Phase 5) is one gradient file per energy term,
+ * mirroring the energy/ layout, with finite-difference cross-checks in
+ * tests/gradient.test.ts.
  */
 
 import type { TypedMolecule } from '../../types';
@@ -33,9 +28,6 @@ export function calc_gradient(molecule: TypedMolecule): number[][] {
   // For each energy term:
   //   1. Call the corresponding gradient function (to be created).
   //   2. Sum the contributions into the per-atom gradient array.
-  //
-  // The gradient functions follow the same pattern as the energy functions:
-  // one function per term, same signature, returning the gradient contribution.
   //
   // Return: gradient[i] = [dE/dx_i, dE/dy_i, dE/dz_i].
   return molecule.atoms.map(() => [0, 0, 0]);

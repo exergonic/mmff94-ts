@@ -26,7 +26,8 @@
  * the charge computation lives in src/mmff94/atom-types.ts.
  *
  * 1-4 SCALING: For atoms exactly three bonds apart, the electrostatic
- * energy is multiplied by 0.75. Applied in total.ts.
+ * energy is multiplied by 0.75. To be applied in total.ts (not yet
+ * implemented — see its TODO).
  */
 
 import type { TypedMolecule } from '../../types';

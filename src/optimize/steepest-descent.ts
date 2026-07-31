@@ -5,6 +5,10 @@
  * (e.g., for highly strained starting geometries). It moves each
  * atom in the direction of the negative gradient (i.e., downhill).
  *
+ * STATUS: NOT YET IMPLEMENTED — returns the input geometry with
+ * converged: false (placeholder). The description below is the
+ * design for the real implementation (AGENTS.md Phase 6).
+ *
  *   x_{k+1} = x_k − α · ∇E(x_k)
  *
  * The step size α is determined by an Armijo backtracking line search:

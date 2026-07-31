@@ -1,7 +1,7 @@
 /**
  * Total MMFF94 energy.
  *
- * Sums all seven energy terms and applies 1-4 scaling.
+ * Sums all seven energy terms.
  *
  * 1-4 SCALING applies to atoms that are exactly three bonds apart:
  *   - Van der Waals:      multiply by 0.5
@@ -13,11 +13,12 @@
  * and electrostatic energies would be double-counted for atoms
  * separated by three bonds.
  *
- * The scaling is applied HERE rather than in the individual term
- * functions so that each term function is simple and testable in
- * isolation. The individual term functions calculate the FULL
- * (unscaled) energy for every pair; total.ts decides which pairs
- * get scaled.
+ * STATUS: the scaling is NOT yet applied — all terms are summed
+ * unscaled (see TODO below). When it lands, it will be applied HERE
+ * rather than in the individual term functions, so that each term
+ * function is simple and testable in isolation: the individual term
+ * functions calculate the FULL (unscaled) energy for every pair, and
+ * total.ts decides which pairs get scaled.
  */
 
 import type { TypedMolecule, EnergyComponents } from '../../types';
@@ -47,13 +48,13 @@ export function calc_energy(molecule: TypedMolecule): EnergyComponents {
   // TODO: apply 1-4 scaling to van_der_waals and electrostatic.
   // This requires identifying 1-4 atom pairs (atoms exactly 3 bonds apart)
   // and multiplying the appropriate pairwise contributions by 0.5 (vdW)
-  // or 0.75 (electrostatic).**
+  // or 0.75 (electrostatic).
   // TODO: stretch-bend interactions are omitted when Halgren's equation 4
-  // is used to calculate the angle bending energy. In angle-bend.ts:72, we use
-  // equation 4 if the angle is greater than 150 degrees. Keep track of which
-  // angles use equation 4 and which use equation 3, OR use same condition for
-  // both equations. If angle is greater than 150 degrees, simply omit stretch-bend
-  // interactions.
+  // is used to calculate the angle bending energy. In angle-bend.ts, we use
+  // equation 4 when the reference angle theta0 > 150 degrees. Keep track of
+  // which angles use equation 4 and which use equation 3, OR use the same
+  // condition for both equations. If the angle uses equation 4, simply omit
+  // stretch-bend interactions for it.
 
   const total = bond_stretch + angle_bend + stretch_bend +
                 torsion + van_der_waals + electrostatic + out_of_plane;

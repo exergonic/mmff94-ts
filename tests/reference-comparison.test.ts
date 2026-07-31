@@ -4,15 +4,17 @@
  * For each SDF in tests/fixtures/sdf/, assign atom types, compute all energy
  * terms, and compare against the obenergy log in tests/references/.
  *
- * Terms that match exactly (same formula, same parameters):
+ * Terms asserted in this file (0.02 kcal/mol tolerance):
  *   bond_stretch, angle_bend, van_der_waals
  *
- * Terms with known discrepancies:
- *   torsion — Fourier series same, values differ (~43% of reference)
+ * Terms with known discrepancies (printed in the comparison, not asserted):
  *   stretch_bend — near zero in practice; reference often < 0.01
  *
- * Terms still stubs:
- *   electrostatic, out_of_plane
+ * Term still a stub:
+ *   electrostatic (returns 0)
+ *
+ * out_of_plane is implemented and validated against BatchMin in
+ * validate-against-suite.test.ts; here it is printed for reference only.
  */
 
 import { describe, it, expect } from 'vitest';
@@ -81,8 +83,6 @@ describe('All benchmark molecules vs OpenBabel references', () => {
       const energy = calc_energy(typed);
 
       // Determine which of our atom types are wrong (can't match ref)
-      const typesOk = typed.atom_types.every(t => t !== 1 || true); // placeholder
-
       const check = (v: number, r: number, tol: number) =>
         Math.abs(v - r) < tol ? '✓' : `✗ (${(v / r).toFixed(2)}×)` ;
 
@@ -94,7 +94,7 @@ describe('All benchmark molecules vs OpenBabel references', () => {
       console.log(`    Torsion:   ${energy.torsion.toFixed(5)} vs ${ref.torsion.toFixed(5)} ${check(energy.torsion, ref.torsion, 0.5)}`);
       console.log(`    VDW:       ${energy.van_der_waals.toFixed(5)} vs ${ref.vdw.toFixed(5)} ${check(energy.van_der_waals, ref.vdw, 0.01)}`);
       console.log(`    Elec:      ${energy.electrostatic.toFixed(5)} vs ${ref.elec.toFixed(5)} (STUB)`);
-      console.log(`    OOP:       ${energy.out_of_plane.toFixed(5)} vs ${ref.oop.toFixed(5)} (STUB)`);
+      console.log(`    OOP:       ${energy.out_of_plane.toFixed(5)} vs ${ref.oop.toFixed(5)} ${check(energy.out_of_plane, ref.oop, 0.05)}`);
       console.log(`    Total:     ${energy.total.toFixed(5)} vs ${ref.total.toFixed(5)}`);
     });
   }

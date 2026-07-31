@@ -123,7 +123,7 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
           break;
         }
 
-        // Fallback for unusual n_neighborsination
+        // Fallback for unusual coordination numbers
         atom_types[i] = 1;
         break;
       }
@@ -195,8 +195,8 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
             return target.element === 'O';
           });
           if (dbl_to_O) {
-            // N-oxide (N→O) — check n_neighborsination
-            atom_types[i] = 67; // N2OX (placeholder for N-oxide)
+            // N-oxide (N→O): placeholder — N2OX (type 67)
+            atom_types[i] = 67;
           } else {
             // Amide N (N-C=O) with delocalized lone pair → type 10 (NC=O)
             atom_types[i] = 10;
@@ -405,6 +405,9 @@ function estimate_ring_size(
  * on an atom is the SUM of the BCI values of every bond it participates in.
  *
  * Formal charges override the BCI sum.
+ *
+ * STATUS: NOT YET IMPLEMENTED — fills partial_charges with zeros. The
+ * BCI sum (and formal-charge override) is the remaining work.
  */
 export function compute_bci_charges(molecule: TypedMolecule): void {
   molecule.partial_charges = molecule.atoms.map(() => 0.0);

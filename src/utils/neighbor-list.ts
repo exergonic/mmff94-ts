@@ -1,6 +1,9 @@
 /**
  * Build a pair list for non-bonded interactions (vdW + electrostatic).
  *
+ * STATUS: NOT YET IMPLEMENTED — returns an empty list. The design below
+ * is the plan for the real implementation.
+ *
  * For small molecules (< 200 atoms), a simple O(n²) double loop over
  * all atom pairs is fast enough. For larger molecules, we build a
  * neighbor list using a distance cutoff to skip pairs that are too

@@ -29,7 +29,7 @@ client side.
 | Torsion (Fourier series) | ✅ |
 | Van der Waals (buffered 14-7) | ✅ |
 | Electrostatic (BCI model) | ⬜ |
-| Out-of-plane bending | ⬜ |
+| Out-of-plane bending | ✅ |
 | 1-4 scaling | ⬜ |
 | Analytical gradients | ⬜ |
 | Geometry optimization (L-BFGS / SD) | ⬜ |

@@ -65,8 +65,7 @@ export function parse_sdf(sdf_text: string): Molecule {
                element[1] >= 'a' && element[1] <= 'z') {
       // Two-character element symbol — still valid
     } else {
-      // Not a recognized element symbol — assign as '?' (atoms that pass through this
-      // parser are expected to be known, but we treat unrecognized ones as inert)
+      // Not a recognizable element symbol — skip the atom (malformed line)
       continue;
     }
 
