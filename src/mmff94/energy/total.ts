@@ -47,7 +47,13 @@ export function calc_energy(molecule: TypedMolecule): EnergyComponents {
   // TODO: apply 1-4 scaling to van_der_waals and electrostatic.
   // This requires identifying 1-4 atom pairs (atoms exactly 3 bonds apart)
   // and multiplying the appropriate pairwise contributions by 0.5 (vdW)
-  // or 0.75 (electrostatic).
+  // or 0.75 (electrostatic).**
+  // TODO: stretch-bend interactions are omitted when Halgren's equation 4
+  // is used to calculate the angle bending energy. In angle-bend.ts:72, we use
+  // equation 4 if the angle is greater than 150 degrees. Keep track of which
+  // angles use equation 4 and which use equation 3, OR use same condition for
+  // both equations. If angle is greater than 150 degrees, simply omit stretch-bend
+  // interactions.
 
   const total = bond_stretch + angle_bend + stretch_bend +
                 torsion + van_der_waals + electrostatic + out_of_plane;
