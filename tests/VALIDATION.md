@@ -105,10 +105,13 @@ types exactly, so the comparison isolates the oop term.
    (+8.053) show what the stub leaves out; no fixture total with
    nonzero BCI charges can match until Phase 4.
 
-6. **Typing scoreboard.** 32/550 suite molecules type-exact vs
-   OpenBabel (baseline; see `atom-types-suite.test.ts`). The torsion
-   assertions on non-ethane fixtures stay skipped until typing
-   isolates the term.
+6. **Typing scoreboard.** 65/550 suite molecules type-exact vs
+   OpenBabel (11.8%; 165 ≥90% atoms; see `atom-types-suite.test.ts`).
+   The torsion assertions on non-ethane fixtures stay skipped until typing
+   isolates the term. Biggest remaining classes (from the worst-10):
+   thioamide/thiazole S and ring C/N (44, 63–66, 78–81), sulfonyl/
+   sulfate S (18), phosphate P (25) with H–S (71), amide/cyanamide N
+   (10, 28, 42/43).
 
 ## Updating this ledger
 

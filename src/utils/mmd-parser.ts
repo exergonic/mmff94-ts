@@ -16,7 +16,23 @@
  *   21+    atom name fragments + trailing serial number
  */
 
-import type { Atom, Bond, Molecule } from '../types';
+import type { Molecule, Atom, Bond } from '../types';
+
+// MacroModel atom type (the .mmd first column) → element symbol.
+// Extracted from OpenBabel's data/types.txt MMD column — OpenBabel's
+// mmd reader uses exactly this table, so elements agree with the
+// typing reference by construction. Types not listed here (31, 51,
+// 201+) are ones OpenBabel cannot translate either; their molecules
+// never make it into the reference.
+const MMD_ELEMENT: Record<number, string> = {
+  1: 'C', 2: 'C', 3: 'C', 10: 'C', 11: 'C', 12: 'C',
+  15: 'O', 16: 'O', 18: 'O', 20: 'O', 23: 'O',
+  24: 'N', 25: 'N', 26: 'N', 29: 'N', 32: 'N', 35: 'N', 36: 'N',
+  41: 'H', 42: 'H', 43: 'H', 44: 'H', 45: 'H', 48: 'H',
+  49: 'S', 52: 'S',
+  53: 'P', 54: 'B', 55: 'B', 56: 'F', 57: 'Cl', 58: 'Br', 59: 'I',
+  60: 'Si',
+};
 
 /**
  * Parse a complete .mmd file into an array of Molecules.
@@ -85,14 +101,25 @@ export function parse_mmd(mmd_text: string): Molecule[] {
       // Partial charge (not stored, just consume)
       cursor++;
 
-      // Extract element from the atom name (last several fields).
-      // The atom name typically starts with the molecule prefix followed
-      // by the element symbol and index, e.g. "FORM C1" → "C".
-      const nameFields = parts.slice(cursor);
-      let element = '?';
-      for (const field of nameFields) {
-        const match = field.match(/^([A-Z][a-z]?)\d*$/);
-        if (match) { element = match[1]; break; }
+      // Element from the MacroModel type index (first field): OpenBabel's
+      // mmd reader maps it through data/types.txt (MMD → atomic number),
+      // so this is the authoritative source — atom names carry residue
+      // prefixes ("UNCH C1", "CE05 C1") and are only a fallback.
+      const mmd_type = parseInt(parts[0], 10);
+      let element = MMD_ELEMENT[mmd_type] ?? '?';
+
+      if (element === '?') {
+        // Fallback: derive from the atom name field ("C1", "Cl1"). The
+        // strict pattern (one letter + optional lowercase) rejects
+        // residue prefixes like "UNCH" or "CE05" so the scan reaches
+        // the element field. Types outside the table (31, 51, 201+)
+        // are ones OpenBabel cannot translate either — such molecules
+        // never appear in the typing reference.
+        const nameFields = parts.slice(cursor);
+        for (const field of nameFields) {
+          const match = field.match(/^([A-Z][a-z]?)\d*$/);
+          if (match) { element = match[1]; break; }
+        }
       }
 
       atoms.push({ index: a, element, x, y, z });

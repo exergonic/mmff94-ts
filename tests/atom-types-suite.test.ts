@@ -21,11 +21,17 @@ const reference = JSON.parse(
 // scoreboard, update this list (add newly-exact codes, drop regressed
 // ones), and record the trade-off in the commit message.
 const KNOWN_GOOD: string[] = [
-  'CIXWAH', 'COKDEL', 'DADDAN', 'DIKWID', 'DUYNOA', 'DUYRAQ', 'FAGVEO',
-  'FILNOD', 'FOJBEL', 'FORGOI', 'FOWZAS', 'FUVDOP', 'GAKNIP', 'GEKXEZ',
-  'GIKTUP', 'JAKGUX', 'JEMWUT', 'JIYJAC', 'KAGBOJ', 'KAVTEG', 'KOHVIM',
-  'METBZC10', 'VABROF', 'CE05A', 'CO01A', 'CO08A', 'NH10A', 'NH23A',
-  'SR01A', 'SR05A', 'SR07A', 'HL13A',
+  'BAOXLM01', 'CAFORM07', 'CAMALD03', 'CE05A', 'CITDIS', 'CIXWAH',
+  'CO01A', 'CO08A', 'COKDEL', 'COLZUY', 'COMDIR', 'COVHUQ', 'CUDNEU',
+  'DADDAN', 'DAHNAB', 'DANCUQ', 'DAWYUV', 'DICYIX', 'DIKWID',
+  'DMEOXA01', 'DUYNOA', 'DUYRAQ', 'FAGLII', 'FAGVEO', 'FAZKUM',
+  'FILNOD', 'FINBIN', 'FOJBEL', 'FORGOI', 'FOWVES', 'FOWZAS',
+  'FUCMIZ', 'FUHFAP', 'FUPTOZ', 'FUTZEZ', 'FUVDOP', 'GAKNIP',
+  'GEKXEZ', 'GIKTUP', 'GOJCIR', 'HL13A', 'JAHYEW', 'JAKGUX',
+  'JEMWUT', 'JESFES', 'JIYJAC', 'JIZWUK', 'KAGBOJ', 'KAVTEG',
+  'KOHVIM', 'KOJKID', 'METBZC10', 'NH10A', 'NH23A', 'SAVDOI',
+  'SEGJAP', 'SELFIY', 'SI02A', 'SI03A', 'SR01A', 'SR05A', 'SR07A',
+  'TAFXIH', 'VABROF', 'VEYBIK',
 ];
 
 interface MoleculeResult {

@@ -55,6 +55,21 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
     water_oxygens.add(i);
   }
 
+  // Carboxylate detection: C(=O)-O⁻ with a TERMINAL single-bonded oxygen
+  // (no H or other bonds — the free acid's -OH has two neighbors and
+  // stays 3/7/6). Carboxylate C → type 41 (CO₂M), both oxygens → 32
+  // (O2CM). Pre-scanned so the O case works regardless of atom order.
+  const carboxylate_carbons = new Set<number>();
+  for (let i = 0; i < n; i++) {
+    const atom = molecule.atoms[i];
+    if (atom.element !== 'C') continue;
+    const has_dbl_O = adj[i].some(nb => nb.order === 2 && molecule.atoms[nb.nbr].element === 'O');
+    const has_terminal_O = adj[i].some(
+      nb => nb.order === 1 && molecule.atoms[nb.nbr].element === 'O' && adj[nb.nbr].length === 1,
+    );
+    if (has_dbl_O && has_terminal_O) carboxylate_carbons.add(i);
+  }
+
   for (let i = 0; i < n; i++) {
     const atom = molecule.atoms[i];
     const neighbors = adj[i];
@@ -97,7 +112,10 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
               return target.element === 'O';
             });
 
-            if (dbl_to_O) {
+            if (carboxylate_carbons.has(i)) {
+              // Carboxylate carbon C(=O)O⁻ → type 41 (CO₂M)
+              atom_types[i] = 41;
+            } else if (dbl_to_O) {
               // Carbonyl: C=O with 3 neighbors → type 3 (C=O)
               atom_types[i] = 3;
             } else if (dbl_to_C) {
@@ -182,6 +200,9 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
         if (water_oxygens.has(i)) {
           // Water oxygen → type 70 (OXYGEN IN WATER)
           atom_types[i] = 70;
+        } else if (n_neighbors === 1 && carboxylate_carbons.has(neighbors[0].nbr)) {
+          // Carboxylate oxygen — the =O or the terminal -O⁻ → type 32 (O2CM)
+          atom_types[i] = 32;
         } else if (has_double) {
           // Carbonyl oxygen O=C → type 7 (O=C)
           atom_types[i] = 7;
