@@ -80,24 +80,21 @@ describe('All benchmark molecules vs OpenBabel references', () => {
       expect(Math.abs(energy.van_der_waals - ref.vdw)).toBeLessThan(0.02);
     });
 
-    // Torsion is asserted only where typing is complete enough to isolate
-    // the term. Regression guard for the 180° dihedral phase bug:
-    // dihedral_angle once returned τ − 180°, making every torsion energy
-    // wrong (ethane read −2.13 instead of −4.959).
-    if (name === 'ethane') {
-      it(`${name}: torsion matches reference (dihedral convention regression)`, () => {
-        const sdfText = readFileSync(join(SDF_DIR, sdfFile), 'utf-8');
-        const ref = parse_reference_log(refFile);
+    it(`${name}: torsion matches reference`, () => {
+      // Regression guard: torsion parameters must be resolved by exact
+      // types in both directions before any wildcard fallback — the
+      // generic '*-1-1-*' default once swallowed H-C-C-C dihedrals
+      // (cyclohexane read -10.856 instead of -11.410). All 9 fixtures
+      // now match the obenergy logs exactly.
+      const sdfText = readFileSync(join(SDF_DIR, sdfFile), 'utf-8');
+      const ref = parse_reference_log(refFile);
 
-        const mol = parse_sdf(sdfText);
-        const typed = assign_atom_types(mol);
-        const energy = calc_energy(typed);
+      const mol = parse_sdf(sdfText);
+      const typed = assign_atom_types(mol);
+      const energy = calc_energy(typed);
 
-        expect(Math.abs(energy.torsion - ref.torsion)).toBeLessThan(0.01);
-      });
-    } else {
-      it.skip(`${name}: torsion vs reference (typing incomplete)`, () => {});
-    }
+      expect(Math.abs(energy.torsion - ref.torsion)).toBeLessThan(0.02);
+    });
 
     it(`${name}: prints full comparison`, () => {
       const sdfText = readFileSync(join(SDF_DIR, sdfFile), 'utf-8');

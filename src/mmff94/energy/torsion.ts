@@ -33,7 +33,7 @@
  */
 
 import type { TypedMolecule } from '../../types';
-import { TORSION_PARAMS, lookup_param } from '../parameters';
+import { TORSION_PARAMS, lookup_param, type TorsionParams } from '../parameters';
 import { dihedral_angle, Vec3 } from '../../utils/vector';
 
 /**
@@ -76,10 +76,23 @@ export function calc_torsion_energy(molecule: TypedMolecule): number {
         const tl = molecule.atom_types[l];
         const posL: Vec3 = [molecule.atoms[l].x, molecule.atoms[l].y, molecule.atoms[l].z];
 
-        // Look up torsion parameters for ordered types (i, j, k, l)
-        let params = lookup_param(TORSION_PARAMS, [ti, tj, tk, tl]);
+        // MMFF94 resolves torsion parameters by canonical direction and
+        // exact types first (Halgren part I, p. 513 — the "step-down"
+        // protocol starts from the exact 1-1-1-1 match). Trying wildcards
+        // before the reversed direction is wrong: an H-C-C-C dihedral
+        // would match the generic '*-1-1-*' default (V3 only) instead of
+        // the exact reversed entry.
+        const forward_key = `0-${ti}-${tj}-${tk}-${tl}`;
+        const reverse_key = `0-${tl}-${tk}-${tj}-${ti}`;
+        let params: TorsionParams | undefined =
+          TORSION_PARAMS[forward_key] ?? TORSION_PARAMS[reverse_key];
 
-        // If not found, try reverse order (l, k, j, i)
+        // Fall back to the priority/wildcard helper for entries in other
+        // classes (e.g. class 1 for double-bond centers) and for types
+        // with no exact entry in either direction.
+        if (!params) {
+          params = lookup_param(TORSION_PARAMS, [ti, tj, tk, tl]);
+        }
         if (!params) {
           params = lookup_param(TORSION_PARAMS, [tl, tk, tj, ti]);
         }

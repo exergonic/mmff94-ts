@@ -18,33 +18,33 @@ condensed public version of this ledger.
   `MMFF94.mmd`, BatchMin component energies from `MMFF94_bmin.log`.
 - **Asserted in CI** (`tests/reference-comparison.test.ts`,
   `tests/validate-against-suite.test.ts`):
-  - bond, angle, stretch-bend, vdW vs obenergy: all 9 fixtures, |Δ| < 0.02
-  - torsion vs obenergy: ethane only, |Δ| < 0.01 (other fixtures
-    skipped until typing isolates the term)
+  - bond, angle, stretch-bend, torsion, vdW vs obenergy: all 9
+    fixtures, |Δ| < 0.02
   - out-of-plane vs BatchMin: 8 suite molecules, |Δ| < 0.05
 
 ## Fixtures — per-term deltas vs obenergy (kcal/mol, |ours − ref|)
 
 From the printed comparisons in `reference-comparison.test.ts`
-(2026-07-31). "stub" in the elec column = we return 0; the reference
+(2026-08-01). "stub" in the elec column = we return 0; the reference
 value is shown in parentheses when nonzero.
 
 | molecule | bond | angle | strbnd | torsion | vdw | oop | elec |
 |---|---|---|---|---|---|---|---|
 | benzene | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | stub (ref 3.07810) |
-| butane | 0.00000 | 0.00000 | 0.00000 | 0.05261 | 0.00000 | 0.00000 | stub |
-| cyclohexane | 0.00000 | 0.00000 | 0.00000 | 0.55420 | 0.00000 | 0.00000 | stub |
+| butane | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | stub |
+| cyclohexane | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | stub |
 | ethane | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | stub |
 | ethene | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | stub (ref 8.05300) |
 | formaldehyde | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | stub |
 | methane | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | stub |
-| propane | 0.00000 | 0.00000 | 0.00000 | 0.00650 | 0.00000 | 0.00000 | stub |
+| propane | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | stub |
 | water | 0.01008 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | stub |
 
 Total energies match exactly where every term matches: ethane
-(−4.73436 both sides), methane (0.02638), formaldehyde (0.05416).
-Everywhere else the total delta equals the sum of the open items
-(e.g. cyclohexane's total delta of 0.5542 is its torsion delta).
+(−4.73436), butane (−5.07596), cyclohexane (−3.56091), propane
+(−4.89729), methane (0.02638), formaldehyde (0.05416). The remaining
+total deltas are exactly the open items: benzene and ethene are the
+electrostatic stub (3.078 / 8.053), water is the typing gap (0.01008).
 
 ## Suite — out-of-plane vs BatchMin (8 molecules, kcal/mol)
 
@@ -75,15 +75,19 @@ types exactly, so the comparison isolates the oop term.
    Note: the validation suite has no bare-water BatchMin reference
    (only hydrates), so obenergy is the only cross-check.
 
-2. **Cyclohexane torsion (Δ 0.554, 5% low).** Ours −10.85580 vs
-   ref −11.41000. Pattern across the alkane fixtures: propane
-   Δ 0.0065 (no C–C–C–C dihedrals), butane Δ 0.053 (one), cyclohexane
-   Δ 0.554 (six) — but the deltas don't scale linearly with the
-   C–C–C–C count, so something else in cyclohexane also differs.
-   Lead: `mmfftor.par` has TWO entries for 1-1-1-1 — priority 0
-   (0.103 / 0.681 / 0.332) and priority 5 (0.144 / −0.547 / 1.126);
-   we take priority 0. Check which entry OpenBabel uses and whether
-   its lookup has context rules for the priority-5 variant.
+2. ~~Cyclohexane torsion (Δ 0.554, 5% low)~~ — **RESOLVED 2026-08-01.**
+   Root cause: `lookup_param`'s generic wildcard fallback ran before the
+   reversed-direction exact match. An H–C–C–C dihedral (5,1,1,1) has no
+   forward exact entry, so it matched the generic `'0-0-1-1-0'`
+   (`*-1-1-*`, V3 = 0.300) instead of the exact reversed entry
+   `'0-1-1-1-5'` (0.639 / −0.630 / 0.264) that OpenBabel uses (its
+   direction canonicalization + exact lookup never reaches the
+   wildcard). Fix: torsion.ts now tries exact keys in both directions
+   before any wildcard (Halgren part I, p. 513 step-down protocol).
+   All 9 fixture torsions now match obenergy exactly; the torsion
+   assertion is extended to every fixture. The RING = AL log column is
+   informational — the torsion class (TTijkl, part IV p. 609) is 0 for
+   six-membered rings; class 5 applies only to five-membered rings.
 
 3. **AMHTAR01 oop (Δ 0.021).** Largest suite oop delta, within
    tolerance. Ester/carboxyl pyramidalization; reference types the

@@ -15,6 +15,7 @@ export { BOND_PARAMS } from './bond';
 export { ANGLE_PARAMS } from './angle';
 export { STRETCH_BEND_PARAMS } from './stretch-bend';
 export { TORSION_PARAMS } from './torsion';
+export type { TorsionParams } from './torsion';
 export { VDW_PARAMS } from './van-der-waals';
 export { BCI_PARAMS, BCI_DEFAULT_PARAMS } from './bci';
 export { OOP_PARAMS } from './out-of-plane';

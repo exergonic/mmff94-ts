@@ -54,18 +54,19 @@ nine SDF fixtures against OpenBabel `obenergy` logs
 additionally against Halgren's own BatchMin energies from the
 753-molecule validation suite (`tests/validate-against-suite.test.ts`).
 
-Bond stretch, angle bend, stretch-bend, and van der Waals match the
-obenergy references **exactly (to 5 decimals) on all 9 fixtures**.
-Torsion matches on 6 and is close on 3 (see notes); out-of-plane is
-0 on these acyclic/planar fixtures. Totals match exactly where every
-term does (ethane −4.73436, methane, formaldehyde).
+Bond stretch, angle bend, stretch-bend, torsion, and van der Waals
+match the obenergy references **exactly (to 5 decimals) on all 9
+fixtures**. Out-of-plane is 0 on these acyclic/planar fixtures.
+Totals match exactly where every term does: ethane (−4.73436),
+butane (−5.07596), cyclohexane (−3.56091), propane (−4.89729),
+methane (0.02638), formaldehyde (0.05416).
 
 | Term | Exact on fixtures | Notes |
 |---|---|---|
 | Bond stretch | 8/9 | water Δ 0.0101 — MMFF94 types water O/H as 70/31 (r₀ 0.969); we type 6/21 (r₀ 0.972). Typing gap, not a parameter gap |
 | Angle bend | 9/9 | |
 | Stretch-bend | 9/9 | |
-| Torsion | 6/9 | propane Δ 0.007, butane Δ 0.053, cyclohexane Δ 0.554 — C–C–C–C dihedral parameter question |
+| Torsion | 9/9 | |
 | Van der Waals | 9/9 | |
 | Out-of-plane | 9/9 | 0 on these fixtures; see BatchMin table below |
 | Electrostatic | — | stub (returns 0) |
