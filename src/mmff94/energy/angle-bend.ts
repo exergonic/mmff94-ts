@@ -15,16 +15,16 @@
  * The ½ factor is part of Halgren's definition (same as bond stretch).
  * The parameter table stores the full k_a; the ½ is applied here.
  *
- * For near-linear angles (θ₀ > 150°), eq. (3) is replaced by eq. (4):
+ * For linear centers (the lin flag in mmffprop.par, e.g. sp carbon),
+ * eq. (3) is replaced by eq. (4):
  *   E_angle = 143.9325 · k_a · (1 + cos θ)
  * which avoids the singularity of the cubic expansion at θ = 180°.
- * This is checked via theta0, since linear reference angles define
- * the use of the cosine form regardless of the actual angle.
+ * The linear flag comes from the atom-type properties, not from θ₀.
  */
 
 import type { TypedMolecule } from '../../types';
-import { ANGLE_PARAMS, lookup_param } from '../parameters';
 import { angle_in_radians, Vec3 } from '../../utils/vector';
+import { make_class_context, angle_parameters } from './bond-type';
 
 const CB = -0.007; // cubic bend constant, deg⁻¹
 
@@ -40,11 +40,11 @@ export function calc_angle_bend_energy(molecule: TypedMolecule): number {
     adj[bond.atom1].push(bond.atom2);
     adj[bond.atom2].push(bond.atom1);
   }
+  const ctx = make_class_context(molecule, adj);
 
   // Iterate over all possible central atoms j
   for (let j = 0; j < molecule.atoms.length; j++) {
     const neighbors = adj[j];
-    const tj = molecule.atom_types[j];
     const posJ: Vec3 = [molecule.atoms[j].x, molecule.atoms[j].y, molecule.atoms[j].z];
 
     // Iterate over all pairs of neighbors (i, k)
@@ -53,27 +53,22 @@ export function calc_angle_bend_energy(molecule: TypedMolecule): number {
         const i = neighbors[i_idx];
         const k = neighbors[k_idx];
 
-        const ti = molecule.atom_types[i];
-        const tk = molecule.atom_types[k];
-
         const posI: Vec3 = [molecule.atoms[i].x, molecule.atoms[i].y, molecule.atoms[i].z];
         const posK: Vec3 = [molecule.atoms[k].x, molecule.atoms[k].y, molecule.atoms[k].z];
 
-        const t_min = Math.min(ti, tk);
-        const t_max = Math.max(ti, tk);
-
-        const params = lookup_param(ANGLE_PARAMS, [t_min, tj, t_max]);
-        if (!params) continue;
-
-        const { k_a, theta0 } = params;
+        // Class-aware resolution: BTij/ring classes select the entry
+        // (small rings have their own θ₀ ≈ 90°/60°); misses fall to the
+        // empirical rules. Linear centers (the lin flag, e.g. sp C) use
+        // the cosine form regardless of the lookup result.
+        const { k_a, theta0, linear } = angle_parameters(ctx, i, j, k);
         const theta_rad = angle_in_radians(posJ, posI, posK);
-        const theta_deg = theta_rad * (180.0 / Math.PI);
 
-        if (theta0 > 150.0) {
-          // Halgren1996 eq. (4): cosine form for near-linear angles
+        if (linear) {
+          // Halgren1996 eq. (4): cosine form for linear centers
           total_energy += 143.9325 * k_a * (1.0 + Math.cos(theta_rad));
         } else {
           // Halgren1996 eq. (3): harmonic + cubic expansion
+          const theta_deg = theta_rad * (180.0 / Math.PI);
           const delta_theta = theta_deg - theta0;
           const half_k_a = 0.5 * k_a;
           const harmonic = 0.043844 * half_k_a * delta_theta * delta_theta;

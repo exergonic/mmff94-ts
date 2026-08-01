@@ -11,9 +11,10 @@
 
 export { lookup_param } from './lookup';
 export { ATOM_TYPES } from './atom-types';
+export { ATOM_PROPERTIES, type AtomTypeProperties } from './properties';
 export { BOND_PARAMS } from './bond';
-export { ANGLE_PARAMS } from './angle';
-export { STRETCH_BEND_PARAMS } from './stretch-bend';
+export { ANGLE_PARAMS, type AngleParams } from './angle';
+export { STRETCH_BEND_PARAMS, type StretchBendParams } from './stretch-bend';
 export { TORSION_PARAMS } from './torsion';
 export type { TorsionParams } from './torsion';
 export { VDW_PARAMS } from './van-der-waals';

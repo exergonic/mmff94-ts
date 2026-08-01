@@ -399,6 +399,56 @@ export function lookup_all<T>(
     print("  [write] lookup.ts (helper functions)")
 
 
+# ── Atom-type properties (mmffprop.par + mmffdef.par) ──────────────────
+# mmffprop.par format: atype aspec crd val pilp mltb arom lin sbmb
+# These flags drive the parameter-class system (MMFF part V, p. 620):
+#   arom/sbmb  → GetBondType (BTij), which selects bond class 1 and
+#                the angle classes 1/2/5-8
+#   crd/val/mltb/lin → the empirical angle-default rules when a
+#                class lookup misses
+# mmffdef.par format: SYMBOL TYPE lvl1..lvl5 DEFINITION — the last three
+# columns are the EqLvl3/4/5 equivalence levels used by the step-down
+# parameter chain (MMFF part I, p. 513): exact → EqLvl3 → EqLvl4 → EqLvl5
+# (level 5 is 0 = wildcard for most types).
+
+def generate_properties():
+    lines = parse_par('mmffprop.par')
+    levels = {}
+    for line in parse_par('mmffdef.par'):
+        parts = line.split()
+        if len(parts) < 6 or not parts[1].isdigit():
+            continue
+        levels[int(parts[1])] = (parts[3], parts[4], parts[5])  # lvl3, lvl4, lvl5
+    with open(os.path.join(OUT_DIR, 'properties.ts'), 'w') as f:
+        write_ts_header(f, "Atom-type properties: coordination, valence, multiple-bond, aromatic, linear, sbmb flags, EqLvl3/4/5 equivalence levels.")
+        f.write("export interface AtomTypeProperties {\n")
+        f.write("  crd: number;    // coordination number\n")
+        f.write("  val: number;    // valence\n")
+        f.write("  mltb: number;   // multiple-bond flag\n")
+        f.write("  arom: number;   // in aromatic set (BTij case b)\n")
+        f.write("  lin: number;    // linear-set flag (eq. 4 angle form)\n")
+        f.write("  sbmb: number;   // single/multiple-bond set (BTij case a)\n")
+        f.write("  lvl3: number;   // EqLvl3 equivalence level (step-down chain)\n")
+        f.write("  lvl4: number;   // EqLvl4\n")
+        f.write("  lvl5: number;   // EqLvl5 (0 = wildcard)\n")
+        f.write("}\n\n")
+        f.write("export const ATOM_PROPERTIES: Record<number, AtomTypeProperties> = {\n")
+        for line in lines:
+            parts = line.split()
+            if len(parts) < 9:
+                continue
+            atype = int(parts[0])
+            crd, val, mltb, arom, lin, sbmb = parts[2], parts[3], parts[5], parts[6], parts[7], parts[8]
+            lvl = levels.get(atype, ('0', '0', '0'))
+            f.write(
+                f"  {atype}: {{ crd: {value(crd)}, val: {value(val)}, mltb: {value(mltb)}, "
+                f"arom: {value(arom)}, lin: {value(lin)}, sbmb: {value(sbmb)}, "
+                f"lvl3: {value(lvl[0])}, lvl4: {value(lvl[1])}, lvl5: {value(lvl[2])} }},\n"
+            )
+        f.write("};\n")
+    print(f"  [write] properties.ts ({len(lines)} entries, {len(levels)} with levels)")
+
+
 # ── Main ───────────────────────────────────────────────────────────────
 
 def main():
@@ -413,6 +463,7 @@ def main():
     generate_bci()
     generate_oop()
     generate_atom_types()
+    generate_properties()
     generate_lookup()
 
     print("\nDone. All parameter tables regenerated.")

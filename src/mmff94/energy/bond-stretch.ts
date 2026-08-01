@@ -16,8 +16,8 @@
  */
 
 import type { TypedMolecule } from '../../types';
-import { BOND_PARAMS, lookup_param } from '../parameters';
 import { distance, Vec3 } from '../../utils/vector';
+import { make_class_context, bond_parameters } from './bond-type';
 
 /**
  * Calculate the total bond stretching energy for all bonds in a molecule.
@@ -25,20 +25,26 @@ import { distance, Vec3 } from '../../utils/vector';
 export function calc_bond_stretch_energy(molecule: TypedMolecule): number {
   let total_energy = 0.0;
 
+  // Adjacency for the BTij class queries (conjugated single bonds).
+  const adj: number[][] = Array.from({ length: molecule.atoms.length }, () => []);
+  for (const bond of molecule.bonds) {
+    adj[bond.atom1].push(bond.atom2);
+    adj[bond.atom2].push(bond.atom1);
+  }
+  const ctx = make_class_context(molecule, adj);
+
   for (const bond of molecule.bonds) {
     const a1 = molecule.atoms[bond.atom1];
     const a2 = molecule.atoms[bond.atom2];
-    const t1 = molecule.atom_types[bond.atom1];
-    const t2 = molecule.atom_types[bond.atom2];
 
     const pos1: Vec3 = [a1.x, a1.y, a1.z];
     const pos2: Vec3 = [a2.x, a2.y, a2.z];
     const r = distance(pos1, pos2);
 
-    const t_min = Math.min(t1, t2);
-    const t_max = Math.max(t1, t2);
-
-    const params = lookup_param(BOND_PARAMS, [t_min, t_max]);
+    // Class-aware lookup: a BTij=1 bond (conjugated single bond) uses
+    // the class-1 entry — '0-2-2' is the C=C double-bond parameter and
+    // would badly overestimate a diene's central single bond.
+    const params = bond_parameters(ctx, bond.atom1, bond.atom2);
     if (!params) continue;
 
     const { k_b, r0 } = params;

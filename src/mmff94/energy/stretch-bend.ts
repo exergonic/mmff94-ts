@@ -19,8 +19,33 @@
  */
 
 import type { TypedMolecule } from '../../types';
-import { BOND_PARAMS, ANGLE_PARAMS, STRETCH_BEND_PARAMS, lookup_param } from '../parameters';
+import { STRETCH_BEND_PARAMS, lookup_param, type StretchBendParams } from '../parameters';
 import { distance, angle_in_radians, Vec3 } from '../../utils/vector';
+import { make_class_context, angle_class, bond_parameters, angle_parameters } from './bond-type';
+
+// Default stretch-bend force constants (mmffdfsb.par), keyed by element
+// ROWS — 0=H, 1=C, 2=N, 3=O, 4=F, ... (F for F is 1!). Used when the
+// stretch-bend lookup misses entirely: BatchMin still evaluates the
+// angle with these small constants — a molecule with stretched bonds
+// around an untyped angle (e.g. Si–C) can carry several kcal/mol here,
+// so skipping the angle outright (the old behavior) is wrong.
+const DEFAULT_FSB: Record<string, [number, number]> = {
+  '0-1-0': [0.15, 0.15], '0-1-1': [0.10, 0.30], '0-1-2': [0.05, 0.35], '0-1-3': [0.05, 0.35], '0-1-4': [0.05, 0.35],
+  '0-2-0': [0.00, 0.00], '0-2-1': [0.00, 0.15], '0-2-2': [0.00, 0.15], '0-2-3': [0.00, 0.15], '0-2-4': [0.00, 0.15],
+  '1-1-1': [0.30, 0.30], '1-1-2': [0.30, 0.50], '1-1-3': [0.30, 0.50], '1-1-4': [0.30, 0.50],
+  '2-1-2': [0.50, 0.50], '2-1-3': [0.50, 0.50], '2-1-4': [0.50, 0.50],
+  '3-1-3': [0.50, 0.50], '3-1-4': [0.50, 0.50], '4-1-4': [0.50, 0.50],
+  '1-2-1': [0.30, 0.30], '1-2-2': [0.25, 0.25], '1-2-3': [0.25, 0.25], '1-2-4': [0.25, 0.25],
+  '2-2-2': [0.25, 0.25], '2-2-3': [0.25, 0.25], '2-2-4': [0.25, 0.25],
+  '3-2-3': [0.25, 0.25], '3-2-4': [0.25, 0.25], '4-2-4': [0.25, 0.25],
+};
+
+// Element → periodic-table row: 0 = Z ≤ 2, 1 = 3–10, 2 = 11–18,
+// 3 = 19–36, 4 = 37–54 (rows beyond 4 have no default-fsb entries).
+const ELEMENT_ROW: Record<string, number> = {
+  H: 0, B: 1, C: 1, N: 1, O: 1, F: 1,
+  Si: 2, P: 2, S: 2, Cl: 2, Br: 3, I: 4,
+};
 
 /**
  * Calculate the total stretch-bend cross term energy.
@@ -34,6 +59,7 @@ export function calc_stretch_bend_energy(molecule: TypedMolecule): number {
     adj[bond.atom1].push(bond.atom2);
     adj[bond.atom2].push(bond.atom1);
   }
+  const ctx = make_class_context(molecule, adj);
 
   // Iterate over all possible central atoms j
   for (let j = 0; j < molecule.atoms.length; j++) {
@@ -53,26 +79,61 @@ export function calc_stretch_bend_energy(molecule: TypedMolecule): number {
         const t_min = Math.min(ti, tk);
         const t_max = Math.max(ti, tk);
 
-        // 1. Look up stretch-bend parameters
-        const sb_params = lookup_param(STRETCH_BEND_PARAMS, [t_min, tj, t_max]);
-        if (!sb_params) continue;
+        // The stretch-bend class is the angle class (BTij/ring classes),
+        // so ring angles use the ring-class entries (e.g. '4-3-3-3').
+        const cls = angle_class(ctx, i, j, k);
 
-        // The table stores terminal types sorted (I ≤ K), so k_sb_IJK
-        // belongs to the bond on the min-type side and k_sb_KJI to the
-        // bond on the max-type side — whichever of i and k that is.
-        const k_ij = ti <= tk ? sb_params.k_sb_IJK : sb_params.k_sb_KJI;
-        const k_kj = ti <= tk ? sb_params.k_sb_KJI : sb_params.k_sb_IJK;
+        // 1. Look up stretch-bend parameters
+        let sb_params: StretchBendParams | undefined;
+        if (cls !== 0) {
+          const keys = [
+            `${cls}-${t_min}-${tj}-${t_max}`,
+            `${cls}-0-${tj}-${t_max}`,
+            `${cls}-${t_min}-${tj}-0`,
+            `${cls}-0-${tj}-0`,
+          ];
+          for (const key of keys) {
+            sb_params = STRETCH_BEND_PARAMS[key];
+            if (sb_params) break;
+          }
+        } else {
+          sb_params = lookup_param(STRETCH_BEND_PARAMS, [t_min, tj, t_max]);
+        }
+        // No stretch-bend entry: use the default F(I_J,K)/F(K_J,I) from
+        // the element-row table (mmffdfsb.par) — BatchMin evaluates every
+        // angle, and the defaults are the only values for e.g. Si angles.
+        let k_ij: number;
+        let k_kj: number;
+        if (sb_params) {
+          // The table stores terminal types sorted (I ≤ K), so k_sb_IJK
+          // belongs to the bond on the min-type side and k_sb_KJI to the
+          // bond on the max-type side — whichever of i and k that is.
+          k_ij = ti <= tk ? sb_params.k_sb_IJK : sb_params.k_sb_KJI;
+          k_kj = ti <= tk ? sb_params.k_sb_KJI : sb_params.k_sb_IJK;
+        } else {
+          const rowa = ELEMENT_ROW[molecule.atoms[i].element] ?? 0;
+          const rowb = ELEMENT_ROW[molecule.atoms[j].element] ?? 0;
+          const rowc = ELEMENT_ROW[molecule.atoms[k].element] ?? 0;
+          const direct = DEFAULT_FSB[`${rowa}-${rowb}-${rowc}`];
+          const F = direct ?? DEFAULT_FSB[`${rowc}-${rowb}-${rowa}`];
+          if (!F) continue;
+          // F[0] belongs to the I-J bond when the stored row order is
+          // (rowa, rowb, rowc); for the reversed match it belongs to K-J.
+          k_ij = direct ? F[0] : F[1];
+          k_kj = direct ? F[1] : F[0];
+        }
 
         // 2. Look up equilibrium bond lengths from bond parameters —
         //    each bond uses its own type pair (sorted), not the angle's
         //    sorted terminal types.
-        const bond_ij = lookup_param(BOND_PARAMS, [Math.min(ti, tj), Math.max(ti, tj)]);
-        const bond_kj = lookup_param(BOND_PARAMS, [Math.min(tk, tj), Math.max(tk, tj)]);
+        const bond_ij = bond_parameters(ctx, i, j);
+        const bond_kj = bond_parameters(ctx, j, k);
         if (!bond_ij || !bond_kj) continue;
 
-        // 3. Look up equilibrium angle from angle parameters
-        const ang_params = lookup_param(ANGLE_PARAMS, [t_min, tj, t_max]);
-        if (!ang_params) continue;
+        // 3. Equilibrium angle from the same class-aware resolution the
+        //    angle term uses, so ring and BT-flagged angles share θ₀.
+        const { theta0, linear } = angle_parameters(ctx, i, j, k);
+        if (linear) continue; // no stretch-bend for linear centers (eq. 4)
 
         // 4. Compute current geometry
         const posI: Vec3 = [molecule.atoms[i].x, molecule.atoms[i].y, molecule.atoms[i].z];
@@ -86,7 +147,7 @@ export function calc_stretch_bend_energy(molecule: TypedMolecule): number {
         // 5. Accumulate energy
         const dr_IJ = r_IJ - bond_ij.r0;
         const dr_KJ = r_KJ - bond_kj.r0;
-        const d_theta = theta_deg - ang_params.theta0;
+        const d_theta = theta_deg - theta0;
 
         total_energy += 2.51210 * (k_ij * dr_IJ + k_kj * dr_KJ) * d_theta;
       }
