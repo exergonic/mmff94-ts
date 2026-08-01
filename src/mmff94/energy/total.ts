@@ -50,12 +50,8 @@ export function calc_energy(molecule: TypedMolecule): EnergyComponents {
   // scaled at 1-4 (Halgren 1996, p. 496 — see the header above).
   // This requires identifying 1-4 atom pairs (atoms exactly 3 bonds apart)
   // and multiplying the appropriate pairwise contributions by 0.75.
-  // TODO: stretch-bend interactions are omitted when Halgren's equation 4
-  // is used to calculate the angle bending energy. In angle-bend.ts, we use
-  // equation 4 when the reference angle theta0 > 150 degrees. Keep track of
-  // which angles use equation 4 and which use equation 3, OR use the same
-  // condition for both equations. If the angle uses equation 4, simply omit
-  // stretch-bend interactions for it.
+  // (Stretch-bend is already omitted for linear centers — the lin flag
+  // from angle_parameters, applied in stretch-bend.ts.)
 
   const total = bond_stretch + angle_bend + stretch_bend +
                 torsion + van_der_waals + electrostatic + out_of_plane;
