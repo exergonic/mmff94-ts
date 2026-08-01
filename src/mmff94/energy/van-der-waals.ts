@@ -98,20 +98,31 @@ export function calc_vdw_energy(molecule: TypedMolecule): number {
       const is_donor = param_i.DA === 1 || param_j.DA === 1;    // DA flag: 1 = H-bond donor
       const is_acceptor = param_i.DA === 2 || param_j.DA === 2; //          2 = H-bond acceptor
 
-      // Combined radius and well depth
+      // Combined radius and well depth. The arithmetic-mean combination
+      // applies whenever EITHER atom is a donor (MMFF part V) — the
+      // Waldman-Hagler rules are only for pairs with no donor at all
+      // (e.g. C...C, O...O). ε is halved and R* scaled by 0.8 only for
+      // donor-acceptor pairs; ε always uses the UNSCALED R*.
       let R_ij: number;
       let epsilon_ij: number;
 
-      if (is_donor && is_acceptor) {
-        // Hydrogen bond donor-acceptor: arithmetic mean, epsilon halved,
-        // R_ij further scaled by 0.8
+      if (is_donor) {
         const R_ij_unscaled = 0.5 * (R_i + R_j);
         const R_ij6_unscaled = Math.pow(R_ij_unscaled, 6);
-        epsilon_ij = 0.5 * (181.16 * param_i.G_i * param_j.G_i * param_i.alpha_i * param_j.alpha_i) /
-                     (sqrt_alpha_over_N_i + sqrt_alpha_over_N_j) / R_ij6_unscaled;
-        R_ij = 0.8 * R_ij_unscaled;
+        if (is_acceptor) {
+          // Hydrogen bond donor-acceptor: epsilon halved, R* × 0.8
+          epsilon_ij = 0.5 * (181.16 * param_i.G_i * param_j.G_i * param_i.alpha_i * param_j.alpha_i) /
+                       (sqrt_alpha_over_N_i + sqrt_alpha_over_N_j) / R_ij6_unscaled;
+          R_ij = 0.8 * R_ij_unscaled;
+        } else {
+          // Donor present but no acceptor (e.g. H-N...H-C): arithmetic
+          // mean, full epsilon
+          epsilon_ij = (181.16 * param_i.G_i * param_j.G_i * param_i.alpha_i * param_j.alpha_i) /
+                       (sqrt_alpha_over_N_i + sqrt_alpha_over_N_j) / R_ij6_unscaled;
+          R_ij = R_ij_unscaled;
+        }
       } else {
-        // Non-hydrogen-bond: Waldman-Hagler combination
+        // No donor: Waldman-Hagler combination
         const asymmetry = (R_i - R_j) / (R_i + R_j);
         const asymmetry2 = asymmetry * asymmetry;
         R_ij = 0.5 * (R_i + R_j) * (1.0 + 0.2 * (1.0 - Math.exp(-12.0 * asymmetry2)));
