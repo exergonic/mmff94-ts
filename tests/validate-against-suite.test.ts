@@ -112,4 +112,81 @@ describe('Halgren MMFF94 suite validation', () => {
       expect(Math.abs(got.out_of_plane - ref.oop)).toBeLessThan(tol);
     }
   });
+
+  it('reports per-component energies for typing-exact molecules', () => {
+    // The typing-exact molecules are the only place where a component
+    // delta cannot be blamed on atom typing: every mismatch is a term
+    // or lookup bug. BatchMin's log is a single-point calculation at the
+    // .mmd geometry (per the suite README), so the comparison is valid
+    // at the parsed coordinates. Informational: the report drives term
+    // fixes; as terms improve the green counts should rise.
+    const reference = JSON.parse(
+      readFileSync(join(suiteDir, 'mmff94-atom-types.json'), 'utf-8'),
+    ) as { molecules: Record<string, number[]> };
+
+    const termDefs = [
+      ['bond', 'bond_stretch', 'stretch'],
+      ['angle', 'angle_bend', 'bend'],
+      ['strbnd', 'stretch_bend', 'strbnd'],
+      ['torsion', 'torsion', 'torsion'],
+      ['vdw', 'van_der_waals', 'vdw'],
+      ['oop', 'out_of_plane', 'oop'],
+    ] as const;
+
+    const stats = termDefs.map(() => ({
+      green: 0,
+      mean: 0,
+      max: 0,
+      worst: [] as [string, number][],
+    }));
+    let nChecked = 0;
+    let elecMean = 0;
+    let elecMax = 0;
+
+    for (const mol of molecules) {
+      const refTypes = reference.molecules[mol.name!];
+      if (refTypes === undefined || refTypes.length !== mol.atoms.length) continue;
+      const typed = assign_atom_types(mol);
+      if (typed.atom_types.some((t, i) => t !== refTypes[i])) continue;
+      const ref = refEnergies.get(mol.name!);
+      if (ref === undefined) continue;
+      nChecked++;
+
+      const got = calc_energy(typed);
+      termDefs.forEach(([, gk, rk], idx) => {
+        const d = got[gk] - ref[rk];
+        const s = stats[idx];
+        s.mean += Math.abs(d);
+        s.max = Math.max(s.max, Math.abs(d));
+        if (Math.abs(d) <= 0.05) s.green++;
+        s.worst.push([mol.name!, d]);
+      });
+      elecMean += Math.abs(ref.elec);
+      elecMax = Math.max(elecMax, Math.abs(ref.elec));
+    }
+
+    const lines = [
+      `\nPer-component energy deltas vs BatchMin on typing-exact molecules (${nChecked} of 550):`,
+      `  term       |Δ|≤0.05   mean|Δ|    max|Δ|`,
+      `  ─────────────────────────────────────────`,
+    ];
+    termDefs.forEach(([label], idx) => {
+      const s = stats[idx];
+      const mean = (s.mean / Math.max(1, nChecked)).toFixed(3);
+      s.worst.sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]));
+      const worst = s.worst.slice(0, 3).map(([c, d]) => `${c} ${d > 0 ? '+' : ''}${d.toFixed(2)}`).join(', ');
+      lines.push(
+        `  ${label.padEnd(9)} ${String(s.green).padStart(3)}/${nChecked}  ${mean.padStart(7)}   ${s.max.toFixed(2).padStart(7)}   ${worst}`,
+      );
+    });
+    lines.push(
+      `  ─────────────────────────────────────────`,
+      `  electrostatics (stub omits): mean |ref| ${(elecMean / Math.max(1, nChecked)).toFixed(2)}, max ${elecMax.toFixed(2)} kcal/mol`,
+    );
+    console.log(lines.join('\n'));
+
+    // The report must cover most of the exact set; the exact count grows
+    // as typing improves. This is a floor, not an upper bound.
+    expect(nChecked).toBeGreaterThanOrEqual(50);
+  });
 });
