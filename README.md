@@ -59,11 +59,11 @@ match the obenergy references **exactly (to 5 decimals) on all 9
 fixtures**. Out-of-plane is 0 on these acyclic/planar fixtures.
 Totals match exactly where every term does: ethane (−4.73436),
 butane (−5.07596), cyclohexane (−3.56091), propane (−4.89729),
-methane (0.02638), formaldehyde (0.05416).
+methane (0.02638), formaldehyde (0.05416), water (0.00000).
 
 | Term | Exact on fixtures | Notes |
 |---|---|---|
-| Bond stretch | 8/9 | water Δ 0.0101 — MMFF94 types water O/H as 70/31 (r₀ 0.969); we type 6/21 (r₀ 0.972). Typing gap, not a parameter gap |
+| Bond stretch | 9/9 | |
 | Angle bend | 9/9 | |
 | Stretch-bend | 9/9 | |
 | Torsion | 9/9 | |

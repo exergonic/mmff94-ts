@@ -41,6 +41,20 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
   // Ring detection: atoms that survive iterative leaf-stripping are ring atoms.
   const is_ring = find_ring_atoms(adj, n);
 
+  // Water detection: MMFF94 gives H2O dedicated types — O = 70
+  // ("OXYGEN IN WATER"), H = 31 ("H-OH") — with r₀ 0.969 (bond
+  // 0-31-70), distinct from alcohols (O 6, H 21, r₀ 0.972). An O
+  // with exactly two H neighbors, each H bonded only to that O, is
+  // water. Pre-scanned so the H case works regardless of atom order.
+  const water_oxygens = new Set<number>();
+  for (let i = 0; i < n; i++) {
+    const atom = molecule.atoms[i];
+    if (atom.element !== 'O' || adj[i].length !== 2) continue;
+    const hs = adj[i].map(nb => nb.nbr);
+    if (!hs.every(h => molecule.atoms[h].element === 'H' && adj[h].length === 1)) continue;
+    water_oxygens.add(i);
+  }
+
   for (let i = 0; i < n; i++) {
     const atom = molecule.atoms[i];
     const neighbors = adj[i];
@@ -150,8 +164,8 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
             atom_types[i] = 23;
             break;
           case 'O':
-            // H bonded to oxygen → type 21 (HOR, alcohols)
-            atom_types[i] = 21;
+            // Water hydrogen → type 31 (H-OH); other O-H → type 21 (HOR)
+            atom_types[i] = water_oxygens.has(neighbors[0].nbr) ? 31 : 21;
             break;
           case 'S':
             // H bonded to sulfur → type 71 (HS)
@@ -165,11 +179,14 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
 
       // ── Oxygen ──────────────────────────────────────────────────────
       case 'O': {
-        if (has_double) {
+        if (water_oxygens.has(i)) {
+          // Water oxygen → type 70 (OXYGEN IN WATER)
+          atom_types[i] = 70;
+        } else if (has_double) {
           // Carbonyl oxygen O=C → type 7 (O=C)
           atom_types[i] = 7;
         } else {
-          // Ether, alcohol, water, and terminal O are all type 6 for now;
+          // Ether, alcohol, and terminal O are all type 6 for now;
           // the carboxylate (32) and oxide (35) distinctions are not yet typed.
           atom_types[i] = 6;
         }

@@ -4,14 +4,15 @@
  * Sums all seven energy terms.
  *
  * 1-4 SCALING applies to atoms that are exactly three bonds apart:
- *   - Van der Waals:      multiply by 0.5
  *   - Electrostatic:      multiply by 0.75
+ *   - Van der Waals:      NOT scaled — Halgren 1996 (p. 496): "1,4-vdW
+ *                         interactions are not differentially scaled in
+ *                         MMFF94". The ×0.5 common in MM2/GAFF is a
+ *                         different force field's convention.
  *
- * These scaling factors are part of the MMFF94 specification and
- * compensate for the fact that 1-4 interactions are partially
- * captured by the torsion term. Without scaling, the van der Waals
- * and electrostatic energies would be double-counted for atoms
- * separated by three bonds.
+ * The electrostatic factor is part of the MMFF94 specification and
+ * compensates for the fact that 1-4 charges are partially captured by
+ * the torsion term's parameterization.
  *
  * STATUS: the scaling is NOT yet applied — all terms are summed
  * unscaled (see TODO below). When it lands, it will be applied HERE
@@ -45,10 +46,10 @@ export function calc_energy(molecule: TypedMolecule): EnergyComponents {
   const electrostatic = calc_electrostatic_energy(molecule);
   const out_of_plane  = calc_oop_energy(molecule);
 
-  // TODO: apply 1-4 scaling to van_der_waals and electrostatic.
+  // TODO: apply 1-4 scaling to electrostatic only (×0.75). vdW is NOT
+  // scaled at 1-4 (Halgren 1996, p. 496 — see the header above).
   // This requires identifying 1-4 atom pairs (atoms exactly 3 bonds apart)
-  // and multiplying the appropriate pairwise contributions by 0.5 (vdW)
-  // or 0.75 (electrostatic).
+  // and multiplying the appropriate pairwise contributions by 0.75.
   // TODO: stretch-bend interactions are omitted when Halgren's equation 4
   // is used to calculate the angle bending energy. In angle-bend.ts, we use
   // equation 4 when the reference angle theta0 > 150 degrees. Keep track of

@@ -38,13 +38,13 @@ value is shown in parentheses when nonzero.
 | formaldehyde | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | stub |
 | methane | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | stub |
 | propane | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | stub |
-| water | 0.01008 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | stub |
+| water | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | stub |
 
 Total energies match exactly where every term matches: ethane
 (−4.73436), butane (−5.07596), cyclohexane (−3.56091), propane
-(−4.89729), methane (0.02638), formaldehyde (0.05416). The remaining
-total deltas are exactly the open items: benzene and ethene are the
-electrostatic stub (3.078 / 8.053), water is the typing gap (0.01008).
+(−4.89729), methane (0.02638), formaldehyde (0.05416), water
+(0.00000). The only remaining total deltas are the electrostatic
+stub: benzene (3.078) and ethene (8.053).
 
 ## Suite — out-of-plane vs BatchMin (8 molecules, kcal/mol)
 
@@ -65,15 +65,18 @@ types exactly, so the comparison isolates the oop term.
 
 ## Known open questions
 
-1. **Water typing (bond Δ 0.01008).** MMFF94 has dedicated water
-   types — O = 70 ("OXYGEN IN WATER"), H = 31 ("H-OH") — with bond
-   `'0-31-70': r₀ 0.969` (present in our parameter table). We type
-   water as generic alcohol (6/21, r₀ 0.972), so our bond stretch at
-   the reference geometry is 0.01008 while obenergy (which types
-   water correctly) reports 0.00000. Fix: water typing rule (O with
-   exactly two H neighbors, each H with only that O → O=70, H=31).
-   Note: the validation suite has no bare-water BatchMin reference
-   (only hydrates), so obenergy is the only cross-check.
+1. ~~Water typing (bond Δ 0.01008)~~ — **RESOLVED 2026-08-01.**
+   MMFF94 has dedicated water types — O = 70 ("OXYGEN IN WATER"),
+   H = 31 ("H-OH") — with bond `'0-31-70': r₀ 0.969` (already in our
+   parameter table). We typed water as generic alcohol (6/21,
+   r₀ 0.972). Fix: `assign_atom_types` now pre-scans for water (O with
+   exactly two H neighbors, each H bonded only to that O → O=70,
+   H=31). Water's bond term is now exact and its total matches
+   obenergy exactly (0.00000). Note: the validation suite has no
+   bare-water BatchMin reference (only hydrates), so obenergy is the
+   only cross-check. The typing reference (`atom-types.test.ts`) pins
+   water as [70, 31, 31]; the suite scoreboard is unaffected (no bare
+   water in the 550 typed molecules).
 
 2. ~~Cyclohexane torsion (Δ 0.554, 5% low)~~ — **RESOLVED 2026-08-01.**
    Root cause: `lookup_param`'s generic wildcard fallback ran before the

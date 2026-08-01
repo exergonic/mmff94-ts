@@ -14,7 +14,7 @@ const EXPECTED_TYPES: Record<string, number[]> = {
   'ethene.sdf':     [2, 2, 5, 5, 5, 5],
   'benzene.sdf':    [37, 37, 37, 37, 37, 37, 5, 5, 5, 5, 5, 5],
   'formaldehyde.sdf': [3, 7, 5, 5],
-  'water.sdf':      [6, 21, 21],
+  'water.sdf':      [70, 31, 31],   // MMFF94 dedicated water types: O = 70, H = 31
 };
 
 const SDF_DIR = join(__dirname, '..', 'tests', 'fixtures', 'sdf');

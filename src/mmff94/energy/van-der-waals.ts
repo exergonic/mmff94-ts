@@ -25,7 +25,7 @@
  *
  * Slater-Kirkwood well depth, eq. (12):
  *   ε_ij  = 181.16 · G_i · G_j · α_i · α_j /
- *           [α_i / √(N_i) + α_j / √(N_j)] / R_ij⁶
+ *           [√(α_i / N_i) + √(α_j / N_j)] / R_ij⁶
  *
  * The 1/R_ij⁶ damping is part of the MMFF94 vdW model. The Waldman-Hagler
  * combination accounts for the different sizes of heteronuclear pairs.
@@ -33,9 +33,10 @@
  * For hydrogen-bond donor-acceptor pairs (DA flags), R_ij is a simple
  * arithmetic mean and is further scaled by 0.8; ε is halved.
  *
- * 1-4 SCALING: vdW is multiplied by 0.5 for atoms exactly three bonds
- * apart. To be applied in total.ts (not yet implemented — see its TODO),
- * not here.
+ * 1-4 SCALING: none. Halgren 1996 (p. 496): "1,4-vdW interactions are
+ * not differentially scaled in MMFF94" — unlike MM2/MM3/GAFF, no 0.5
+ * factor is applied at three-bond separation. (Only the electrostatic
+ * term carries a 1-4 factor, 0.75, applied in total.ts.)
  */
 
 import type { TypedMolecule } from '../../types';
