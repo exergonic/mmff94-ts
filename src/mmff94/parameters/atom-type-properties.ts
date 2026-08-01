@@ -15,7 +15,7 @@ export interface AtomTypeProperties {
   lvl5: number;   // EqLvl5 (0 = wildcard)
 }
 
-export const ATOM_PROPERTIES: Record<number, AtomTypeProperties> = {
+export const ATOM_TYPE_PROPERTIES: Record<number, AtomTypeProperties> = {
   1: { crd: 4, val: 4, pilp: 0, mltb: 0, arom: 0, lin: 0, sbmb: 0, lvl3: 1, lvl4: 1, lvl5: 0 },
   2: { crd: 3, val: 4, pilp: 0, mltb: 2, arom: 0, lin: 0, sbmb: 1, lvl3: 2, lvl4: 1, lvl5: 0 },
   3: { crd: 3, val: 4, pilp: 0, mltb: 2, arom: 0, lin: 0, sbmb: 1, lvl3: 3, lvl4: 1, lvl5: 0 },

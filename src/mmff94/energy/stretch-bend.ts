@@ -19,29 +19,15 @@
  */
 
 import type { TypedMolecule } from '../../types';
-import { STRETCH_BEND_PARAMS, lookup_param, type StretchBendParams } from '../parameters';
+import {
+  STRETCH_BEND_PARAMS,
+  DEFAULT_STRETCH_BEND,
+  ELEMENT_ROW,
+  lookup_param,
+  type StretchBendParams,
+} from '../parameters';
 import { distance, angle_in_radians, Vec3 } from '../../utils/vector';
-import { make_class_context, strbnd_type, bond_parameters, angle_parameters, ELEMENT_ROW } from './bond-type';
-
-// Default stretch-bend force constants (mmffdfsb.par), keyed by element
-// ROWS — 0=H, 1=C, 2=N, 3=O, 4=F, ... (F for F is 1!). Used when the
-// stretch-bend lookup misses entirely: BatchMin still evaluates the
-// angle with these small constants — a molecule with stretched bonds
-// around an untyped angle (e.g. Si–C) can carry several kcal/mol here,
-// so skipping the angle outright (the old behavior) is wrong.
-const DEFAULT_FSB: Record<string, [number, number]> = {
-  '0-1-0': [0.15, 0.15], '0-1-1': [0.10, 0.30], '0-1-2': [0.05, 0.35], '0-1-3': [0.05, 0.35], '0-1-4': [0.05, 0.35],
-  '0-2-0': [0.00, 0.00], '0-2-1': [0.00, 0.15], '0-2-2': [0.00, 0.15], '0-2-3': [0.00, 0.15], '0-2-4': [0.00, 0.15],
-  '1-1-1': [0.30, 0.30], '1-1-2': [0.30, 0.50], '1-1-3': [0.30, 0.50], '1-1-4': [0.30, 0.50],
-  '2-1-2': [0.50, 0.50], '2-1-3': [0.50, 0.50], '2-1-4': [0.50, 0.50],
-  '3-1-3': [0.50, 0.50], '3-1-4': [0.50, 0.50], '4-1-4': [0.50, 0.50],
-  '1-2-1': [0.30, 0.30], '1-2-2': [0.25, 0.25], '1-2-3': [0.25, 0.25], '1-2-4': [0.25, 0.25],
-  '2-2-2': [0.25, 0.25], '2-2-3': [0.25, 0.25], '2-2-4': [0.25, 0.25],
-  '3-2-3': [0.25, 0.25], '3-2-4': [0.25, 0.25], '4-2-4': [0.25, 0.25],
-};
-
-// Element → periodic-table row (empirical rules): see bond-type.ts.
-// (ELEMENT_ROW imported from ./bond-type)
+import { make_class_context, strbnd_type, bond_parameters, angle_parameters } from '../parameters/parameter-classes';
 
 /**
  * Calculate the total stretch-bend cross term energy.
@@ -97,9 +83,11 @@ export function calc_stretch_bend_energy(molecule: TypedMolecule): number {
         } else {
           sb_params = lookup_param(STRETCH_BEND_PARAMS, [t_min, tj, t_max]);
         }
-        // No stretch-bend entry: use the default F(I_J,K)/F(K_J,I) from
-        // the element-row table (mmffdfsb.par) — BatchMin evaluates every
-        // angle, and the defaults are the only values for e.g. Si angles.
+        // No stretch-bend entry: use the default F(I_J,K)/F(K_J,I)
+        // from the element-row table (mmffdfsb.par) — BatchMin
+        // evaluates every angle, and the defaults are the only values
+        // for e.g. Si angles (a stretched Si–C bond can carry several
+        // kcal/mol here, so skipping the angle outright is wrong).
         let k_ij: number;
         let k_kj: number;
         if (sb_params) {
@@ -112,8 +100,8 @@ export function calc_stretch_bend_energy(molecule: TypedMolecule): number {
           const rowa = ELEMENT_ROW[molecule.atoms[i].element] ?? 0;
           const rowb = ELEMENT_ROW[molecule.atoms[j].element] ?? 0;
           const rowc = ELEMENT_ROW[molecule.atoms[k].element] ?? 0;
-          const direct = DEFAULT_FSB[`${rowa}-${rowb}-${rowc}`];
-          const F = direct ?? DEFAULT_FSB[`${rowc}-${rowb}-${rowa}`];
+          const direct = DEFAULT_STRETCH_BEND[`${rowa}-${rowb}-${rowc}`];
+          const F = direct ?? DEFAULT_STRETCH_BEND[`${rowc}-${rowb}-${rowa}`];
           if (!F) continue;
           // F[0] belongs to the I-J bond when the stored row order is
           // (rowa, rowb, rowc); for the reversed match it belongs to K-J.

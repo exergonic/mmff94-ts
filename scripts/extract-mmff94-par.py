@@ -419,7 +419,7 @@ def generate_properties():
         if len(parts) < 6 or not parts[1].isdigit():
             continue
         levels[int(parts[1])] = (parts[3], parts[4], parts[5])  # lvl3, lvl4, lvl5
-    with open(os.path.join(OUT_DIR, 'properties.ts'), 'w') as f:
+    with open(os.path.join(OUT_DIR, 'atom-type-properties.ts'), 'w') as f:
         write_ts_header(f, "Atom-type properties: coordination, valence, multiple-bond, aromatic, linear, sbmb flags, EqLvl3/4/5 equivalence levels.")
         f.write("export interface AtomTypeProperties {\n")
         f.write("  crd: number;    // coordination number\n")
@@ -433,7 +433,7 @@ def generate_properties():
         f.write("  lvl4: number;   // EqLvl4\n")
         f.write("  lvl5: number;   // EqLvl5 (0 = wildcard)\n")
         f.write("}\n\n")
-        f.write("export const ATOM_PROPERTIES: Record<number, AtomTypeProperties> = {\n")
+        f.write("export const ATOM_TYPE_PROPERTIES: Record<number, AtomTypeProperties> = {\n")
         for line in lines:
             parts = line.split()
             if len(parts) < 9:
@@ -447,7 +447,31 @@ def generate_properties():
                 f"lvl3: {value(lvl[0])}, lvl4: {value(lvl[1])}, lvl5: {value(lvl[2])} }},\n"
             )
         f.write("};\n")
-    print(f"  [write] properties.ts ({len(lines)} entries, {len(levels)} with levels)")
+    print(f"  [write] atom-type-properties.ts ({len(lines)} entries, {len(levels)} with levels)")
+
+
+# ── Default stretch-bend constants (mmffdfsb.par) ───────────────────────
+# Format: IR JR KR F(I_J,K) F(K_J,I) — the row indices are ELEMENT rows
+# (0 = H, 1 = C/N/O/F, 2 = Si/P/S/Cl, 3 = Br, 4 = I), used when the
+# stretch-bend class lookup misses: BatchMin still evaluates the angle
+# with these small constants.
+
+def generate_default_stretch_bend():
+    lines = parse_par('mmffdfsb.par')
+    entries = []
+    for line in lines:
+        parts = line.split()
+        if len(parts) < 5 or not parts[0].isdigit():
+            continue  # header line ("IR JR KR ...") and comments
+        entries.append(parts)
+    with open(os.path.join(OUT_DIR, 'default-stretch-bend.ts'), 'w') as f:
+        write_ts_header(f, "Default stretch-bend constants (mmffdfsb.par), keyed by element-row triple: [F(I_J,K), F(K_J,I)].")
+        f.write("export const DEFAULT_STRETCH_BEND: Record<string, [number, number]> = {\n")
+        for parts in entries:
+            key = f"{parts[0]}-{parts[1]}-{parts[2]}"
+            f.write(f"  '{key}': [{value(parts[3])}, {value(parts[4])}],\n")
+        f.write("};\n")
+    print(f"  [write] default-stretch-bend.ts ({len(entries)} entries)")
 
 
 # ── Main ───────────────────────────────────────────────────────────────
@@ -465,6 +489,7 @@ def main():
     generate_oop()
     generate_atom_types()
     generate_properties()
+    generate_default_stretch_bend()
     generate_lookup()
 
     print("\nDone. All parameter tables regenerated.")

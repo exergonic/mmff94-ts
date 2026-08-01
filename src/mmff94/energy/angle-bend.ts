@@ -24,7 +24,7 @@
 
 import type { TypedMolecule } from '../../types';
 import { angle_in_radians, Vec3 } from '../../utils/vector';
-import { make_class_context, angle_parameters } from './bond-type';
+import { make_class_context, angle_parameters } from '../parameters/parameter-classes';
 
 const CB = -0.007; // cubic bend constant, deg⁻¹
 

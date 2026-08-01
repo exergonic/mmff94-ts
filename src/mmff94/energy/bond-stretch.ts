@@ -17,7 +17,7 @@
 
 import type { TypedMolecule } from '../../types';
 import { distance, Vec3 } from '../../utils/vector';
-import { make_class_context, bond_parameters } from './bond-type';
+import { make_class_context, bond_parameters } from '../parameters/parameter-classes';
 
 /**
  * Calculate the total bond stretching energy for all bonds in a molecule.
