@@ -21,7 +21,7 @@
 import type { TypedMolecule } from '../../types';
 import { STRETCH_BEND_PARAMS, lookup_param, type StretchBendParams } from '../parameters';
 import { distance, angle_in_radians, Vec3 } from '../../utils/vector';
-import { make_class_context, angle_class, bond_parameters, angle_parameters } from './bond-type';
+import { make_class_context, strbnd_type, bond_parameters, angle_parameters } from './bond-type';
 
 // Default stretch-bend force constants (mmffdfsb.par), keyed by element
 // ROWS — 0=H, 1=C, 2=N, 3=O, 4=F, ... (F for F is 1!). Used when the
@@ -79,9 +79,11 @@ export function calc_stretch_bend_energy(molecule: TypedMolecule): number {
         const t_min = Math.min(ti, tk);
         const t_max = Math.max(ti, tk);
 
-        // The stretch-bend class is the angle class (BTij/ring classes),
-        // so ring angles use the ring-class entries (e.g. '4-3-3-3').
-        const cls = angle_class(ctx, i, j, k);
+        // The stretch-bend class is a remap of the angle class
+        // (GetStrBndType): for BT-flagged angles the class splits 1/2 by
+        // which side carries the flag, so the ring/BT classes resolve to
+        // different keys than the angle term's.
+        const cls = strbnd_type(ctx, i, j, k);
 
         // 1. Look up stretch-bend parameters
         let sb_params: StretchBendParams | undefined;

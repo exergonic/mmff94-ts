@@ -228,6 +228,38 @@ function lookup_angle_entry(
   return undefined;
 }
 
+/** GetStrBndType — the stretch-bend class, a REMAP of the angle class
+ *  (part IV, p. 609): class 1/2 split by which side carries the BT flag
+ *  (and the i-vs-k type order), 2→3, 3→5, 4→4, 5→6/7, 6→8, 7→9/10,
+ *  8→11. The strbnd par only carries classes 0/1/2/4/5; the remapped
+ *  classes miss and fall to the default-fsb table. */
+export function strbnd_type(ctx: ClassContext, i: number, j: number, k: number): number {
+  const { mol } = ctx;
+  const atabc = angle_class(ctx, i, j, k);
+  const btab = bond_type_flag(ctx, i, j);
+  const btbc = bond_type_flag(ctx, j, k);
+  const inverse = mol.atom_types[i] > mol.atom_types[k];
+  switch (atabc) {
+    case 0: return 0;
+    case 1:
+      if (btab) return inverse ? 2 : 1;
+      if (btbc) return inverse ? 1 : 2;
+      return 0; // unreachable: atabc 1 implies one BT flag
+    case 2: return 3;
+    case 3: return 5;
+    case 4: return 4;
+    case 5:
+      if (btab) return inverse ? 7 : 6;
+      return inverse ? 6 : 7;
+    case 6: return 8;
+    case 7:
+      if (btab) return inverse ? 10 : 9;
+      return inverse ? 9 : 10;
+    case 8: return 11;
+    default: return 0;
+  }
+}
+
 /**
  * Full angle-parameter resolution: class-scoped step-down lookup (exact
  * → EqLvl3 → EqLvl4 → EqLvl5), falling to the empirical θ₀ rules and the
