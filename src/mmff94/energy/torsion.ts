@@ -33,8 +33,79 @@
  */
 
 import type { TypedMolecule } from '../../types';
-import { TORSION_PARAMS, lookup_param, type TorsionParams } from '../parameters';
+import { TORSION_PARAMS, ATOM_PROPERTIES, type TorsionParams } from '../parameters';
 import { dihedral_angle, Vec3 } from '../../utils/vector';
+import { make_class_context, bond_type_flag, type ClassContext } from './bond-type';
+
+// Torsion class TTijkl (MMFF part IV, p. 609):
+//   1 = central bond BT-flagged (e.g. the central single bond of a
+//       conjugated diene — V2 ≈ 1.8, not the alkene's 12)
+//   2 = central bond single but a terminal bond BT-flagged
+//   4 = all four atoms in the same 4-membered ring
+//   5 = all four in a non-aromatic 5-ring with at least one sp3 C
+//   0 = everything else (alkanes, alkenes, aromatic rings)
+function torsion_class(ctx: ClassContext, i: number, j: number, k: number, l: number): number {
+  const { mol } = ctx;
+  const bt_ab = bond_type_flag(ctx, i, j);
+  const bt_bc = bond_type_flag(ctx, j, k);
+  const bt_cd = bond_type_flag(ctx, k, l);
+
+  if (bt_bc === 1) return 1;
+
+  // 4-ring: the closing bond i-l makes i-j-k-l a 4-cycle.
+  if (ctx.adj[i].includes(l)) return 4;
+
+  const central = mol.bonds.find(
+    b => (b.atom1 === j && b.atom2 === k) || (b.atom1 === k && b.atom2 === j),
+  );
+  if (central && central.bond_order === 1) {
+    if (bt_ab || bt_cd) return 2;
+  }
+
+  // 5-ring: a common neighbor x of i and l closes the cycle i-j-k-l-x.
+  const types = [i, j, k, l].map(a => mol.atom_types[a]);
+  if (types.includes(1) && types.every(t => !ATOM_PROPERTIES[t]?.arom)) {
+    const x = ctx.adj[i].find(n => n !== j && n !== k && ctx.adj[l].includes(n));
+    if (x !== undefined) return 5;
+  }
+
+  return 0;
+}
+
+// Torsion step-down chain (part I, p. 513): exact, then the asymmetric
+// (EqLvl3, EqLvl5) terminal reductions. The par file stores each entry
+// in ONE canonical direction; the order index decides which direction
+// that is, and only that direction's chain is consulted — the other
+// direction would hit wildcard defaults (e.g. '0-0-1-1-0') before the
+// exact reversed entry.
+function lookup_torsion(
+  cls: number,
+  ti: number,
+  tj: number,
+  tk: number,
+  tl: number,
+): TorsionParams | undefined {
+  const lvl3 = (t: number) => ATOM_PROPERTIES[t]?.lvl3 ?? t;
+  const lvl5 = (t: number) => ATOM_PROPERTIES[t]?.lvl5 ?? t;
+  const chain = (a: number, b: number, c: number, d: number): TorsionParams | undefined => {
+    const keys = [
+      `${cls}-${a}-${b}-${c}-${d}`,
+      `${cls}-${lvl3(a)}-${b}-${c}-${lvl5(d)}`,
+      `${cls}-${lvl5(a)}-${b}-${c}-${lvl3(d)}`,
+      `${cls}-${lvl5(a)}-${b}-${c}-${lvl5(d)}`,
+    ];
+    for (const key of keys) {
+      const p = TORSION_PARAMS[key];
+      if (p) return p;
+    }
+    return undefined;
+  };
+
+  const M = 136;
+  const order =
+    tk * M ** 3 + tj * M ** 2 + tl * M + ti - (tj * M ** 3 + tk * M ** 2 + ti * M + tl);
+  return order >= 0 ? chain(ti, tj, tk, tl) : chain(tl, tk, tj, ti);
+}
 
 /**
  * Calculate the total torsional (dihedral) energy.
@@ -48,11 +119,11 @@ export function calc_torsion_energy(molecule: TypedMolecule): number {
     adj[bond.atom1].push(bond.atom2);
     adj[bond.atom2].push(bond.atom1);
   }
+  const ctx = make_class_context(molecule, adj);
 
-  // Iterate over all bonds; only single bonds contribute torsion
+  // Iterate over all bonds (single and multiple — an alkene's C=C
+  // torsion is real, V2 ≈ 12; only H-centered bonds are skipped)
   for (const bond of molecule.bonds) {
-    if (bond.bond_order !== 1) continue;
-
     const j = bond.atom1;
     const k = bond.atom2;
 
@@ -76,26 +147,14 @@ export function calc_torsion_energy(molecule: TypedMolecule): number {
         const tl = molecule.atom_types[l];
         const posL: Vec3 = [molecule.atoms[l].x, molecule.atoms[l].y, molecule.atoms[l].z];
 
-        // MMFF94 resolves torsion parameters by canonical direction and
-        // exact types first (Halgren part I, p. 513 — the "step-down"
-        // protocol starts from the exact 1-1-1-1 match). Trying wildcards
-        // before the reversed direction is wrong: an H-C-C-C dihedral
-        // would match the generic '*-1-1-*' default (V3 only) instead of
-        // the exact reversed entry.
-        const forward_key = `0-${ti}-${tj}-${tk}-${tl}`;
-        const reverse_key = `0-${tl}-${tk}-${tj}-${ti}`;
-        let params: TorsionParams | undefined =
-          TORSION_PARAMS[forward_key] ?? TORSION_PARAMS[reverse_key];
-
-        // Fall back to the priority/wildcard helper for entries in other
-        // classes (e.g. class 1 for double-bond centers) and for types
-        // with no exact entry in either direction.
-        if (!params) {
-          params = lookup_param(TORSION_PARAMS, [ti, tj, tk, tl]);
-        }
-        if (!params) {
-          params = lookup_param(TORSION_PARAMS, [tl, tk, tj, ti]);
-        }
+        // Class-scoped step-down lookup: TTijkl selects the class
+        // (part IV p. 609 — conjugated central bond, terminal BT flags,
+        // 4/5-rings), then the asymmetric EqLvl3/EqLvl5 chain runs in
+        // both directions (part I p. 513). Exact types in either
+        // direction always win — a wildcard default like '*-1-1-*'
+        // must never preempt the exact reversed entry.
+        const cls = torsion_class(ctx, i, j, k, l);
+        const params = lookup_torsion(cls, ti, tj, tk, tl);
 
         if (!params) continue;
 
