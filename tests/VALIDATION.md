@@ -1,0 +1,115 @@
+# Validation Ledger
+
+Living record of what `mmff94-ts` has been validated against —
+molecule by molecule, term by term. The numbers here are produced by
+`npm run test`; update this file whenever the reference tests change.
+The README's [Validation](../README.md#validation) section is the
+condensed public version of this ledger.
+
+## Method
+
+- **Fixtures**: 9 molecules in `tests/fixtures/sdf/`, typed with our
+  own `assign_atom_types()`.
+- **Fixture references**: `obenergy -ff MMFF94` logs in
+  `tests/references/` (OpenBabel 3.1.0, generated via
+  `tests/scripts/get_mmff94_breakdown.py`).
+- **Suite references**: Halgren's 753-molecule MMFF94 validation
+  suite in `tests/fixtures/validation-suite/` — structures from
+  `MMFF94.mmd`, BatchMin component energies from `MMFF94_bmin.log`.
+- **Asserted in CI** (`tests/reference-comparison.test.ts`,
+  `tests/validate-against-suite.test.ts`):
+  - bond, angle, stretch-bend, vdW vs obenergy: all 9 fixtures, |Δ| < 0.02
+  - torsion vs obenergy: ethane only, |Δ| < 0.01 (other fixtures
+    skipped until typing isolates the term)
+  - out-of-plane vs BatchMin: 8 suite molecules, |Δ| < 0.05
+
+## Fixtures — per-term deltas vs obenergy (kcal/mol, |ours − ref|)
+
+From the printed comparisons in `reference-comparison.test.ts`
+(2026-07-31). "stub" in the elec column = we return 0; the reference
+value is shown in parentheses when nonzero.
+
+| molecule | bond | angle | strbnd | torsion | vdw | oop | elec |
+|---|---|---|---|---|---|---|---|
+| benzene | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | stub (ref 3.07810) |
+| butane | 0.00000 | 0.00000 | 0.00000 | 0.05261 | 0.00000 | 0.00000 | stub |
+| cyclohexane | 0.00000 | 0.00000 | 0.00000 | 0.55420 | 0.00000 | 0.00000 | stub |
+| ethane | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | stub |
+| ethene | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | stub (ref 8.05300) |
+| formaldehyde | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | stub |
+| methane | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | stub |
+| propane | 0.00000 | 0.00000 | 0.00000 | 0.00650 | 0.00000 | 0.00000 | stub |
+| water | 0.01008 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | stub |
+
+Total energies match exactly where every term matches: ethane
+(−4.73436 both sides), methane (0.02638), formaldehyde (0.05416).
+Everywhere else the total delta equals the sum of the open items
+(e.g. cyclohexane's total delta of 0.5542 is its torsion delta).
+
+## Suite — out-of-plane vs BatchMin (8 molecules, kcal/mol)
+
+Asserted in `validate-against-suite.test.ts` (|Δ| < 0.05). These
+molecules are chosen because our typing reproduces the reference
+types exactly, so the comparison isolates the oop term.
+
+| code | ours | BatchMin | Δ |
+|---|---|---|---|
+| DADDAN | 0.255548 | 0.255547 | +0.000000 |
+| GIDJUY | 0.216936 | 0.216938 | −0.000002 |
+| VEJWOW | 0.176902 | 0.177154 | −0.000252 |
+| DIKGAF | 0.160155 | 0.158925 | +0.001230 |
+| FAXVAB | 0.127921 | 0.126658 | +0.001263 |
+| GEXGIZ | 0.122862 | 0.123820 | −0.000958 |
+| VIRBON | 0.101801 | 0.102969 | −0.001167 |
+| AMHTAR01 | 0.203026 | 0.224486 | −0.021460 |
+
+## Known open questions
+
+1. **Water typing (bond Δ 0.01008).** MMFF94 has dedicated water
+   types — O = 70 ("OXYGEN IN WATER"), H = 31 ("H-OH") — with bond
+   `'0-31-70': r₀ 0.969` (present in our parameter table). We type
+   water as generic alcohol (6/21, r₀ 0.972), so our bond stretch at
+   the reference geometry is 0.01008 while obenergy (which types
+   water correctly) reports 0.00000. Fix: water typing rule (O with
+   exactly two H neighbors, each H with only that O → O=70, H=31).
+   Note: the validation suite has no bare-water BatchMin reference
+   (only hydrates), so obenergy is the only cross-check.
+
+2. **Cyclohexane torsion (Δ 0.554, 5% low).** Ours −10.85580 vs
+   ref −11.41000. Pattern across the alkane fixtures: propane
+   Δ 0.0065 (no C–C–C–C dihedrals), butane Δ 0.053 (one), cyclohexane
+   Δ 0.554 (six) — but the deltas don't scale linearly with the
+   C–C–C–C count, so something else in cyclohexane also differs.
+   Lead: `mmfftor.par` has TWO entries for 1-1-1-1 — priority 0
+   (0.103 / 0.681 / 0.332) and priority 5 (0.144 / −0.547 / 1.126);
+   we take priority 0. Check which entry OpenBabel uses and whether
+   its lookup has context rules for the priority-5 variant.
+
+3. **AMHTAR01 oop (Δ 0.021).** Largest suite oop delta, within
+   tolerance. Ester/carboxyl pyramidalization; reference types the
+   CO₂M carbon 41 and oxygens 32/32 where we type 3/7/6 — typing gap
+   (see the atom-types suite scoreboard).
+
+4. **AGLYSL01 components.** Stretch-bend 0.00000 vs 0.24423, torsion
+   −3.00231 vs −4.71331, vdW 3.51572 vs 2.78652 — all traceable to
+   typing (sulfonate S, ammonium N). The OOP row is exact (0/0).
+
+5. **Electrostatic stub.** obenergy's benzene (+3.078) and ethene
+   (+8.053) show what the stub leaves out; no fixture total with
+   nonzero BCI charges can match until Phase 4.
+
+6. **Typing scoreboard.** 32/550 suite molecules type-exact vs
+   OpenBabel (baseline; see `atom-types-suite.test.ts`). The torsion
+   assertions on non-ethane fixtures stay skipped until typing
+   isolates the term.
+
+## Updating this ledger
+
+1. Run `npm run test`; the reference-comparison tests print every
+   fixture's per-term comparison, and the suite test prints AGLYSL01.
+2. Update the fixture delta table and the oop table with the new
+   numbers (re-run the oop table script if the values drift — the
+   numbers live in the test's printed output).
+3. When an open question is resolved, move it to a short "Resolved"
+   note at the bottom with the commit that fixed it, and tighten the
+   corresponding assertion in the test files.

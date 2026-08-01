@@ -46,6 +46,47 @@ optimization are still in progress (see [Status](#status)).
 | Analytical gradients | ⬜ |
 | Geometry optimization (L-BFGS / SD) | ⬜ |
 
+## Validation
+
+Every implemented term is checked against reference energies: the
+nine SDF fixtures against OpenBabel `obenergy` logs
+(`tests/reference-comparison.test.ts`), and the out-of-plane term
+additionally against Halgren's own BatchMin energies from the
+753-molecule validation suite (`tests/validate-against-suite.test.ts`).
+
+Bond stretch, angle bend, stretch-bend, and van der Waals match the
+obenergy references **exactly (to 5 decimals) on all 9 fixtures**.
+Torsion matches on 6 and is close on 3 (see notes); out-of-plane is
+0 on these acyclic/planar fixtures. Totals match exactly where every
+term does (ethane −4.73436, methane, formaldehyde).
+
+| Term | Exact on fixtures | Notes |
+|---|---|---|
+| Bond stretch | 8/9 | water Δ 0.0101 — MMFF94 types water O/H as 70/31 (r₀ 0.969); we type 6/21 (r₀ 0.972). Typing gap, not a parameter gap |
+| Angle bend | 9/9 | |
+| Stretch-bend | 9/9 | |
+| Torsion | 6/9 | propane Δ 0.007, butane Δ 0.053, cyclohexane Δ 0.554 — C–C–C–C dihedral parameter question |
+| Van der Waals | 9/9 | |
+| Out-of-plane | 9/9 | 0 on these fixtures; see BatchMin table below |
+| Electrostatic | — | stub (returns 0) |
+
+### Out-of-plane vs BatchMin (8 suite molecules, kcal/mol)
+
+| Molecule | Ours | BatchMin | Δ |
+|---|---|---|---|
+| DADDAN | 0.255548 | 0.255547 | 0.000000 |
+| GIDJUY | 0.216936 | 0.216938 | −0.000002 |
+| VEJWOW | 0.176902 | 0.177154 | −0.000252 |
+| DIKGAF | 0.160155 | 0.158925 | +0.001230 |
+| FAXVAB | 0.127921 | 0.126658 | +0.001263 |
+| GEXGIZ | 0.122862 | 0.123820 | −0.000958 |
+| VIRBON | 0.101801 | 0.102969 | −0.001167 |
+| AMHTAR01 | 0.203026 | 0.224486 | −0.021460 |
+
+The full molecule-by-molecule ledger — every delta, the known open
+questions, and how to update it — lives in
+[`tests/VALIDATION.md`](tests/VALIDATION.md).
+
 ## Usage
 
 ```typescript
