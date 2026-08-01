@@ -177,64 +177,78 @@ This is currently a stub.
 
 The numeric parameters come from **OpenBabel**'s `.par` files (which are themselves
 machine-readable transcriptions of Halgren's published tables). The extraction
-script (`scripts/extract-params.ps1`) reads these `.par` files and writes TypeScript
+script (`scripts/extract-mmff94-par.py`) reads these `.par` files and writes TypeScript
 literal objects. The script is a format converter — it implements zero MMFF94 logic.
 
-### 6.2 Key format and the priority column
+### 6.2 Key format and the class column
 
-OpenBabel's parameter files may have multiple entries for the same type combination,
-distinguished by a leading priority code (0 = default/primary, 1 = alternative,
-etc.). For example, a C=C double bond and a conjugated C-C single bond both have
-type pair (2,2) but different force constants:
+The first column of every parameter table is the parameter **class**: class 0
+is the general entry, and higher classes hold context-specific alternatives —
+conjugated single bonds (bond class 1), angles with BT-flagged bonds (classes
+1/2), 3-ring angles (3/5/6), 4-ring angles (4/7/8), and the torsion classes
+(1/2/4/5). The class is NOT a priority ladder — it is a chemical question:
+which class applies is decided from the molecule's bonding, not by falling
+through entries. For example, a C=C double bond and a conjugated C-C single
+bond both have type pair (2,2) but different force constants:
 
 ```
-0   2    2     9.505     1.333   C94    <- C=C double bond (priority 0)
-1   2    2     5.310     1.430   #C94   <- conjugated single bond (priority 1)
+0   2    2     9.505     1.333   C94    <- class 0: C=C double bond
+1   2    2     5.310     1.430   C94    <- class 1: conjugated single bond (BTij = 1)
 ```
 
-The extraction preserves these as separate keys by including the priority:
+The extraction preserves these as separate keys by including the class:
 
 ```typescript
 BOND_PARAMS = {
-  "0-2-2": { k_b: 9.505, r0: 1.333 },   // priority 0: C=C double
-  "1-2-2": { k_b: 5.310, r0: 1.430 },   // priority 1: conjugated C-C
+  "0-2-2": { k_b: 9.505, r0: 1.333 },   // class 0: C=C double
+  "1-2-2": { k_b: 5.310, r0: 1.430 },   // class 1: conjugated C-C
   ...
 }
 ```
 
-### 6.3 The lookup system — `lookup.ts`
+### 6.3 The class system — `parameter-classes.ts`
 
-The `lookup_param()` function implements ordered parameter lookup:
+`lookup_param()` is only the class-0 fallback. The real resolution is the class
+system in `src/mmff94/parameters/parameter-classes.ts`:
 
-1. **Priority 0** — try the default entry first
-2. **Priority 1, 2, ...** — fall through to alternatives
-3. **Wildcard at terminals** — replace type_i or type_k with 0
-4. **Wildcard at both terminals** — replace both with 0
+1. **BTij** (bond-type flag, part V p. 620) — 1 for a single bond between two
+   sbmb-flagged types (conjugated dienes, C(=O)–C(ar)), 1 for a non-ring bond
+   between two aromatic types (biphenyl), 0 for everything else including
+   aromatic ring bonds (BatchMin flags ring bonds aromatic; Kekulé input files
+   don't, so an in-ring BFS check reproduces it).
+2. **ATijk** (angle) = BT(i,j) + BT(j,k) with ring overrides → classes 1/2,
+   3/5/6 (3-ring), 4/7/8 (4-ring). **TTijkl** (torsion) → classes 1/2/4/5.
+   **STijk** (stretch-bend) is a remap of ATijk (GetStrBndType).
+3. **Step-down chain** (part I p. 513) — within the class: exact terminal types
+   first, then the EqLvl3/4/5 equivalence levels of the terminals (from
+   `mmffdef.par`, extracted into `atom-type-properties.ts`).
+4. **Empirical rules** — when the chain misses: part-II rules for angles
+   (reference θ₀ from coordination numbers, k_a from the Z/C element tables),
+   part-IV rules for torsions (`torsion-empirical.ts`, rules a–h), and the
+   default-fsb table (`default-stretch-bend.ts`) for stretch-bend.
 
-```typescript
-// For a C-C bond (types [1, 1]), tries keys in this order:
-//   "0-1-1" → found → return
-//   "1-1-1" → skip (not found)
-//   ...
-//   "0-0-1" → wildcard at terminal → skip
-//   "0-1-0" → wildcard at other terminal → skip
-```
-
-This mirrors OpenBabel's own lookup strategy: exact match first, then wildcards
-from most-specific to least-specific.
+The terms import these helpers from the parameters barrel; each energy term
+stays a pure evaluation of geometry × resolved parameters.
 
 ### 6.4 Parameter tables
 
 | File | Content | Keyed by | Entry count |
 |---|---|---|---|
-| `bond.ts` | Bond stretch: k_b (mdyn/Å), r₀ (Å) | `"p-t1-t2"` | ~500 |
-| `angle.ts` | Angle bend: k_a (mdyn·Å/rad²), θ₀ (°) | `"p-t1-t2-t3"` | ~2350 |
-| `stretch-bend.ts` | Stretch-bend: k_sb_IJK, k_sb_KJI | `"p-t1-t2-t3"` | ~290 |
-| `torsion.ts` | Torsion: up to 3 Fourier terms (V_n, γ_n, n) | `"p-t1-t2-t3-t4"` | ~940 |
-| `van-der-waals.ts` | VDW per-atom: R*, α_i, N_i, G_i | atom type number | ~95 |
-| `bci.ts` | Bond charge increments | `"p-t1-t2"` + per-atom defaults | ~600 |
+| `bond.ts` | Bond stretch: k_b (mdyn/Å), r₀ (Å) | `"c-t1-t2"` | ~500 |
+| `angle.ts` | Angle bend: k_a (mdyn·Å/rad²), θ₀ (°) | `"c-t1-t2-t3"` | ~2350 |
+| `stretch-bend.ts` | Stretch-bend: k_sb_IJK, k_sb_KJI | `"c-t1-t2-t3"` | ~290 |
+| `torsion.ts` | Torsion: up to 3 Fourier terms (V_n, γ_n, n) | `"c-t1-t2-t3-t4"` | ~940 |
+| `van-der-waals.ts` | VDW per-atom: R*, α_i, N_i, G_i, DA flag | atom type number | ~95 |
+| `bci.ts` | Bond charge increments | `"c-t1-t2"` + per-atom defaults | ~600 |
 | `out-of-plane.ts` | OOP bending: k_oop | `"t1-t2-t3-t4"` | ~120 |
 | `atom-types.ts` | Type definitions: symbol, element, valence | atom type number | ~95 |
+| `atom-type-properties.ts` | Per-type flags: crd, val, pilp, mltb, arom, lin, sbmb + EqLvl3/4/5 | atom type number | ~95 |
+| `default-stretch-bend.ts` | Element-row default k_sb values (mmffdfsb.par) | `"row-row-row"` | 30 |
+| `parameter-classes.ts` | BTij/ATijk/TTijkl/STijk class selection + class-scoped resolution (hand-written) | — | — |
+| `torsion-empirical.ts` | Part-IV empirical torsion rules (hand-written) | — | — |
+
+(The `c` in the key format is the class column; `lookup.ts` provides
+`lookup_param()` for class-0 wildcard fallback.)
 
 ---
 
@@ -260,7 +274,10 @@ E_bond = 143.9325 · (k_b / 2) · (r − r₀)² · [1 + cs · (r − r₀) + 7/
 where `cs = −2 Å⁻¹` is the cubic stretch constant (Halgren1996, eq. (2)).
 
 For every bond in the molecule:
-1. Look up k_b and r₀ from `BOND_PARAMS` by the pair of atom types
+1. Resolve k_b and r₀ by the pair of atom types — class-aware: a BTij = 1
+   bond (conjugated single bond) uses the class-1 entry when one exists
+   (e.g. a diene's central C–C uses `1-2-2`, not the C=C double-bond
+   `0-2-2`)
 2. Compute the current bond length r from atomic coordinates
 3. Compute the harmonic term (leading quadratic) and the anharmonic correction
    (cubic and quartic terms from the Morse expansion), then multiply them:
@@ -285,19 +302,25 @@ E_angle = 0.043844 · (k_a / 2) · Δθ² · (1 + cb · Δθ)
 
 where `Δθ = θ − θ₀`, and `cb = −0.007 deg⁻¹` is the cubic bend constant.
 
-For near-linear angles (θ₀ > 150°), eq. (3) is replaced by eq. (4):
+For linear centers — atom types with the `lin` flag in `atom-type-properties.ts`
+(e.g. sp carbon) — eq. (3) is replaced by eq. (4):
 
 ```
 E_angle = 143.9325 · k_a · (1 + cos θ)
 ```
 
-which avoids the singularity of the cubic expansion at θ = 180°.
+which avoids the singularity of the cubic expansion at θ = 180°. Stretch-bend
+is omitted for these angles (the same flag drives both terms).
 
 For every angle i-j-k (where j is the central atom):
 
-1. Look up k_a and θ₀ from `ANGLE_PARAMS` by the triplet of types (i, j, k)
+1. Resolve k_a, θ₀ and the linear flag via `angle_parameters()`: the angle
+   class ATijk (BT sum, with 3/5/6 for 3-rings and 4/7/8 for 4-rings) selects
+   the class-scoped entry — small rings have their own θ₀ ≈ 60°/90° — then the
+   EqLvl3/4/5 step-down chain, then the part-II empirical rules (θ₀ from the
+   central atom's coordination number, k_a from the Z/C element tables)
 2. Compute the current angle θ
-3. If `θ₀ > 150°`: use the cosine form (eq. 4)
+3. If `linear`: use the cosine form (eq. 4)
 4. Otherwise: compute the harmonic term and the anharmonic correction:
    ```
    harmonic     = 0.043844 · (k_a / 2) · Δθ²
@@ -322,11 +345,22 @@ because bond lengths and angles are physically coupled: when an H-C-H angle in
 methane closes, the C-H bonds shorten slightly.
 
 For each angle i-j-k:
-1. Look up k_sb_IJK and k_sb_KJI from `STRETCH_BEND_PARAMS`
-2. Look up r₀ for bonds i-j and k-j from `BOND_PARAMS`
-3. Look up θ₀ from `ANGLE_PARAMS`
-4. Compute current distances and angle
-5. Accumulate: `E += 2.51210 * (k_IJK * dr_IJ + k_KJI * dr_KJ) * dθ`
+1. Resolve the stretch-bend class: STijk is a REMAP of the angle class
+   (1↔2 split by which side carries the BT flag, 2→3, 3→5, 4→4, 5→6/7,
+   6→8, 7→9/10, 8→11), so ring/BT angles look up different keys than the
+   angle term's
+2. Look up k_sb_IJK and k_sb_KJI from `STRETCH_BEND_PARAMS` by the class and
+   the type triplet; if the lookup misses, the default-fsb table
+   (`default-stretch-bend.ts`, element-row keyed) supplies small F values —
+   BatchMin still evaluates the angle (a stretched Si–C bond around an
+   untyped angle can carry several kcal/mol)
+3. Look up r₀ for bonds i-j and k-j via the class-aware `bond_parameters()`
+   (each bond uses its OWN sorted type pair, not the angle's terminals)
+4. Take θ₀ from the same `angle_parameters()` call the angle term uses, so
+   ring and BT-flagged angles share the reference angle; skip the angle if
+   the center is linear (eq. 4)
+5. Compute current distances and angle
+6. Accumulate: `E += 2.51210 * (k_IJK * dr_IJ + k_KJI * dr_KJ) * dθ`
 
 Two separate k_sb constants are used because asymmetric environments (e.g., C-C-O
 vs O-C-C) have different coupling strengths for the two sides of the angle. Many
@@ -344,10 +378,22 @@ periodicities. The parameter table stores V₁, V₂, V₃ with fixed phase shif
 γ₁ = 0°, γ₂ = 180°, γ₃ = 0° (by convention). The V_n values are barrier heights
 in kcal/mol.
 
-The function evaluates every dihedral i-j-k-l where the central bond j-k is a
-single bond. If the forward type order (i, j, k, l) doesn't match, the reverse
-(l, k, j, i) is tried as fallback. Double and triple bonds have no torsion
-potential — their planarity is enforced by the angle bend and out-of-plane terms.
+The function evaluates every dihedral i-j-k-l around every bond — including
+double bonds: an alkene's C=C torsion is real (V₂ ≈ 12 kcal/mol, holding the
+alkene planar; the class-0 entries for double bonds have V₁ = V₃ = 0). Only
+torsions with no substituent on either central atom are skipped by construction.
+
+Parameters come from the torsion class TTijkl (part IV p. 609): 1 = central
+bond BT-flagged (conjugated diene — V₂ ≈ 1.8), 2 = terminal bond BT-flagged,
+4 = all four atoms in a 4-ring, 5 = non-aromatic 5-ring with an sp3 carbon,
+else 0. Within the class, the step-down chain runs in the order-canonical
+direction only — the par file stores each entry in ONE direction (decided by
+an order index), and consulting the other direction first would let wildcard
+defaults like `*-1-1-*` steal exact reversed entries (an H-C-C-C dihedral must
+resolve to `0-1-1-1-5`, not the generic `0-0-1-1-0`). If the chain misses
+entirely, the part-IV empirical rules apply (`torsion-empirical.ts`, rules
+a–h: V₂ from the U parameters, V₃ from the V parameters, negative V₂ for O/S
+central pairs, with some combinations skipping the torsion).
 
 ### 7.5 Van der Waals — `van-der-waals.ts`
 
@@ -362,11 +408,19 @@ MMFF94 more numerically stable during optimization when atoms may approach very
 closely.
 
 Combination rules for mixed-atom pairs:
-- R*_ij = 0.5 × (R*_i + R*_j) (arithmetic mean)
-- ε_ij = 181.16 × G_i × G_j × α_i × α_j / [α_i / √N_i + α_j / √N_j] (Slater-Kirkwood)
+- **A donor atom present (DA flag = 1, e.g. H–N, H–O)**: arithmetic mean
+  R*_ij = 0.5 × (R*_i + R*_j). If the OTHER atom is an acceptor (DA = 2,
+  e.g. carbonyl O, amine N), the pair is a hydrogen bond: ε is halved and
+  R* is scaled by 0.8 (ε always uses the unscaled R*).
+- **No donor**: Waldman–Hagler combination,
+  R*_ij = 0.5 × (R*_i + R*_j) × [1 + 0.2 × (1 − e^(−12·Δ²))] with
+  Δ = (R*_i − R*_j)/(R*_i + R*_j).
+- ε_ij = 181.16 × G_i × G_j × α_i × α_j / (√(α_i/N_i) + √(α_j/N_j)) (Slater–Kirkwood)
 
-At r = R*, the expression simplifies to E = −ε — the well depth — because both
-buffer fractions become exactly 1. This property is verified in the test suite.
+The donor flags come from the DA column of `mmffvdw.par` (extracted into the
+vdW table). At r = R*, the expression simplifies to E = −ε — the well depth —
+because both buffer fractions become exactly 1. This property is verified in
+the test suite.
 
 ### 7.6 Electrostatic — `electrostatic.ts` (stub)
 
@@ -383,10 +437,10 @@ Requires `compute_bci_charges()` to have been called first to fill in the
 
 Current status: **stub** (returns 0).
 
-### 7.7 Out-of-plane bending — `out-of-plane.ts` (stub)
+### 7.7 Out-of-plane bending — `out-of-plane.ts`
 
 ```
-E_oop = 0.043844 · k_oop · χ²
+E_oop = 0.043844 · (k_oop / 2) · χ²
 ```
 
 MMFF94 uses a dedicated oop term rather than the **improper torsion** approach
@@ -402,10 +456,11 @@ used by UFF and GAFF. These are NOT the same thing:
   central atom to any one substituent and the plane defined by the other two
   substituents and the central atom.
 
-Applied to every sp² center (carbonyl C, olefinic C, aromatic C, trigonal planar N)
-with exactly three bonded neighbors.
-
-Current status: **stub** (returns 0).
+Applied to every tri-coordinate center (planar or pyramidal) with exactly three
+bonded neighbors. The sign of k_oop encodes real chemistry: zero for amine N
+(pyramidalization comes from angle-bend reference values), negative for amide N
+(MMFF94 gives pyramidal amide nitrogen deliberately). Validated against
+BatchMin: exact on all 65 typing-exact suite molecules.
 
 ---
 
@@ -421,9 +476,8 @@ export function calc_energy(molecule: TypedMolecule): EnergyComponents {
   const electrostatic = calc_electrostatic_energy(molecule);
   const out_of_plane  = calc_oop_energy(molecule);
 
-  // Apply 1-4 scaling to vdW and electrostatic
-  //   vdW:           multiply by 0.5
-  //   electrostatic: multiply by 0.75
+  // TODO: apply 1-4 scaling to electrostatic only (×0.75). vdW is NOT
+  // scaled at 1-4 (Halgren 1996, p. 496).
   // (not yet implemented)
 
   const total = bond_stretch + angle_bend + stretch_bend +
@@ -442,7 +496,7 @@ interactions would be double-counted. The MMFF94 specification mandates:
 
 | Interaction | 1-4 scale factor | Reason |
 |---|---|---|
-| Van der Waals | 0.5 | Torsion barriers already capture some steric repulsion |
+| Van der Waals | **none** | Halgren 1996 p. 496: "1,4-vdW interactions are not differentially scaled in MMFF94" — the ×0.5 of MM2/GAFF is a different convention |
 | Electrostatic | 0.75 | BCI charges are parameterized with this scaling built in |
 
 The scaling is applied in `total.ts` rather than in the individual term functions
@@ -520,26 +574,29 @@ imported by energy/ modules
 TypeScript compilation
 ```
 
-The extraction script handles 8 separate `.par` files, each with its own column
+The extraction script handles 10 `.par` files, each with its own column
 layout:
 
 | File | Section in script | Key format |
 |---|---|---|
-| `mmffbond.par` | `Generate-Bond` | `"p-t1-t2"` |
-| `mmffang.par` | `Generate-Angle` | `"p-t1-t2-t3"` |
-| `mmffstbn.par` | `Generate-StretchBend` | `"p-t1-t2-t3"` |
-| `mmfftor.par` | `Generate-Torsion` | `"p-t1-t2-t3-t4"` |
-| `mmffvdw.par` | `Generate-Vdw` | atom type number |
-| `mmffchg.par` + `mmffpbci.par` | `Generate-Bci` | `"p-t1-t2"` + per-atom defaults |
-| `mmffoop.par` | `Generate-Oop` | `"t1-t2-t3-t4"` |
-| `mmffdef.par` + `mmffprop.par` | `Generate-AtomTypes` | atom type number |
+| `mmffbond.par` | `generate_bond` | `"c-t1-t2"` |
+| `mmffang.par` | `generate_angle` | `"c-t1-t2-t3"` |
+| `mmffstbn.par` | `generate_stretch_bend` | `"c-t1-t2-t3"` |
+| `mmfftor.par` | `generate_torsion` | `"c-t1-t2-t3-t4"` |
+| `mmffvdw.par` | `generate_vdw` | atom type number |
+| `mmffchg.par` + `mmffpbci.par` | `generate_bci` | `"c-t1-t2"` + per-atom defaults |
+| `mmffoop.par` | `generate_oop` | `"t1-t2-t3-t4"` |
+| `mmffdef.par` | `generate_atom_types` | atom type number |
+| `mmffprop.par` + `mmffdef.par` (levels) | `generate_properties` | atom type number |
+| `mmffdfsb.par` | `generate_default_stretch_bend` | `"row-row-row"` |
 
-The first column in most `.par` files is a **priority code** (0 = default, 1+
-= alternative). Older extraction attempts that dropped this column caused silent
-data loss — for example, the C=C double bond parameter (priority 0) was overwritten
-by the conjugated C-C single bond parameter (priority 1) because both produced the
-key `"2-2"`. Including the priority in the key as `"0-2-2"` / `"1-2-2"` preserves
-both entries.
+The first column in most `.par` files is the **class code** (0 = general
+entry, higher = context-specific alternatives; see §6.2). Older extraction
+attempts that dropped this column caused silent data loss — for example, the
+C=C double bond parameter (class 0) was overwritten by the conjugated C-C
+single bond parameter (class 1) because both produced the key `"2-2"`.
+Including the class in the key as `"0-2-2"` / `"1-2-2"` preserves both
+entries.
 
 ---
 
@@ -636,10 +693,10 @@ src/index.ts  (public barrel)
   │     │     ├── bond-stretch.ts    ← types, vector, parameters
   │     │     ├── angle-bend.ts      ← types, vector, parameters
   │     │     ├── stretch-bend.ts    ← types, vector, parameters
-  │     │     ├── torsion.ts         ← types, vector, parameters (stub)
-  │     │     ├── van-der-waals.ts   ← types, parameters (stub)
+  │     │     ├── torsion.ts         ← types, vector, parameters
+  │     │     ├── van-der-waals.ts   ← types, parameters
   │     │     ├── electrostatic.ts   ← types, parameters (stub)
-  │     │     ├── out-of-plane.ts    ← types, parameters (stub)
+  │     │     ├── out-of-plane.ts    ← types, parameters
   │     │     └── total.ts           ← all of the above
   │     │
   │     ├── gradient/
@@ -651,11 +708,15 @@ src/index.ts  (public barrel)
   │           ├── bond.ts        ← auto-generated
   │           ├── angle.ts       ← auto-generated
   │           ├── stretch-bend.ts ← auto-generated
+  │           ├── default-stretch-bend.ts ← auto-generated
   │           ├── torsion.ts     ← auto-generated
   │           ├── van-der-waals.ts ← auto-generated
   │           ├── bci.ts         ← auto-generated
   │           ├── out-of-plane.ts ← auto-generated
-  │           └── atom-types.ts  ← auto-generated
+  │           ├── atom-types.ts  ← auto-generated
+  │           ├── atom-type-properties.ts ← auto-generated
+  │           ├── parameter-classes.ts ← class selection + resolution
+  │           └── torsion-empirical.ts  ← part-IV rules
   │
   ├── src/utils/vector.ts        ← no deps
   │
@@ -685,20 +746,20 @@ Every energy term is tested **in isolation** before it is tested in combination.
 |---|---|---|
 | Data types | ✅ Complete | — |
 | SDF parser | ✅ Complete | 5 tests |
-| Vector math | ✅ Complete | 12 tests |
-| Atom typing | ✅ Implemented | 9 tests |
+| Vector math | ✅ Complete | 13 tests |
+| Atom typing | ✅ Implemented | 3 tests (suite scoreboard: 65/550 type-exact) |
 | BCI charges | ⚠️ Stub | 0 tests |
 | Bond stretch | ✅ Implemented | 2 tests |
 | Angle bend | ✅ Implemented | 2 tests |
-| Stretch-bend | ✅ Implemented | 2 tests |
-| Torsion | ✅ Implemented | 3 tests |
-| Van der Waals | ✅ Implemented | 4 tests |
+| Stretch-bend | ✅ Implemented | 3 tests |
+| Torsion | ✅ Implemented | 4 tests |
+| Van der Waals | ✅ Implemented | 5 tests |
 | Electrostatic | ❌ Stub (returns 0) | 0 tests |
-| Out-of-plane | ❌ Stub (returns 0) | 0 tests |
+| Out-of-plane | ✅ Implemented | 12 tests |
 | 1-4 scaling | ❌ Not implemented | 0 tests |
-| Total energy | ⚠️ Sums all stubs | 0 tests |
+| Total energy | ✅ Sums all seven terms | 8 tests (reference + suite comparison) |
 | Gradients | ❌ Stub | 0 tests |
 | L-BFGS | ❌ Stub | 0 tests |
 | Steepest descent | ❌ Stub | 0 tests |
 | MMD parser (Halgren suite) | ✅ Complete | 4 tests |
-| **All tests** | **45 passing** | **9 files** |
+| **All tests** | **92 passing** | **13 files** |
