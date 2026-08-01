@@ -79,6 +79,24 @@ function in_ring(ctx: ClassContext, i: number, j: number): boolean {
   return found;
 }
 
+/** Is bond (i, j) part of an aromatic ring? Both endpoints are
+ *  aromatic-typed and the bond lies in a ring (Kekulé input files
+ *  carry no aromatic flags; BatchMin's perception marks ring bonds). */
+export function is_aromatic_bond(ctx: ClassContext, i: number, j: number): boolean {
+  const { mol } = ctx;
+  const pi = ATOM_PROPERTIES[mol.atom_types[i]];
+  const pj = ATOM_PROPERTIES[mol.atom_types[j]];
+  if (!pi || !pj || !pi.arom || !pj.arom) return false;
+  return in_ring(ctx, i, j);
+}
+
+/** Element → periodic-table row (empirical rules): 0 = Z ≤ 2,
+ *  1 = 3–10, 2 = 11–18, 3 = 19–36, 4 = 37–54. */
+export const ELEMENT_ROW: Record<string, number> = {
+  H: 0, B: 1, C: 1, N: 1, O: 1, F: 1,
+  Si: 2, P: 2, S: 2, Cl: 2, Br: 3, I: 4,
+};
+
 /** GetBondType — the BTij flag for bond (i, j). */
 export function bond_type_flag(ctx: ClassContext, i: number, j: number): number {
   const { mol } = ctx;

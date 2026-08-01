@@ -21,7 +21,7 @@
 import type { TypedMolecule } from '../../types';
 import { STRETCH_BEND_PARAMS, lookup_param, type StretchBendParams } from '../parameters';
 import { distance, angle_in_radians, Vec3 } from '../../utils/vector';
-import { make_class_context, strbnd_type, bond_parameters, angle_parameters } from './bond-type';
+import { make_class_context, strbnd_type, bond_parameters, angle_parameters, ELEMENT_ROW } from './bond-type';
 
 // Default stretch-bend force constants (mmffdfsb.par), keyed by element
 // ROWS — 0=H, 1=C, 2=N, 3=O, 4=F, ... (F for F is 1!). Used when the
@@ -40,12 +40,8 @@ const DEFAULT_FSB: Record<string, [number, number]> = {
   '3-2-3': [0.25, 0.25], '3-2-4': [0.25, 0.25], '4-2-4': [0.25, 0.25],
 };
 
-// Element → periodic-table row: 0 = Z ≤ 2, 1 = 3–10, 2 = 11–18,
-// 3 = 19–36, 4 = 37–54 (rows beyond 4 have no default-fsb entries).
-const ELEMENT_ROW: Record<string, number> = {
-  H: 0, B: 1, C: 1, N: 1, O: 1, F: 1,
-  Si: 2, P: 2, S: 2, Cl: 2, Br: 3, I: 4,
-};
+// Element → periodic-table row (empirical rules): see bond-type.ts.
+// (ELEMENT_ROW imported from ./bond-type)
 
 /**
  * Calculate the total stretch-bend cross term energy.

@@ -424,6 +424,7 @@ def generate_properties():
         f.write("export interface AtomTypeProperties {\n")
         f.write("  crd: number;    // coordination number\n")
         f.write("  val: number;    // valence\n")
+        f.write("  pilp: number;   // lone-pair count (empirical torsion rules)\n")
         f.write("  mltb: number;   // multiple-bond flag\n")
         f.write("  arom: number;   // in aromatic set (BTij case b)\n")
         f.write("  lin: number;    // linear-set flag (eq. 4 angle form)\n")
@@ -438,10 +439,10 @@ def generate_properties():
             if len(parts) < 9:
                 continue
             atype = int(parts[0])
-            crd, val, mltb, arom, lin, sbmb = parts[2], parts[3], parts[5], parts[6], parts[7], parts[8]
+            crd, val, pilp, mltb, arom, lin, sbmb = parts[2], parts[3], parts[4], parts[5], parts[6], parts[7], parts[8]
             lvl = levels.get(atype, ('0', '0', '0'))
             f.write(
-                f"  {atype}: {{ crd: {value(crd)}, val: {value(val)}, mltb: {value(mltb)}, "
+                f"  {atype}: {{ crd: {value(crd)}, val: {value(val)}, pilp: {value(pilp)}, mltb: {value(mltb)}, "
                 f"arom: {value(arom)}, lin: {value(lin)}, sbmb: {value(sbmb)}, "
                 f"lvl3: {value(lvl[0])}, lvl4: {value(lvl[1])}, lvl5: {value(lvl[2])} }},\n"
             )

@@ -35,7 +35,7 @@
 import type { TypedMolecule } from '../../types';
 import { TORSION_PARAMS, ATOM_PROPERTIES, type TorsionParams } from '../parameters';
 import { dihedral_angle, Vec3 } from '../../utils/vector';
-import { make_class_context, bond_type_flag, type ClassContext } from './bond-type';
+import { make_class_context, bond_type_flag, is_aromatic_bond, ELEMENT_ROW, type ClassContext } from './bond-type';
 
 // Torsion class TTijkl (MMFF part IV, p. 609):
 //   1 = central bond BT-flagged (e.g. the central single bond of a
@@ -107,6 +107,129 @@ function lookup_torsion(
   return order >= 0 ? chain(ti, tj, tk, tl) : chain(tl, tk, tj, ti);
 }
 
+// ── Empirical torsion rules (MMFF part IV, p. 631-632) ────────────────
+// Used when the step-down chain misses entirely. Rules (b)-(h) always
+// set something; a few cases SKIP the torsion (linear centers, or
+// specific crd/val/mltb combinations in rules (e)/(f)/(g)).
+
+// MMFF part V, table X: U_i and V_i (element-based).
+const ELEMENT_U: Record<string, number> = {
+  C: 2.0, N: 2.0, O: 2.0, Si: 1.25, P: 1.25, S: 1.25,
+};
+const ELEMENT_V: Record<string, number> = {
+  C: 2.12, N: 1.5, O: 0.2, Si: 1.22, P: 2.4, S: 0.49,
+};
+
+function empirical_torsion(
+  ctx: ClassContext,
+  i: number,
+  j: number,
+  k: number,
+): { v1: number; v2: number; v3: number; skip: boolean } {
+  const { mol } = ctx;
+  const tj = mol.atom_types[j];
+  const tk = mol.atom_types[k];
+  const pj = ATOM_PROPERTIES[tj];
+  const pk = ATOM_PROPERTIES[tk];
+  const ej = mol.atoms[j].element;
+  const ek = mol.atoms[k].element;
+  const ub = ELEMENT_U[ej] ?? 0;
+  const uc = ELEMENT_U[ek] ?? 0;
+  const vb = ELEMENT_V[ej] ?? 0;
+  const vc = ELEMENT_V[ek] ?? 0;
+  const v = { v1: 0, v2: 0, v3: 0, skip: false };
+  let found = false;
+
+  // rule (a): linear centers carry no torsion
+  if (pj?.lin || pk?.lin) { v.skip = true; return v; }
+
+  const bond_ab = mol.bonds.find(
+    b => (b.atom1 === i && b.atom2 === j) || (b.atom1 === j && b.atom2 === i),
+  );
+  const aromatic_central = is_aromatic_bond(ctx, j, k);
+
+  // rules (b)/(c): V2 from the U parameters
+  if (aromatic_central) {
+    const pi_bc = (!pj?.pilp && !pk?.pilp) ? 0.5 : 0.3;
+    const beta =
+      (pj?.val === 3 && pk?.val === 4) || (pj?.val === 4 && pk?.val === 3) ? 3.0 : 6.0;
+    v.v2 = beta * pi_bc * Math.sqrt(ub * uc);
+    found = true;
+  } else {
+    const pi_bc =
+      pj?.mltb === 2 && pk?.mltb === 2 && bond_ab?.bond_order === 2 && !is_aromatic_bond(ctx, i, j)
+        ? 1.0
+        : 0.4;
+    v.v2 = 6.0 * pi_bc * Math.sqrt(ub * uc);
+    found = true;
+  }
+
+  // rule (d): both sp3 → V3
+  if (!found && pj?.crd === 4 && pk?.crd === 4) {
+    v.v3 = Math.sqrt(vb * vc) / 9.0;
+    found = true;
+  }
+
+  // rules (e)/(f): sp3/sp2 mixed — skip some val/mltb combinations
+  const skip_sp2 = (t: number): boolean => {
+    const p = ATOM_PROPERTIES[t];
+    if (!p) return false;
+    if (p.crd === 3) return p.val === 4 || p.val === 34 || p.mltb !== 0;
+    if (p.crd === 2) return p.val === 3 || p.mltb !== 0;
+    return false;
+  };
+  if (!found && pj?.crd === 4 && pk?.crd !== 4) {
+    if (skip_sp2(tk)) { v.skip = true; return v; }
+  } else if (!found && pk?.crd === 4 && pj?.crd !== 4) {
+    if (skip_sp2(tj)) { v.skip = true; return v; }
+  }
+
+  // rule (g): order-1 central with mltb/pilp combinations → V2
+  if (!found) {
+    const central = mol.bonds.find(
+      b => (b.atom1 === j && b.atom2 === k) || (b.atom1 === k && b.atom2 === j),
+    );
+    const central_single = central?.bond_order === 1 && !aromatic_central;
+    if (
+      central_single &&
+      ((pj?.mltb && pk?.mltb) || (pj?.mltb && pk?.pilp) || (pk?.mltb && pj?.pilp))
+    ) {
+      if (pj?.pilp && pk?.pilp) { v.skip = true; return v; } // case (1)
+      let pi_bc = 0.15;
+      if (pj?.pilp && pk?.mltb) { // case (2)
+        if (pk.mltb === 1) pi_bc = 0.5;
+        else if (ELEMENT_ROW[ej] === 1 && ELEMENT_ROW[ek] === 1) pi_bc = 0.3;
+        else pi_bc = 0.15;
+        found = true;
+      }
+      if (pk?.pilp && pj?.mltb) { // case (3)
+        if (pj.mltb === 1) pi_bc = 0.5;
+        else if (ELEMENT_ROW[ej] === 1 && ELEMENT_ROW[ek] === 1) pi_bc = 0.3;
+        else pi_bc = 0.15;
+        found = true;
+      }
+      if (!found && (pj?.mltb === 1 || pk?.mltb === 1) && (ej !== 'C' || ek !== 'C')) {
+        pi_bc = 0.4;
+        found = true;
+      }
+      if (!found) pi_bc = 0.15;
+      v.v2 = 6.0 * pi_bc * Math.sqrt(ub * uc);
+      found = true;
+    }
+  }
+
+  // rule (h): O/S central pair → negative V2; else V3 from the V params
+  if (!found) {
+    const o_s = (e: string) => e === 'O' || e === 'S';
+    if (o_s(ej) && o_s(ek)) {
+      v.v2 = -Math.sqrt((ej === 'O' ? 2.0 : 8.0) * (ek === 'O' ? 2.0 : 8.0));
+    } else {
+      v.v3 = Math.sqrt(vb * vc) / ((pj?.crd ?? 1) * (pk?.crd ?? 1));
+    }
+  }
+  return v;
+}
+
 /**
  * Calculate the total torsional (dihedral) energy.
  */
@@ -156,15 +279,36 @@ export function calc_torsion_energy(molecule: TypedMolecule): number {
         const cls = torsion_class(ctx, i, j, k, l);
         const params = lookup_torsion(cls, ti, tj, tk, tl);
 
-        if (!params) continue;
+        // Empirical rules (part IV, p. 631) when the chain misses
+        let v1 = 0;
+        let v2 = 0;
+        let v3 = 0;
+        if (params) {
+          for (const term of params.terms) {
+            if (term.periodicity === 1) v1 = term.V;
+            else if (term.periodicity === 2) v2 = term.V;
+            else v3 = term.V;
+          }
+        } else {
+          const emp = empirical_torsion(ctx, i, j, k);
+          if (emp.skip) continue;
+          v1 = emp.v1;
+          v2 = emp.v2;
+          v3 = emp.v3;
+        }
 
         // Compute dihedral angle in degrees
         const tau_rad = dihedral_angle(posI, posJ, posK, posL);
         const tau_deg = tau_rad * (180.0 / Math.PI);
 
-        // Evaluate each Fourier term
-        for (const term of params.terms) {
-          const angle_rad = (term.periodicity * tau_deg - term.gamma) * (Math.PI / 180.0);
+        // Fourier series: ½·V_n·(1 + cos(nτ − γ_n)), γ = 0/180/0
+        const terms = [
+          { V: v1, n: 1, gamma: 0 },
+          { V: v2, n: 2, gamma: 180 },
+          { V: v3, n: 3, gamma: 0 },
+        ];
+        for (const term of terms) {
+          const angle_rad = (term.n * tau_deg - term.gamma) * (Math.PI / 180.0);
           total_energy += (term.V / 2.0) * (1.0 + Math.cos(angle_rad));
         }
       }
