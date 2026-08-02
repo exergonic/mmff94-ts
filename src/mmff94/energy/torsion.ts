@@ -68,6 +68,12 @@ export function calc_torsion_energy(molecule: TypedMolecule): number {
       const posI: Vec3 = [molecule.atoms[i].x, molecule.atoms[i].y, molecule.atoms[i].z];
 
       for (const l of l_neighbors) {
+        // A 3-membered ring closes on itself: i and l are the same
+        // atom, so i-j-k-l is a triangle, not a dihedral. BatchMin
+        // skips these (OBMol::FindTorsions: d == a); counting them
+        // pins a spurious V3 term at τ = 0 (FUVDOP's triazine ring).
+        if (l === i) continue;
+
         const posL: Vec3 = [molecule.atoms[l].x, molecule.atoms[l].y, molecule.atoms[l].z];
 
         // Class-scoped step-down lookup (TTijkl), with the part-IV

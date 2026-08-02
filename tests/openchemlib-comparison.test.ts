@@ -183,9 +183,9 @@ describe('openchemlib-js cross-validation', () => {
     lines.push(
       `  ─ note: BAOXLM01/CAMALD03 are the documented formal-charge salts (elec 89/91` +
       ` in the suite test); the .mmd carries the reference partial charges and neither` +
-      ` implementation feeds them. FUVDOP is the known torsion residual (89/91, +1.12);` +
-      ` openchemlib's exact match here pins it as a torsion-parameter bug in our code,` +
-      ` not a BatchMin quirk.`,
+      ` implementation feeds them. FUVDOP's torsion residual (+1.12) was a real bug —` +
+      ` degenerate i = l "torsions" in its triazine 3-ring, now skipped like BatchMin` +
+      ` does (torsion 90/91; FILNOD +0.22 remains).`,
     );
     console.log(lines.join('\n'));
   });

@@ -113,6 +113,18 @@ describe('Halgren MMFF94 suite validation', () => {
     }
   });
 
+  it('torsion term matches BatchMin on the 3-ring closure case (FUVDOP)', () => {
+    // FUVDOP's triazine 3-ring makes i-j-k-l "torsions" with i = l —
+    // closed triangles, not dihedrals. BatchMin skips them; counting
+    // them pinned a spurious V3 term at τ = 0 (Δ = +1.125, the worst
+    // torsion residual). Pinned here so a reintroduction fails loudly.
+    const raw = molecules.find(m => m.name === 'FUVDOP')!;
+    const typed = assign_atom_types(raw);
+    const ref = refEnergies.get('FUVDOP')!;
+    const got = calc_energy(typed);
+    expect(Math.abs(got.torsion - ref.torsion)).toBeLessThan(0.01);
+  });
+
   it('reports per-component energies for typing-exact molecules', () => {
     // The typing-exact molecules are the only place where a component
     // delta cannot be blamed on atom typing: every mismatch is a term
