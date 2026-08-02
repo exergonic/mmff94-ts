@@ -4,14 +4,13 @@
 
 > ⚠️ **Work in progress — pre-alpha.**
 >
-> The six implemented energy terms (bond stretch, angle bend,
-> stretch-bend, torsion, buffered 14-7 van der Waals, out-of-plane) are
-> validated against OpenBabel `obenergy` logs and Halgren's 753-molecule
-> validation suite. The remaining pieces — the electrostatic (BCI) term,
-> 1-4 scaling, analytical gradients, and geometry optimization — are
-> stubs that return zeros. The public API is not yet stable and may
-> change before 0.1.0. See the [Status](#status) table for the full
-> picture.
+> All seven energy terms (bond stretch, angle bend, stretch-bend,
+> torsion, buffered 14-7 van der Waals, electrostatic (BCI),
+> out-of-plane) are implemented and validated against OpenBabel
+> `obenergy` logs and Halgren's 753-molecule validation suite. The
+> remaining pieces — analytical gradients and geometry optimization —
+> are stubs. The public API is not yet stable and may change before
+> 0.1.0. See the [Status](#status) table for the full picture.
 
 Energy evaluation for organic molecules, running in the browser or
 Node.js without WebAssembly, native binaries, or external services.
@@ -24,11 +23,11 @@ bundles trivially with any web framework, works in sandboxed
 environments (no WASM, no native binaries), and composes naturally
 with the rest of your TypeScript toolchain.
 
-`mmff94-ts` implements the MMFF94 energy functional form — the
-buffered 14-7 van der Waals, stretch-bend cross term, Fourier-series
-torsion, and the rest of the six implemented terms — so you can run
-energy evaluations entirely on the client side. Bond charge increment
-electrostatics, 1-4 scaling, analytical gradients, and geometry
+`mmff94-ts` implements the complete MMFF94 energy functional form —
+the buffered 14-7 van der Waals, stretch-bend cross term,
+Fourier-series torsion, bond-charge-increment electrostatics, and
+the rest of the seven terms — so you can run energy evaluations
+entirely on the client side. Analytical gradients and geometry
 optimization are still in progress (see [Status](#status)).
 
 ## Status
@@ -40,36 +39,41 @@ optimization are still in progress (see [Status](#status)).
 | Stretch-bend (class-II cross term) | ✅ |
 | Torsion (Fourier series) | ✅ |
 | Van der Waals (buffered 14-7) | ✅ |
-| Electrostatic (BCI model) | ⬜ |
+| Electrostatic (BCI model) | ✅ |
 | Out-of-plane bending | ✅ |
-| 1-4 scaling | ⬜ |
+| 1-4 scaling | ✅ (electrostatic ×0.75, inside the term) |
 | Analytical gradients | ⬜ |
 | Geometry optimization (L-BFGS / SD) | ⬜ |
 
 ## Validation
 
 Every implemented term is checked against reference energies: the
-nine SDF fixtures against OpenBabel `obenergy` logs
-(`tests/reference-comparison.test.ts`), and the out-of-plane term
-additionally against Halgren's own BatchMin energies from the
-753-molecule validation suite (`tests/validate-against-suite.test.ts`).
+SDF fixtures against OpenBabel `obenergy` logs
+(`tests/reference-comparison.test.ts`), and the out-of-plane and
+electrostatic terms additionally against Halgren's own BatchMin
+energies from the 753-molecule validation suite
+(`tests/validate-against-suite.test.ts`).
 
-Bond stretch, angle bend, stretch-bend, torsion, and van der Waals
-match the obenergy references **exactly (to 5 decimals) on all 9
-fixtures**. Out-of-plane is 0 on these acyclic/planar fixtures.
-Totals match exactly where every term does: ethane (−4.73436),
-butane (−5.07596), cyclohexane (−3.56091), propane (−4.89729),
-methane (0.02638), formaldehyde (0.05416), water (0.00000).
+All seven terms match the obenergy references **exactly (to 5
+decimals) on all 15 asserted fixtures** (formamide is a documented
+typing-gap skip until amide N typing lands), and every fixture
+**total** matches exactly. The BCI partial charges also match the
+reference logs per atom (`tests/charges.test.ts`).
 
 | Term | Exact on fixtures | Notes |
 |---|---|---|
-| Bond stretch | 9/9 | |
-| Angle bend | 9/9 | |
-| Stretch-bend | 9/9 | |
-| Torsion | 9/9 | |
-| Van der Waals | 9/9 | |
-| Out-of-plane | 9/9 | 0 on these fixtures; see BatchMin table below |
-| Electrostatic | — | stub (returns 0) |
+| Bond stretch | 15/15 | |
+| Angle bend | 15/15 | |
+| Stretch-bend | 15/15 | |
+| Torsion | 15/15 | |
+| Van der Waals | 15/15 | |
+| Electrostatic | 15/15 | per-atom charges pinned in charges.test.ts |
+| Out-of-plane | 15/15 | 0 on most fixtures; see BatchMin table below |
+
+Per-component energies vs BatchMin on the 91 typing-exact suite
+molecules: bond/angle/vdW/oop 91/91, strbnd 90/91, torsion 89/91
+(the known residuals FUVDOP +1.12 and FILNOD +0.22), electrostatic
+89/91 (two metal-carboxylate salts awaiting formal-charge input).
 
 ### Out-of-plane vs BatchMin (8 suite molecules, kcal/mol)
 
@@ -91,10 +95,12 @@ questions, and how to update it — lives in
 ## Usage
 
 ```typescript
-import { parse_sdf, assign_atom_types, calc_energy } from 'mmff94-ts';
+import { parse_sdf, assign_atom_types, compute_bci_charges, calc_energy } from 'mmff94-ts';
 
 const mol = parse_sdf(sdfText);
 const typed = assign_atom_types(mol);
+compute_bci_charges(typed);       // BCI partial charges (the electrostatic
+                                  // term also computes them on demand)
 const energy = calc_energy(typed);
 
 console.log(energy.total);           // kcal/mol
