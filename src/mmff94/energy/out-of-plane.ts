@@ -49,6 +49,41 @@ import { wilson_oop_angle, Vec3 } from '../../utils/vector';
 const OOP_UNIT = 0.043844; // (mdyn·Å/rad²)·deg² → kcal/mol, same as angle bending
 
 /**
+ * The out-of-plane force constant for the tri-coordinate center j
+ * with substituents a, c, d.
+ *
+ * The three substituent types are interchangeable — the same k
+ * applies to all three angles at the center — so the lookup matches
+ * the sorted multiset of substituent types, falling back to the
+ * per-central-type wildcard entry ("0-j-0-0") when no specific entry
+ * exists. Shared with the gradient so both terms use the same k.
+ */
+export function oop_force_constant(
+  molecule: TypedMolecule,
+  j: number,
+  a: number,
+  c: number,
+  d: number,
+): number | undefined {
+  const tj = molecule.atom_types[j];
+
+  const sorted = [
+    molecule.atom_types[a],
+    molecule.atom_types[c],
+    molecule.atom_types[d],
+  ].sort((x, y) => x - y);
+  let params = lookup_param(OOP_PARAMS, [sorted[0], tj, sorted[1], sorted[2]]);
+
+  // No specific entry: fall back to the per-central-type wildcard
+  // ("0-j-0-0"). This is what applies amine N's explicit zero and
+  // amide N's negative constant to every substituent combination.
+  if (!params) {
+    params = lookup_param(OOP_PARAMS, [0, tj, 0, 0]);
+  }
+  return params?.k_oop;
+}
+
+/**
  * Calculate the total out-of-plane bending energy.
  *
  * Evaluated for every tri-coordinate center (exactly three bonded
@@ -71,27 +106,12 @@ export function calc_oop_energy(molecule: TypedMolecule): number {
     if (neighbors.length !== 3) continue;
 
     const [a, c, d] = neighbors;
-    const tj = molecule.atom_types[j];
 
     // The three substituents are interchangeable — the same k_oop
-    // applies to all three Wilson angles at the center — so sort their
-    // types before lookup. The table stores each combination once,
-    // keyed i-j-k-l with the central atom second.
-    const sorted = [
-      molecule.atom_types[a],
-      molecule.atom_types[c],
-      molecule.atom_types[d],
-    ].sort((x, y) => x - y);
-    let params = lookup_param(OOP_PARAMS, [sorted[0], tj, sorted[1], sorted[2]]);
-
-    // No specific entry: fall back to the per-central-type wildcard
-    // ("0-j-0-0"). This is what applies amine N's explicit zero and
-    // amide N's negative constant to every substituent combination.
-    if (!params) {
-      params = lookup_param(OOP_PARAMS, [0, tj, 0, 0]);
-    }
-    if (!params) continue;
-    const k_oop = params.k_oop;
+    // applies to all three Wilson angles at the center (resolved by
+    // the shared oop_force_constant() helper, same for the gradient).
+    const k_oop = oop_force_constant(molecule, j, a, c, d);
+    if (k_oop === undefined) continue;
 
     const posJ: Vec3 = [molecule.atoms[j].x, molecule.atoms[j].y, molecule.atoms[j].z];
     const posA: Vec3 = [molecule.atoms[a].x, molecule.atoms[a].y, molecule.atoms[a].z];

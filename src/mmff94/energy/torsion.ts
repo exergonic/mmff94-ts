@@ -29,12 +29,49 @@
 
 import type { TypedMolecule } from '../../types';
 import { dihedral_angle, Vec3 } from '../../utils/vector';
-import {
-  make_class_context,
-  torsion_class,
-  lookup_torsion,
-} from '../parameters/parameter-classes';
+import { make_class_context, type ClassContext, torsion_class, lookup_torsion } from '../parameters/parameter-classes';
 import { empirical_torsion } from '../parameters/torsion-empirical';
+
+/**
+ * The three Fourier barrier heights for the dihedral i-j-k-l, resolved
+ * exactly as the energy term resolves them: torsion class (TTijkl),
+ * class-scoped step-down lookup, then the part-IV empirical rules.
+ *
+ * Shared with the gradient so the two can never resolve different
+ * parameters for the same dihedral.
+ */
+export interface TorsionTerms {
+  v1: number;
+  v2: number;
+  v3: number;
+}
+
+/**
+ * Resolve the torsion parameters for i-j-k-l.
+ * Returns undefined when the dihedral is skipped (the empirical rule
+ * says so — e.g. no substituent on either central atom).
+ */
+export function torsion_terms(
+  ctx: ClassContext,
+  molecule: TypedMolecule,
+  i: number,
+  j: number,
+  k: number,
+  l: number,
+): TorsionTerms | undefined {
+  const cls = torsion_class(ctx, i, j, k, l);
+  const ti = molecule.atom_types[i];
+  const tj = molecule.atom_types[j];
+  const tk = molecule.atom_types[k];
+  const tl = molecule.atom_types[l];
+  const params = lookup_torsion(cls, ti, tj, tk, tl);
+  if (params) {
+    return { v1: params.v1, v2: params.v2, v3: params.v3 };
+  }
+  const emp = empirical_torsion(ctx, i, j, k);
+  if (emp.skip) return undefined;
+  return { v1: emp.v1, v2: emp.v2, v3: emp.v3 };
+}
 
 /**
  * Calculate the total torsional (dihedral) energy.
@@ -77,35 +114,18 @@ export function calc_torsion_energy(molecule: TypedMolecule): number {
         const posL: Vec3 = [molecule.atoms[l].x, molecule.atoms[l].y, molecule.atoms[l].z];
 
         // Class-scoped step-down lookup (TTijkl), with the part-IV
-        // empirical rules as the final fallback
-        const cls = torsion_class(ctx, i, j, k, l);
-        const ti = molecule.atom_types[i];
-        const tj = molecule.atom_types[j];
-        const tk = molecule.atom_types[k];
-        const tl = molecule.atom_types[l];
-        let v1 = 0;
-        let v2 = 0;
-        let v3 = 0;
-        const params = lookup_torsion(cls, ti, tj, tk, tl);
-        if (params) {
-          v1 = params.v1;
-          v2 = params.v2;
-          v3 = params.v3;
-        } else {
-          const emp = empirical_torsion(ctx, i, j, k);
-          if (emp.skip) continue;
-          v1 = emp.v1;
-          v2 = emp.v2;
-          v3 = emp.v3;
-        }
+        // empirical rules as the final fallback — resolved by the
+        // shared torsion_terms() helper (same for the gradient).
+        const terms = torsion_terms(ctx, molecule, i, j, k, l);
+        if (!terms) continue;
 
         // Halgren1996 eq. (7): the three Fourier terms, phases γ =
         // 0°/180°/0° folded in (cos(2τ−180°) = −cos 2τ)
         const tau_rad = dihedral_angle(posI, posJ, posK, posL);
         total_energy +=
-          0.5 * v1 * (1.0 + Math.cos(tau_rad)) +
-          0.5 * v2 * (1.0 - Math.cos(2.0 * tau_rad)) +
-          0.5 * v3 * (1.0 + Math.cos(3.0 * tau_rad));
+          0.5 * terms.v1 * (1.0 + Math.cos(tau_rad)) +
+          0.5 * terms.v2 * (1.0 - Math.cos(2.0 * tau_rad)) +
+          0.5 * terms.v3 * (1.0 + Math.cos(3.0 * tau_rad));
       }
     }
   }

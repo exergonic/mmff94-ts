@@ -91,8 +91,12 @@ export function calc_electrostatic_energy(molecule: TypedMolecule): number {
   return total_energy;
 }
 
-/** Are i and j connected by a path of exactly three bonds (i-j-k-l)? */
-function is_1_4_pair(i: number, j: number, adj: number[][]): boolean {
+/**
+ * Are i and j connected by a path of exactly three bonds (i-j-k-l)?
+ * Shared with the gradient so the 1-4 scaling is applied to exactly
+ * the same pairs in both.
+ */
+export function is_1_4_pair(i: number, j: number, adj: number[][]): boolean {
   // BFS from i, bounded at depth 3 — j must appear at exactly that
   // depth (not sooner: 1-2 and 1-3 pairs are excluded entirely, and a
   // pair with both a 1-3 and a 1-4 path is a 1-3 pair).

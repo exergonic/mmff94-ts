@@ -44,6 +44,75 @@ import { VDW_PARAMS } from '../parameters';
 import { distance, Vec3 } from '../../utils/vector';
 
 /**
+ * The pair parameters for one vdW interaction: combined radius R*
+ * and well depth ε. The combination rules are the chemistry — the
+ * Waldman-Hagler equations, the arithmetic-mean shortcut whenever a
+ * hydrogen-bond donor is involved, and the ×0.8/halving for
+ * donor-acceptor pairs.
+ *
+ * Shared with the gradient so the energy and its derivative always
+ * combine the same pair.
+ */
+export interface VdwPairParams {
+  R_ij: number;
+  epsilon_ij: number;
+}
+
+/**
+ * Combine the per-atom vdW parameters of i and j (see the header of
+ * this file for the equations). The VDW_PARAMS entries carry the
+ * per-atom reduced radius pieces (A_i, α_i, N_i, G_i, DA flag).
+ */
+export function vdw_pair_parameters(
+  param_i: { A_i: number; alpha_i: number; N_i: number; G_i: number; DA: number },
+  param_j: { A_i: number; alpha_i: number; N_i: number; G_i: number; DA: number },
+): VdwPairParams {
+  // Per-atom reduced radius (eq. 9) and the Slater-Kirkwood pieces
+  const R_i = param_i.A_i * Math.pow(param_i.alpha_i, 0.25);
+  const R_j = param_j.A_i * Math.pow(param_j.alpha_i, 0.25);
+  const sqrt_alpha_over_N_i = Math.sqrt(param_i.alpha_i / param_i.N_i);
+  const sqrt_alpha_over_N_j = Math.sqrt(param_j.alpha_i / param_j.N_i);
+
+  const is_donor = param_i.DA === 1 || param_j.DA === 1;    // DA flag: 1 = H-bond donor
+  const is_acceptor = param_i.DA === 2 || param_j.DA === 2; //          2 = H-bond acceptor
+
+  // Combined radius and well depth. The arithmetic-mean combination
+  // applies whenever EITHER atom is a donor (MMFF part V) — the
+  // Waldman-Hagler rules are only for pairs with no donor at all
+  // (e.g. C...C, O...O). ε is halved and R* scaled by 0.8 only for
+  // donor-acceptor pairs; ε always uses the UNSCALED R*.
+  let R_ij: number;
+  let epsilon_ij: number;
+
+  if (is_donor) {
+    const R_ij_unscaled = 0.5 * (R_i + R_j);
+    const R_ij6_unscaled = Math.pow(R_ij_unscaled, 6);
+    if (is_acceptor) {
+      // Hydrogen bond donor-acceptor: epsilon halved, R* × 0.8
+      epsilon_ij = 0.5 * (181.16 * param_i.G_i * param_j.G_i * param_i.alpha_i * param_j.alpha_i) /
+                   (sqrt_alpha_over_N_i + sqrt_alpha_over_N_j) / R_ij6_unscaled;
+      R_ij = 0.8 * R_ij_unscaled;
+    } else {
+      // Donor present but no acceptor (e.g. H-N...H-C): arithmetic
+      // mean, full epsilon
+      epsilon_ij = (181.16 * param_i.G_i * param_j.G_i * param_i.alpha_i * param_j.alpha_i) /
+                   (sqrt_alpha_over_N_i + sqrt_alpha_over_N_j) / R_ij6_unscaled;
+      R_ij = R_ij_unscaled;
+    }
+  } else {
+    // No donor: Waldman-Hagler combination
+    const asymmetry = (R_i - R_j) / (R_i + R_j);
+    const asymmetry2 = asymmetry * asymmetry;
+    R_ij = 0.5 * (R_i + R_j) * (1.0 + 0.2 * (1.0 - Math.exp(-12.0 * asymmetry2)));
+    const R_ij6 = Math.pow(R_ij, 6);
+    epsilon_ij = (181.16 * param_i.G_i * param_j.G_i * param_i.alpha_i * param_j.alpha_i) /
+                 (sqrt_alpha_over_N_i + sqrt_alpha_over_N_j) / R_ij6;
+  }
+
+  return { R_ij, epsilon_ij };
+}
+
+/**
  * Calculate the total van der Waals energy between all non-bonded atom pairs.
  *
  * Excludes 1-2 (bonded) and 1-3 (angle) pairs. 1-4 pairs are included
@@ -73,10 +142,6 @@ export function calc_vdw_energy(molecule: TypedMolecule): number {
     const param_i = VDW_PARAMS[molecule.atom_types[i]];
     if (!param_i) continue;
 
-    // Per-atom reduced radius
-    const R_i = param_i.A_i * Math.pow(param_i.alpha_i, 0.25);
-    const sqrt_alpha_over_N_i = Math.sqrt(param_i.alpha_i / param_i.N_i);
-
     const posI: Vec3 = [molecule.atoms[i].x, molecule.atoms[i].y, molecule.atoms[i].z];
 
     for (let j = i + 1; j < molecule.atoms.length; j++) {
@@ -91,45 +156,9 @@ export function calc_vdw_energy(molecule: TypedMolecule): number {
       const posJ: Vec3 = [molecule.atoms[j].x, molecule.atoms[j].y, molecule.atoms[j].z];
       const r = distance(posI, posJ);
 
-      // Per-atom reduced radius for j
-      const R_j = param_j.A_i * Math.pow(param_j.alpha_i, 0.25);
-      const sqrt_alpha_over_N_j = Math.sqrt(param_j.alpha_i / param_j.N_i);
-
-      const is_donor = param_i.DA === 1 || param_j.DA === 1;    // DA flag: 1 = H-bond donor
-      const is_acceptor = param_i.DA === 2 || param_j.DA === 2; //          2 = H-bond acceptor
-
-      // Combined radius and well depth. The arithmetic-mean combination
-      // applies whenever EITHER atom is a donor (MMFF part V) — the
-      // Waldman-Hagler rules are only for pairs with no donor at all
-      // (e.g. C...C, O...O). ε is halved and R* scaled by 0.8 only for
-      // donor-acceptor pairs; ε always uses the UNSCALED R*.
-      let R_ij: number;
-      let epsilon_ij: number;
-
-      if (is_donor) {
-        const R_ij_unscaled = 0.5 * (R_i + R_j);
-        const R_ij6_unscaled = Math.pow(R_ij_unscaled, 6);
-        if (is_acceptor) {
-          // Hydrogen bond donor-acceptor: epsilon halved, R* × 0.8
-          epsilon_ij = 0.5 * (181.16 * param_i.G_i * param_j.G_i * param_i.alpha_i * param_j.alpha_i) /
-                       (sqrt_alpha_over_N_i + sqrt_alpha_over_N_j) / R_ij6_unscaled;
-          R_ij = 0.8 * R_ij_unscaled;
-        } else {
-          // Donor present but no acceptor (e.g. H-N...H-C): arithmetic
-          // mean, full epsilon
-          epsilon_ij = (181.16 * param_i.G_i * param_j.G_i * param_i.alpha_i * param_j.alpha_i) /
-                       (sqrt_alpha_over_N_i + sqrt_alpha_over_N_j) / R_ij6_unscaled;
-          R_ij = R_ij_unscaled;
-        }
-      } else {
-        // No donor: Waldman-Hagler combination
-        const asymmetry = (R_i - R_j) / (R_i + R_j);
-        const asymmetry2 = asymmetry * asymmetry;
-        R_ij = 0.5 * (R_i + R_j) * (1.0 + 0.2 * (1.0 - Math.exp(-12.0 * asymmetry2)));
-        const R_ij6 = Math.pow(R_ij, 6);
-        epsilon_ij = (181.16 * param_i.G_i * param_j.G_i * param_i.alpha_i * param_j.alpha_i) /
-                     (sqrt_alpha_over_N_i + sqrt_alpha_over_N_j) / R_ij6;
-      }
+      // Combined radius and well depth — the combination rules live
+      // in vdw_pair_parameters(), shared with the gradient.
+      const { R_ij, epsilon_ij } = vdw_pair_parameters(param_i, param_j);
 
       // Buffered 14-7 expression, Halgren1996 eq. (8)
       const r7 = Math.pow(r, 7);
