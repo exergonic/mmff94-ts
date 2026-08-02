@@ -29,18 +29,22 @@ const GRADIENT_TOL = 0.05; // kcal/mol/Å — the Phase 6 spec
 
 // Fixture where the Phase 6 spec (max |gradient| < 0.05) is
 // deliberately not asserted, with the reason:
-//   formamide — documented typing gap (amide N type 10 / H 28 not yet
-//       assigned; see reference-comparison.test.ts). The wrong types
-//       give an artificial energy surface with no nearby MMFF94
-//       minimum, so "converge to a stationary point" is meaningless.
-//       (The optimizer still runs and must descend, asserted below.)
-//   nicotine — no caveat needed: with the default history it converges
-//       to the spec, but slowly (441 iterations — the SDF geometry
-//       sits in a vdW canyon where strong-Wolfe steps are wall-limited
-//       to ~1e-3 Å; the L-BFGS history re-learns the canyon curvature
-//       after each non-descent-direction reset).
+//   formamide — the documented typing gap (amide N type 10 / H 28 not
+//       yet assigned; see reference-comparison.test.ts) gives N type 8
+//       and H type 23, changing the BCI charges (N −0.562, N–H +0.360)
+//       and the angle/torsion parameters. The SDF geometry is real
+//       formamide's MMFF94 minimum (openchemlib, correctly typed:
+//       −30.9074, converged immediately), but under our typing it sits
+//       at −25.82 with |g|∞ = 36 and the wrong-typed surface has its
+//       OWN minimum at −38.43, reached from the SDF geometry in ~600
+//       iterations but from a 0.2 Å-shaken start only beyond the
+//       default 1000-iteration budget. The skip is about the artifact,
+//       not the optimizer: the long canyon and its artificial minimum
+//       are properties of the wrong typing, and the converged energy
+//       must NEVER be compared to the MMFF94 reference. The optimizer
+//       still runs on this fixture and must descend (asserted below).
 const OPTIMIZER_CAVEATS: Record<string, { tolerance?: number; skip?: string }> = {
-  formamide: { skip: 'typing gap — artificial surface (see comment above)' },
+  formamide: { skip: 'typing gap — artificial minimum at −38.43 (see comment above)' },
 };
 
 // Deterministic pseudo-random perturbation (LCG) — the test must be
