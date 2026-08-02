@@ -50,7 +50,7 @@ working (see [Status](#status)).
 | Out-of-plane bending | ✅ |
 | 1-4 scaling | ✅ (electrostatic ×0.75, inside the term) |
 | Analytical gradients | ✅ (all 7 terms, FD-verified < 10⁻⁵) |
-| Geometry optimization (L-BFGS) | ✅ (converges 14/16 fixtures to max\|g\| < 0.05; see caveats) |
+| Geometry optimization (L-BFGS) | ✅ (15/16 fixtures to max\|g\| < 0.05; formamide skipped — typing gap) |
 | Geometry optimization (SD fallback) | ⬜ |
 
 ## Validation

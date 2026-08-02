@@ -37,8 +37,8 @@ import type { TypedMolecule, EnergyComponents, OptimizationResult } from '../typ
 
 export interface LbfgsOptions {
   max_iterations?: number;
-  gradient_tolerance?: number;   // kcal/mol/Å
-  history_size?: number;          // m in L-BFGS (default 10)
+  gradient_tolerance?: number; // kcal/mol/Å
+  history_size?: number; // m in L-BFGS (default 10)
 }
 
 /**

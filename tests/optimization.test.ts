@@ -27,22 +27,20 @@ const SDF_DIR = join(__dirname, 'fixtures', 'sdf');
 
 const GRADIENT_TOL = 0.05; // kcal/mol/Å — the Phase 6 spec
 
-// Fixtures where the Phase 6 spec (max |gradient| < 0.05) is
+// Fixture where the Phase 6 spec (max |gradient| < 0.05) is
 // deliberately not asserted, with the reason:
 //   formamide — documented typing gap (amide N type 10 / H 28 not yet
 //       assigned; see reference-comparison.test.ts). The wrong types
 //       give an artificial energy surface with no nearby MMFF94
 //       minimum, so "converge to a stationary point" is meaningless.
-//   nicotine   — the SDF geometry sits in a vdW canyon: along −g the
-//       energy is downhill for only ~2e-4 Å (walls at +13,860 kcal/mol
-//       for a 1 Å step), so every strong-Wolfe step is wall-limited.
-//       Limited-memory L-BFGS stalls with max|g| ~ 0.5 here while the
-//       full-BFGS reference (openchemlib) converges; the relaxed
-//       tolerance asserts the honest capability (convergence to the
-//       minimum basin, energy within 0.1 kcal/mol of the reference).
+//       (The optimizer still runs and must descend, asserted below.)
+//   nicotine — no caveat needed: with the default history it converges
+//       to the spec, but slowly (441 iterations — the SDF geometry
+//       sits in a vdW canyon where strong-Wolfe steps are wall-limited
+//       to ~1e-3 Å; the L-BFGS history re-learns the canyon curvature
+//       after each non-descent-direction reset).
 const OPTIMIZER_CAVEATS: Record<string, { tolerance?: number; skip?: string }> = {
   formamide: { skip: 'typing gap — artificial surface (see comment above)' },
-  nicotine: { tolerance: 1.0, skip: undefined },
 };
 
 // Deterministic pseudo-random perturbation (LCG) — the test must be
@@ -151,5 +149,35 @@ describe('L-BFGS optimization', () => {
     const before = typed.atoms.map(a => [a.x, a.y, a.z]);
     optimize_lbfgs(typed, energy_gradient_fn());
     expect(typed.atoms.map(a => [a.x, a.y, a.z])).toEqual(before);
+  });
+
+  it('handles an ill-conditioned quadratic (condition 10⁴)', () => {
+    // E = x² + 10⁴·y² on a single fake atom. L-BFGS must converge in a
+    // handful of iterations despite the 10⁴ curvature ratio. (Condition
+    // 10⁶ is the documented boundary where the 2 Å trial-step cap makes
+    // the small-curvature mode crawl — real MMFF94 surfaces sit at
+    // condition ~10⁴ or better, e.g. the bond/angle stiffness ratio.)
+    const mol: TypedMolecule = {
+      atoms: [{ index: 0, element: 'C', x: 3, y: 4, z: 0 }],
+      bonds: [],
+      atom_types: [1],
+      partial_charges: [0],
+    };
+    const cond = 1e4;
+    const result = optimize_lbfgs(
+      mol,
+      m => {
+        const x = m.atoms[0].x;
+        const y = m.atoms[0].y;
+        const energy = x * x + cond * y * y;
+        const gradient = [[2 * x, 2 * cond * y, 0]];
+        return { energy: { total: energy, bond_stretch: 0, angle_bend: 0, stretch_bend: 0, torsion: 0, van_der_waals: 0, electrostatic: 0, out_of_plane: 0 }, gradient };
+      },
+      { gradient_tolerance: 1e-8, max_iterations: 100 },
+    );
+    expect(result.converged).toBe(true);
+    expect(result.final_max_gradient).toBeLessThan(1e-8);
+    expect(Math.abs(result.molecule.atoms[0].x)).toBeLessThan(1e-6);
+    expect(Math.abs(result.molecule.atoms[0].y)).toBeLessThan(1e-6);
   });
 });
