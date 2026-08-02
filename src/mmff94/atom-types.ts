@@ -41,6 +41,11 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
   // Ring detection: atoms that survive iterative leaf-stripping are ring atoms.
   const is_ring = find_ring_atoms(adj, n);
 
+  // Aromatic ring perception: 5/6-membered rings with 6 π electrons
+  // (Kekulé doubles + lone-pair heteroatoms), or V2000 aromatic bonds
+  // (order 4). The per-atom rings feed the 5-ring α/β typing below.
+  const aromatic = find_aromatic_rings(adj, molecule, is_ring);
+
   // Water detection: MMFF94 gives H2O dedicated types — O = 70
   // ("OXYGEN IN WATER"), H = 31 ("H-OH") — with r₀ 0.969 (bond
   // 0-31-70), distinct from alcohols (O 6, H 21, r₀ 0.972). An O
@@ -86,6 +91,17 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
 
       // ── Carbon ──────────────────────────────────────────────────────
       case 'C': {
+        // Aromatic ring carbon: 37 in a 6-ring (benzene/pyridine C),
+        // 63/64/78 in a 5-ring by the α/β position relative to the
+        // lone-pair heteroatoms (part II).
+        if (aromatic.atoms.has(i)) {
+          const in_5ring = (aromatic.rings_of.get(i) ?? []).some(r => r.path.length === 5);
+          atom_types[i] = in_5ring
+            ? type_aromatic_5ring_carbon(i, adj, molecule, aromatic)
+            : 37;
+          break;
+        }
+
         // Acetylenic: 2 neighbors, triple bond → type 4 (CSP)
         if (n_neighbors <= 2 && has_triple) {
           atom_types[i] = 4;
@@ -94,12 +110,6 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
 
         if (n_neighbors === 3) {
           // Trigonal planar (sp²): 3 neighbors, at least one double/aromatic
-
-          if (is_ring[i] && (has_aromatic || is_aromatic_ring(i, adj, molecule))) {
-            // Aromatic carbon: 3 bonds in an aromatic ring → type 37 (CB)
-            atom_types[i] = 37;
-            break;
-          }
 
           if (has_double) {
             // Check what the double bond goes to
@@ -200,6 +210,9 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
         if (water_oxygens.has(i)) {
           // Water oxygen → type 70 (OXYGEN IN WATER)
           atom_types[i] = 70;
+        } else if ((aromatic.rings_of.get(i) ?? []).some(r => r.path.length === 5)) {
+          // Aromatic 5-ring oxygen (furan, oxazole) → type 59 (OFUR)
+          atom_types[i] = 59;
         } else if (n_neighbors === 1 && carboxylate_carbons.has(neighbors[0].nbr)) {
           // Carboxylate oxygen — the =O or the terminal -O⁻ → type 32 (O2CM)
           atom_types[i] = 32;
@@ -216,6 +229,18 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
 
       // ── Nitrogen ────────────────────────────────────────────────────
       case 'N': {
+        // Aromatic ring nitrogen: 38 in a 6-ring (pyridine), 39/65/66
+        // in a 5-ring by position (pyrrole's N is 39; imidazole- and
+        // thiazole-type N's are 65/66). The charged variants (58/76/81)
+        // follow the same positions (part II).
+        if (aromatic.atoms.has(i)) {
+          const in_5ring = (aromatic.rings_of.get(i) ?? []).some(r => r.path.length === 5);
+          atom_types[i] = in_5ring
+            ? type_aromatic_5ring_nitrogen(i, adj, molecule, aromatic)
+            : adj[i].length === 3 ? 58 : 38;
+          break;
+        }
+
         if (n_neighbors === 3 && !has_double && !has_aromatic) {
           // Amine N: 3 single bonds → type 8 (NR)
           atom_types[i] = 8;
@@ -236,11 +261,6 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
             // Amide N (N-C=O) with delocalized lone pair → type 10 (NC=O)
             atom_types[i] = 10;
           }
-        } else if (is_ring[i] && has_aromatic) {
-          // Aromatic N — pyridine-like (type 38 NPYD) or pyrrole-like (type 39 NPYL)
-          // For now, use type 38 for 6-ring, 39 for 5-ring
-          const ring_size = estimate_ring_size(i, adj, molecule);
-          atom_types[i] = (ring_size === 5) ? 39 : 38;
         } else {
           atom_types[i] = 8; // fallback: amine N
         }
@@ -249,6 +269,14 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
 
       // ── Sulfur ──────────────────────────────────────────────────────
       case 'S': {
+        // Aromatic 5-ring sulfur (thiophene, thiazole) → type 44 (STHI);
+        // 6-ring aromatic S falls through to the thioether typing (MMFF
+        // has no aromatic type for it).
+        const in_aromatic_5ring = (aromatic.rings_of.get(i) ?? []).some(r => r.path.length === 5);
+        if (aromatic.atoms.has(i) && in_aromatic_5ring) {
+          atom_types[i] = 44;
+          break;
+        }
         if (has_double && n_neighbors >= 3) {
           // Check for S=O / SO₂
           const dbl_to_O = double_nbrs.some(nb => {
@@ -326,65 +354,236 @@ function find_ring_atoms(
 
 
 /**
- * Check if an atom is in an aromatic ring (alternating single/double bonds
- * around a planar ring, typical of benzene and related systems).
+ * Aromatic ring perception (MMFF part II): planar 5- or 6-membered
+ * rings with 6 π electrons — each ring double bond contributes 2, and
+ * each ring N/O/S carrying NO ring double bond contributes its lone
+ * pair (2): pyrrole's N, furan's O, thiophene's S. V2000 aromatic
+ * bonds (order 4) settle the ring directly — the input already
+ * resolved it. Replaces the old carbon-only alternating-bond walker,
+ * which could not perceive heteroaromatic rings (pyridine typed
+ * N=9, pyrrole's ring C's typed 2).
  *
- * For each ring atom, we verify that every atom in the ring has exactly
- * one double bond to another ring atom (the Kekulé pattern). This
- * distinguishes benzene (all 6 C are sp², alternating bonds) from
- * non-aromatic cyclic alkenes like cyclohexadiene.
+ * Returns the aromatic atoms and, per atom, the aromatic rings
+ * containing it (fused systems give more than one).
  */
-function is_aromatic_ring(
-  start: number,
-  adj: { nbr: number; order: number }[][],
-  molecule: Molecule,
-): boolean {
-  // Walk the ring starting from `start`, following alternating single/double
-  // bonds. If we return to `start` having visited all ring atoms, it's aromatic.
-  const visited = new Set<number>();
-  const ring_atoms: number[] = [];
-
-  // Find the ring via DFS, bounded at depth 6
-  function dfs(node: number, parent: number, depth: number): boolean {
-    if (depth > 6) return false;
-    if (node === start && depth > 2) return true;
-
-    visited.add(node);
-    ring_atoms.push(node);
-
-    for (const { nbr } of adj[node]) {
-      if (nbr === parent) continue;
-      // Only consider sp² carbon neighbors in a ring
-      const elem = molecule.atoms[nbr].element;
-      if (elem !== 'C') continue;
-      if (adj[nbr].length !== 3) continue;
-      if (!visited.has(nbr) || nbr === start) {
-        if (dfs(nbr, node, depth + 1)) return true;
-      }
-    }
-
-    visited.delete(node);
-    ring_atoms.pop();
-    return false;
-  }
-
-  if (!dfs(start, -1, 0)) return false;
-
-  // Verify alternating bond pattern around the ring
-  if (ring_atoms.length === 0) return false;
-
-  // Walk the ring and count double bonds to ring neighbors
-  for (const atom of ring_atoms) {
-    const ring_dbl = adj[atom].filter(nb =>
-      ring_atoms.includes(nb.nbr) && nb.order === 2
-    );
-    // Each aromatic carbon must have exactly one double bond to a ring neighbor
-    if (ring_dbl.length !== 1) return false;
-  }
-
-  return true;
+interface AromaticRing {
+  path: number[];
 }
 
+interface AromaticInfo {
+  atoms: Set<number>;
+  rings_of: Map<number, AromaticRing[]>;
+}
+
+function find_aromatic_rings(
+  adj: { nbr: number; order: number }[][],
+  molecule: Molecule,
+  is_ring: boolean[],
+): AromaticInfo {
+  const atoms = new Set<number>();
+  const rings_of = new Map<number, AromaticRing[]>();
+  const seen = new Set<string>();
+  const bond_order = (a: number, b: number): number => {
+    const bond = molecule.bonds.find(
+      bd => (bd.atom1 === a && bd.atom2 === b) || (bd.atom1 === b && bd.atom2 === a),
+    );
+    return bond ? bond.bond_order : 0;
+  };
+
+  // All simple cycles through ring atoms, bounded at 6-membered rings.
+  const cycles: number[][] = [];
+  for (let start = 0; start < molecule.atoms.length; start++) {
+    if (!is_ring[start]) continue;
+    const walk = (node: number, parent: number, path: number[]): void => {
+      for (const { nbr } of adj[node]) {
+        if (nbr === parent || !is_ring[nbr]) continue;
+        if (nbr === start) {
+          if (path.length >= 4 && path.length <= 6) {
+            const key = [...path].sort((a, b) => a - b).join(',');
+            if (!seen.has(key)) {
+              seen.add(key);
+              cycles.push([...path]);
+            }
+          }
+        } else if (path.length < 6 && !path.includes(nbr)) {
+          walk(nbr, node, [...path, nbr]);
+        }
+      }
+    };
+    walk(start, -1, [start]);
+  }
+
+  const mark = (path: number[]): void => {
+    const ring = { path };
+    for (const a of path) {
+      atoms.add(a);
+      const list = rings_of.get(a);
+      if (list) list.push(ring);
+      else rings_of.set(a, [ring]);
+    }
+  };
+
+  for (const path of cycles) {
+    const set = new Set(path);
+    const size = path.length;
+
+    // Chord check: a genuine ring has no bond between non-consecutive
+    // members. Cage molecules (e.g. FUVDOP's triazine) are full of
+    // chords; without this, the cycle walker could close a 6-cycle
+    // through a cage bridge and call it a ring.
+    let chorded = false;
+    for (let p = 0; p < size && !chorded; p++) {
+      for (let q = p + 2; q < size && !chorded; q++) {
+        const adjacent = p === 0 && q === size - 1;
+        if (adjacent) continue;
+        if (adj[path[p]].some(nb => nb.nbr === path[q])) chorded = true;
+      }
+    }
+    if (chorded) continue;
+
+    let input_aromatic = false;
+    for (let p = 0; p < size; p++) {
+      const o = bond_order(path[p], path[(p + 1) % size]);
+      if (o >= 4) input_aromatic = true;
+    }
+    if (input_aromatic) {
+      mark(path);
+      continue;
+    }
+    // Kekulé pattern: every ring atom carries exactly one ring double
+    // bond, except that a 5-ring may have exactly one N/O/S with none
+    // — the lone-pair donor (pyrrole's N, furan's O, thiophene's S).
+    // The 6π count is implied (2 doubles + 1 lone pair in a 5-ring,
+    // 3 doubles in a 6-ring); adjacent double bonds and saturated
+    // rings (FUVDOP's all-single triazine cage, KAGBOJ's pyrone ring
+    // with a bare carbon) fail the pattern.
+    let zero_double_atoms = 0;
+    let kekule = true;
+    for (const a of path) {
+      const ring_doubles = adj[a].filter(nb => set.has(nb.nbr) && nb.order === 2).length;
+      if (ring_doubles > 1) { kekule = false; break; }
+      if (ring_doubles === 0) {
+        zero_double_atoms++;
+        const el = molecule.atoms[a].element;
+        if (el !== 'N' && el !== 'O' && el !== 'S') { kekule = false; break; }
+      }
+    }
+    if (!kekule) continue;
+    if (size === 6 && zero_double_atoms !== 0) continue;
+    if (size === 5 && zero_double_atoms !== 1) continue;
+    mark(path);
+  }
+
+  return { atoms, rings_of };
+}
+
+/**
+ * The lone-pair heteroatoms at the α (ring-neighbor) and β (two bonds
+ * away) positions of an aromatic 5-ring atom: S, O, or a pyrrole-type
+ * N (3 explicit neighbors, not an N-oxide). Pyridine-type N's (2
+ * neighbors) are NOT counted — they carry no lone pair for the ring's
+ * π system — so in a thiazole only the S counts, which is why the
+ * thiazole C's type differently from pyrrole's.
+ */
+function five_ring_alpha_beta(
+  i: number,
+  adj: { nbr: number; order: number }[][],
+  molecule: Molecule,
+  aromatic: AromaticInfo,
+): { alpha: number[]; beta: number[] } {
+  const is_hetero = (a: number): boolean => {
+    const el = molecule.atoms[a].element;
+    if (el === 'S' || el === 'O') return true;
+    if (el !== 'N' || adj[a].length !== 3) return false;
+    // N-oxide N (bonded to a terminal O) is not a lone-pair donor
+    return !adj[a].some(nb => molecule.atoms[nb.nbr].element === 'O' && adj[nb.nbr].length === 1);
+  };
+  const alpha = new Set<number>();
+  const beta = new Set<number>();
+  for (const ring of aromatic.rings_of.get(i) ?? []) {
+    if (ring.path.length !== 5) continue; // α/β positions live in 5-rings
+    const set = new Set(ring.path);
+    const idx = ring.path.indexOf(i);
+    for (const a of [ring.path[(idx + 1) % 5], ring.path[(idx + 4) % 5]]) {
+      if (is_hetero(a)) alpha.add(a);
+      // β: a's other ring neighbors in this ring
+      for (const b of adj[a]) {
+        if (b.nbr !== i && set.has(b.nbr) && is_hetero(b.nbr)) beta.add(b.nbr);
+      }
+    }
+  }
+  return { alpha: [...alpha], beta: [...beta] };
+}
+
+function shares_ring(a: number, b: number, aromatic: AromaticInfo): boolean {
+  const rings_a = aromatic.rings_of.get(a) ?? [];
+  const rings_b = aromatic.rings_of.get(b) ?? [];
+  return rings_a.some(ra => rings_b.includes(ra));
+}
+
+/**
+ * Aromatic 5-ring carbon (C5A/C5B/C5): 63 when α to a lone-pair
+ * heteroatom (pyrrole's α-C), 64 when β to one (pyrrole's β-C), 78
+ * when no heteroatom is in reach — including fused rings whose α and
+ * β heteroatoms live in different rings, and rings with only
+ * pyridine-type N's (e.g. imidazole's C's beyond the α position).
+ */
+function type_aromatic_5ring_carbon(
+  i: number,
+  adj: { nbr: number; order: number }[][],
+  molecule: Molecule,
+  aromatic: AromaticInfo,
+): number {
+  const { alpha, beta } = five_ring_alpha_beta(i, adj, molecule, aromatic);
+  if (alpha.length === 0 && beta.length === 0) return 78; // C5
+  if (alpha.length > 0 && beta.length === 0) return 63; // C5A
+  if (alpha.length === 0 && beta.length > 0) return 64; // C5B
+  // Both: if an α and a β lie in different rings (fused systems) the
+  // α/β concept breaks down — the general 5-ring type applies.
+  for (const a of alpha) {
+    for (const b of beta) {
+      if (!shares_ring(a, b, aromatic)) return 78;
+    }
+  }
+  const s_o = (list: number[]) => list.some(a => {
+    const el = molecule.atoms[a].element;
+    return el === 'S' || el === 'O';
+  });
+  if (s_o(alpha)) return 63;
+  if (s_o(beta)) return 64;
+  return 78;
+}
+
+/**
+ * Aromatic 5-ring nitrogen: the lone-pair N (pyrrole-type, 3
+ * neighbors) with no heteroatom in reach is 39 (pyrrole's N); the
+ * pyridine-type N's (2 neighbors) are 65/66 by position; the charged
+ * variants (81) and the anionic 76 follow the same positions.
+ */
+function type_aromatic_5ring_nitrogen(
+  i: number,
+  adj: { nbr: number; order: number }[][],
+  molecule: Molecule,
+  aromatic: AromaticInfo,
+): number {
+  const deg3 = adj[i].length === 3;
+  const { alpha, beta } = five_ring_alpha_beta(i, adj, molecule, aromatic);
+  if (alpha.length === 0 && beta.length === 0) return deg3 ? 39 : 76; // NPYL / N5M
+  if (alpha.length > 0 && beta.length === 0) return deg3 ? 81 : 65; // N5A+ / N5A
+  if (alpha.length === 0 && beta.length > 0) return deg3 ? 81 : 66; // N5B+ / N5B
+  for (const a of alpha) {
+    for (const b of beta) {
+      if (!shares_ring(a, b, aromatic)) return 79; // N5
+    }
+  }
+  const s_o = (list: number[]) => list.some(a => {
+    const el = molecule.atoms[a].element;
+    return el === 'S' || el === 'O';
+  });
+  if (s_o(alpha)) return 65;
+  if (s_o(beta)) return 66;
+  return 79;
+}
 
 /**
  * Estimate the size of the smallest ring containing atom i.

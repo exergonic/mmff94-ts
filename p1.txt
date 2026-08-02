@@ -1,0 +1,2465 @@
+Merck Molecular Force Field. I. Basis,
+Form, Scope, Parameterization, and
+Performance of MMFF94*
+
+THOMAS A. HALGREN
+
+Department of Molecular Design and Diversity, Merck Research Laboratories,
+Rahway, New Jersey 07065
+
+Received 20 March, 1995; accepted 31 August, 1995
+
+               ABSTRACT
+
+                 This article introduces MMFF94, the initial published version of the Merck
+                 molecular force field (MMFF). It describes the objectives set for MMFF, the form
+                 it takes, and the range of systems to which it applies. This study also outlines
+                 the methodology employed in parameterizing MMFF94 and summarizes its
+                 performance in reproducing computational and experimental data. Though
+                 similar to MM3 in some respects, MMFF94 differs in ways intended to facilitate
+                 application to condensed-phase processes in molecular-dynamics simulations.
+                 Indeed, MMFF94 seeks to achieve MM3-like accuracy for small molecules in a
+                 combined "organic/protein" force field that is equally applicable to proteins
+                 and other systems of biological significance. A second distinguishing feature is
+                 that the core portion of MMFF94 has primarily been derived from high-quality
+                 computational data-ca. 500 molecular structures optimized at the HF/6-31G*
+                 level, 475 structures optimized at the MP2/6-31G* level, 380 MP2/6-31G*
+                 structures evaluated at a defined approximation to the MP4SDQ/TZP level, and
+                 1450 structures partly derived from MP2/6-31G* geometries and evaluated at
+                 the MP2/TZP level. A third distinguishing feature is that MMFF94 has been
+                 parameterized for a wide variety of chemical systems of interest to organic and
+                 medicial chemists, including many that feature frequently occurring
+                 combinations of functional groups for which little, if any, useful experimental
+                 data are available. The methodology used in parameterizing MMFF94 represents
+                 a fourth distinguishing feature. Rather than using the common "functional
+                 group" approach, nearly all MMFF parameters have been determined in a
+                 mutually consistent fashion from the full set of available computational data.
+                 MMFF94 reproduces the computational data used in its parameterizationovery
+                 well. In addition, MMFF94 reproduces experimental bond lengths (0.014 A root
+                 mean square [rrns]), bond angles (1.2" rms), vibrational frequencies (61 cm-'
+
+    *This article includes Supplementary Material available
+from the author upon request or via the Internet at
+ftp.wiley.com/public/journals/jcc/supprnat/l7/490 or
+http://journals.wiley.com/jcc
+
+Journal of Computational Chemistry, Vol. 17, Nos. 5 & 6 , 490-519 (1996)  CCC 0192-8651 I 9 61050490-30
+0 1996 by John Wiley & Sons, Inc.
+                                                                       MERCK MOLECULAR FORCE FIELD. I
+
+rms), conformationalenergies (0.38 kcal/mol rms), and rotational barriers
+(0.39 kcal/mol rms) very nearly as well as does MM3 for comparable systems.
+MMFF94 also describes intermolecular interactions in hydrogen-bonded systems
+in a way that closely parallels that given by the highly regarded OPLS force
+field. 0 1996by John Wiley & Sons,Inc.
+
+  Introduction                                              employ more complex and more accurate force
+                                                            fields in molecular simulations and to obtain
+M olecular-mechanics force fields are a crucial             high-quality computational data against which to
+         component in the armamentarum used by              determine the form of the force field and on which
+computational and medicinal chemists for what               to base its parameterization. Computational theory
+has become known as "rational drug design." Early           has already reached the point at which practical ab
+forms of such force fields go back to the work of           inifio methods routinely give results for small-
+Hendrickson' in the 1960s. Many would find par-             molecule properties that approach experiment in
+ticularly noteworthy the work of Allinger and
+coworkersin developing MMl? MM2: and MM34;                  accuracy'' while avoiding the large errors that
+that of Kollman and coworkers in developing
+AMBER5; that of Jorgensen and coworkers in de-              experiment sometimes incurs.lgMoreover, the req-
+veloping OPLS6;that of Karplus and coworkers in             uisite computational data can be obtained rela-
+developing CHARMM7; and that of Lifson and                  tively easily for essentially any system of interest,
+coworkers in developing CVFF.' Recent develop-              including many for which no pertinent experimen-
+ments, some of which chart important new direc-             tal data are, or are likely to become, available.
+tions, include the extended CHARMM force field              Arguably, then, a complex, broadly parameterized
+of Momany and Roneg; the DREIDING force field               force field even now can best be derived from
+of Mayo et a1.l'; the UFF force field of Rapp&,et           computational data.
+al."; the YETI force field of Vedani antl Huhta";
+the SHAPES and VALBOND force fields of Landis                  Efforts to develop improved force fields using
+                                                            computational data and computationally derived
+and coworker^'^^ 14; the CFF93 force field devel-           insights are already underway in various laborato-
+                                                            ries. In particular, much has been learned about
+oped for the Biosym Consortium on Potential En-             how to model molecular charge distributions accu-
+ergy Functions by Hagler and c o ~ o r k e r s l ~ ,a'n~d;
+the MM4 force field of Allinger et al.I7 Like all           rately'' and to incorporate induced-dipole effects
+contemporary force fields, each of the above em-
+ploys significant physical approximations that limit        arising from molecular polarizability.21These elec-
+its accuracy. Moreover, each applies to a different         trostatic terms critically affect nonbonded interac-
+portion of organic/bio-organic chemistry and is             tions. Research based on the use of computational
+derived in a distinctive fashion from a specific            data obtained from ab initio calculations has also
+selection of data. Given the severity of the approxi-       been undertaken to better define the form and
+mations that have had to be made, force-field               improve the parameterization of the valence-coor-
+development has been as much an art as a science.           dinate terms that depend on bond, angle, and
+One result is that little consensus has been forged         torsional distortions.16,22Particularly noteworthy
+either as to what form the force field should take          in the latter regard are the novel fits of the empiri-
+or as to how it should be derived and tested.               cal potential energy expression to ab initio relative
+                                                            energies and first and second derivatives em-
+   One can imagine a different situation-one in             ployed by Hagler and coworkers in their deriva-
+which essentially all physically significant effects        tion of CFF93.16
+are incorporated accurately into the force field and
+in which alternative approximations for specific               In this series of articles, we report the results of
+physical terms can be rigorously tested and vali-           our own initial effort to employ computationally
+dated. What makes such a situation imaginable is            derived information to develop an improved
+the steadily increasing computational power avail-          molecular mechanics/dynamics force field. We
+able to computational chemists. Such computa-               should note, however, that we have not relied
+tional power simultaneously makes it possible to            exclusively on computational data. In particular,
+                                                            we have supplemented and extended the range of
+                                                            the core, computationally derived force field, which
+                                                            itself is quite broad, by also parameterizing the
+                                                            force field against a large number of crystallo-
+                                                            graphically determined structures. This combined
+
+JOURNAL OF COMPUTATIONAL CHEMISTRY                          491
+HALGREN                                                     (vdW) and electrostatic representation (part I124);
+                                                            (b) the parameterization of the valence-coordinate
+effort has led to what we call the Merck Molecular          terms that determine molecular geometries and
+Force Field (MMFF). We call this initial published          vibrational frequencies (part IIIZ); (c) the parame-
+version "MMFF94." We should note at the outset              terization of the torsion terms that then determine
+that MMFF94 still makes significant approxima-              conformationalenergies and torsionalbarriers (part
+tions in its treatment of important physical interac-       IV26);and (d) the further extension of MMFF using
+tions. Even this version, however, employs compu-           a combination of experimetnal data extracted from
+tational data of higher quality and broader range           the Cambridge Crystallographic Database, addi-
+than we believe has been utilized in previous               tional computational data, and carefully calibrated
+efforts. This effort also embodies a particular point       empirical rules (part VZ7).Each of these reports
+of view on what a force field intended for use in           also further characterizes the performance of the
+bio-organic and pharmaceutical applications                 new force field in reproducing computational and
+should do and on how it should be derived and               experimental data. In this introductory article, we
+validated. We expect that growing computational             summarize MMFF94's performance and address
+power will soon allow a computationally based               the issues that unify its derivation.
+approach to be implemented in an even more
+comprehensive fashion to develop a physically su-              One further clarification needs to be made. This
+perior force field. In the meantime, we believe the         version of MMFF is primarily intended for use in
+performance and range of applicability of MMFF94            molecular-dynamicssimulations rather than in en-
+warrant its description and use in computational            ergy-minimization studies. As a practical matter,
+simulations. To this end, we have deposited the             the principal distinction between these applica-
+parameters as supplementary material in com-                tions concerns MMFF94's treatment of low-energy
+puter-readable form.23Part or all of each parame-           inversion barriers at resonance-delocalized tricoor-
+ter file is listed in this or in one of the other articles  dinate nitrogen in amides and in such unsaturated
+in this ~ e r i e s . M~ o~re-o~ve~r, we have collaborated  amines as vinylamines, anilines, guanines, and nu-
+with others to implement MMFF93 in CHARMmZ8                 cleic-acid bases. In particular, MMFF94 usually
+and are working to make MMFF94 available in                 gives nonplanar energy-minimized geometries at
+CHARMM,7 the academic version. In addition,                 nitrogen, even for amides, thereby emulating the
+MMFF94 is currently being implemented in the                nonplanar MP2/6-31G*-optimized geometries
+BatchMin module of the MacroModel program                   used in its parameterization. Yet experimen-
+suite.29We also hope to be able to distribute OPTI-         tal structures, particularly those determined via
+MOL?' the host molecular-mechanics program for              crystallographic techniques, tend to show planar
+which MMFF94 was developed, through the                     or nearly planar geometries that reflect time-
+Quantum Chemistry Program Exchange?*                        averaged atomic positions. When used in molecu-
+                                                            lar-dynamics simulations, MMFF94 produces rela-
+   In the next section, we first state the philosophy       tively flat dynamically averaged structures for such
+that underlies the development of MMFF94. We                species. Many current pharmaceutical applications,
+define the form of MMFF94. The fourth section               however, rely on energy-minimization methods
+briefly compares the forms of the MMFF94, MM2X,             because of limitations in software and computa-
+MM2, MM3, and CFF93 force fields. We then de-               tional resources. For use in such studies, we are
+fine the range of chemical structures for which the         developing and intend to soon describe a modified
+computationally derived "core" portion of MMFF              version, currently called "MMFF94s," that yields
+has been parameterized and characterize the com-            nearly planar energy-minimized geometries for de-
+putational data used. Next, we outline the                  localized trigonal nitrogen?2 The two force fields
+methodology employed in deriving the force field.           share most parameters and yield similar, often
+We then summarize how MMFF94 performs                       identical, results for other systems.
+against computational and experimental data in
+meeting various structural and energetic tests, and           Basis and Motivation for Formulation
+subsequently we describe some elements of its                 of MMFF94
+implementation in OPTIMOL, CHARMm, and
+BatchMin. Finally, we summarize this work and                  A molecular mechanics/dynamics force field
+sketch some future directions we believe force-field        may reasonably be asked to reproduce accurately
+development will take.                                      any or all of a number of molecular properties,
+
+   Subsequent articles in this series will complete
+the description of MMFF94 by more fully defining:
+(a) the parameterization of the van der Waals
+
+492                                                         VOL. 17, NOS. 5 &6
+including the following:                                               MERCK MOLECULAR FORCE FIELD. I
+
+       molecular geometries.                              To be routinely and reliably useful in pharma-
+                                                       ceutical, bio-organic and chemical applications,
+       conformationaland stereoisomeric energies.      MMFF94 would need to be able to handle most
+                                                       organic structural types represented in the Merck
+       torsional barriers and torsion-deformation      Index3 or the Fine Chemicals Directory.M This broad
+       energies.                                       intended range of application places significant
+                                                       requirements on the data to be used in the param-
+       intermolecular-interactionenergies.             eterization of the force field. We note in this regard
+                                                       that Allinger and coworkers have crafted a series
+       intermolecular-interactiongeometries.           of highly regarded molecular-mechanics force
+                                                       fields based primarily on the meticulous examina-
+       vibrational frequencies.                        tion and careful selection of good quality experi-
+                                                       mental data,2-4,17and that other force fields such
+       heats of formation.                             as AMBER5 and CHARMM7 have also been pa-
+                                                       rameterized mainly against experimental data. This
+Ideally, a single force field would be capable of      approach, however, could not be used to derive
+reproducing these and other molecular properties       MMFF94, for two reasons. First, the location, selec-
+accurately both in gas-phase and in condensed-         tion, and extraction of good experimental data is a
+phase simulations. Because of their relatively sim-    highly time-consuming enterprise and requires a
+ple construction, however, current force fields nec-   degree of expertise we lack. Second, and more
+essarily make a variety of compromises. Here we        importantly, high-quality experimental data, par-
+discuss the choices we have made in developing         ticularly for conformationaland intermolecular-in-
+MMFF94.                                                teraction energies, are unavailable for a great many
+                                                       of the chemical structures MMFF94 must handle.
+   A pivotal application for MMFF94, from which
+a number of constraints on its design and imple-          For these reasons, the core portion of MMFF94,
+mentation follow, is the study of receptor-ligand      on which we focus here, has been derived primar-
+interactions involving proteins or nucleic acids as    ily from ab initio data (though experimental data
+receptors and a wide range of chemical structures      have been liberally employed in its validation). An
+as ligands. For quantitative study, the force field    especially cogent argument for the use of such
+must be able to describe the ligand and receptor       computational data has recently been offered by
+properly in isolation as well as when bound. For       Hagler and coworkers.lb"In a novel and notewor-
+these purposes, molecular geometries need to be        thy departure from previous practice, these work-
+good, but conformationalenergies are crucial if the    ers employed data for molecular dipole moments,
+force field is to avoid modeling the wrong con-        relative energies, and Cartesian first and second
+former of the ligand (or receptor) upon binding or     derivatives obtained from HF/6-31G* calculations
+giving an erroneous estimate of the energetic cost     to characterize the quantum mechanical energy
+of adopting the detailed conformation required for     surface used to derive the QMFF (quantum-mech-
+binding. To assess these aspects properly, the force   anical force field) predecessor of CFF93, the Biosym
+field must be able to locate conformationalminima      Consortium force field. The approach we have
+accurately and describe intervening torsional pro-     taken in deriving MMF94 is, in part, patterned
+files and barriers reasonably well.                    after theirs. Both, for example, employ the power-
+                                                       ful Consortium program PROBE% to derive force
+   At least equally importantly, intermolecular-       constants for terms related to bond stretching and
+interaction energies (and, to a lesser extent, geome-  angle bending from the information on the curva-
+tries) must also be described accurately. In con-      ture of the quantum mechanical surface contained
+trast, vibrational frequencies should be reasonably    in the HF/6-31G* second derivatives. However,
+accurate, but spectroscopic precision is unlikely to   the two approaches also differ in a number of
+be required. Thus, fine details of vibrational spec-   ways that may materially affect their performance
+tra, such as the splitting of high-frequency modes     in molecular sim~dations."-~~
+for bond stretching or angle bending, are unlikely
+to appreciably affect the diferential free energy of      The derivation of a force field from computa-
+binding to a macromolecular receptor of one lig-       tional data would be straightforward if we wished
+and relative to another. Finally, though heats of      to describe only gas-phase systems. However,
+formation are crucial in some applications, they
+are not required to understand differences in free
+energies of binding and are not addressed in
+MMFF94.
+
+JOURNAL OF COMPUTATIONAL CHEMISTRY                     493
+HALGREN                                                  sion more suitable for use in energy minimization
+                                                         studies (MMFF94s) is also being de~eloped.~'
+while many, and perhaps most, of the processes
+we wish to model occur in condensed phases,              Form of the Merck Molecular Force
+MMFF94 accounts for the effects of molecular po-         Field
+larizability only in a limited way. These effects, for
+example, cause the dipole moment of water to rise           The MMFF94 energy expression can be written
+from a gas-phase value of 1.85 D to a mean value         as:
+of -2.4 D in aqueous s ~ l u t i o n . ~Cl'e~ar~ly~, a~
+condensed-phase simulation that uses a gas-phase         = CEB,+, CEAi,k+ CEBAi,k
+dipole moment for water would seriously under-
+estimate electrostatic interactions and would be         + CEooPijk,,+ C E T i ] k !
+expected to yield poor computational proper-
+ties.37 Consequently, MMFF94, like OPLS6 and             + CEvdW,, + CEQ,,            (1)
+other current force fields intended for use in con-
+densed-phase simulations, employs effect pair            where the seven constituent terms are defined as
+potentials37 that reflect, in an averaged sense, the     shown below. In each case, the cited numerical
+enhancement of the charge distribution due to
+molecular polarizability.                                constant is such that the deformation or interaction
+                                                         energy is expressed in kilocalories per mole when
+   Especially careful attention must be given to the
+partitioning between electrostatic, van der Waals        distances and angles are measured in angstroms
+
+(vdW), and torsional interaction^.^' Our approach        and in degrees, respectively.
+                                                            In the notation that follows, we adopt the con-
+begins by choosing the vdW representation as pre-
+viously defined39and the electrostatic representa-       vention that a specific atom involved in a force-
+tion from fits to scaled (enhanced by
+HF/6-31G* 40 molecular dipole moments. To prop-          field interaction is designated by i, j , k, ... and
+erly describe hydrogen-bonding interactions, we
+then adjust key vdW and electrostatic parameters         that the corresponding numeric MMFF atom type
+to better fit scaled intermolecular-interaction ener-
+gies and geometries obtained from HF/6-31G*              is designated by I, I , K , . .. This notation makes
+
+calculation^.^^ Last, we derive the torsion terms to     explicit, for example, that the force constant k b,,
+                                                         and the reference bond length rpJ for the i-j bond
+fit the ab initio gas-phase conformational data.         in eq. (2) depend on the associated MMFF atom
+Conveniently, the HF/6-31G* level of theory con-         types 1 and J, whereas the bond distance, r i j ,
+sistently overestimates gas-phase dipole moments         depends on the atomic coordinates. In certain in-
+for organic compounds.6b'1xaFor water, it gives a        stances, the parameters depend only on the atomic
+calculated dipole moment of 2.20 D,42 or 2.42 D          species for atoms i, j , k, ...;in such cases, we still
+after 10% enhancement, close to the previously           use capital letters, but explicitly note the actual
+cited mean value of -2.4 D found in aqueous
+solution. This use of scaled HF/6-31G* interac-          dependence in the text.
+tion energies and geometries allows MMFF to be
+parameterized in a straightforward manner that              BOND STRETCHING
+seeks to ensure that a proper balance between
+solvent-solvent, solvent-solute, and solute-solute          MMFF94 employs the quartic function:
+interactions is achieved. The quality of this balance
+is crucial for accurately describing aqueous solva-      EB,, = 143.9325-kAbrr$,
+tion and the energetics of host/guest binding in                                2
+aqueous solution. We have also explored the use
+of higher level ab initio calculation^,^^ but have not               x(1 + csAr,, + 7/12cs2Ar;) (2)
+found an alternative approach that appears prefer-
+able.                                                    where kb,, is the force coptant (md/&, A r , , =
+                                                         r,, - rp, is the difference (A) between $ctual and
+   As noted in the Introduction, one further choice      reference bond lengths, and cs = - 2 A-' is the
+we made in developing MMFF94 was to derive a             "cubic-stretch' constant. This function corre-
+force field explicitly intended for use in               sponds to an expansion through fourth oorder of a
+molecular-dynamics simulations. A modified ver-          Morse function with an "alpha" of 2 A-1.43 Re-
+                                                         sults published in a recent high-level ab initio
+                                                         study44show this value for alpha to be a represen-
+                                                         tative one. Special sets of reference bond lengths
+
+494                                                      VOL. 17, NOS. 5 & 6
+and force constants are employed for "conjugated                                   MERCK MOLECULAR FORCE FIELD. I
+single bonds," such as those found in butadiene
+and biphenyl, as well as for certain other single                  center pyramidal; the out-of-plane term can then
+bonds between sp- or spz-hybridizedatoms.z5                        be employed to improve the fit to the inversion
+                                                                   barrier.
+   ANGLE BENDING
+                                                                      TORSION INTERACTIONS
+   MMFF94 normally uses the cubic expansion:
+                                                                      Mh4FF94 uses the threefold representation em-
+   EA j k = 0.043844- kurJK A8j;k(1 + CbA8jjk) (3)                 ployed in MMz3and MM3: where Q, is the i-j-k-Z
+                                                                   torsion angle:
+                              2
+                                                                   ETijki= 0.5(V1(1 -k COS a) + v2(1 - COS2@)
+where ka,,, is the force constant (md A/radz),                                            + v3(1 + COs3@)) (7)
+
+    = 8 i j k - $tiKis the difference between ac-                  The constants V,, V,, and V, depend on the atom
+
+tual and reference bond angles (degrees), and cb =                 types I, J, K , and L for atoms i, j , k, and I , where
+-0.007 deg-' (or, more precisely, -0.4 rad-'1 is                   i-j, j - k , and k-1 are bonded pairs. Torsion interac-
+the "cubic-bend" constant. Special sets of parame-
+ters are used for angles that involve delocalized                  tions within four-membered rings and saturated
+single bonds and/or occur in small ringsE For                      five-membered ringsz6 are given special torsion
+linear or near-linear bond angles, MMFF94 em-                      constants, as are interactions in which either the
+ploys the well-behaved form used in DREIDING"                      central or a wing bond is a single bond between
+and UFF":                                                          two atoms that are capable of participating in
+                                                                   multiple or aromatic bonds?6 The former situation
+      EAjjk = 143.9325kar,,(l + COS 8ijk) (4)                      occurs, for example, in biphenyl, butadiene, and
+                                                                   styrene.
+   STRETCH-BEND INTERACTIONS
+                                                                      VAN DER WAALS INTERACTIONS
+   MMFF94 employs the form:
+                                                                      MMFF employs the recently developed
+EBAijk= 2.51210(kbar,, Arij + kbaKJrArkj)Aajjk                     "Buffered-14-7" form39;the terminology derives
+                                                                   from the formal 14th and 7th power dependencies
+                                                              (5)  for the repulsive and attractive terms that would
+                                                                   be obtained if the RT, "buffering constants" in the
+where kbu,,, and kba,,! are force constants                        denominators were deleted. The form of the poten-
+(md/rad) that couple the z-j and k-j stretches to                  tial is shown in eq. (8):
+the i-j-k bend, and A T and A 8 are as defined
+above. Stretch-bend interactions are omitted when                         (8)
+eq. (4)is used for bond angles.
+                                                                   This form is used in conjunction with an expres-
+   OUT-OF-PLANE BENDING AT TRICOORDINATE                           sion that relates the minimum-energy separation
+   CENTERS                                                         RT, to the atomic polarizability a I[eq. (911, with
+                                                                   specially formulated combination rules [eqs. (10)
+   MMFF94 uses the form:                                           and (ll)], and with a Slater-Kirkwood expression
+                                                                   for the well depth E,, [eq. (1211:
+where koopIIK: is the force constant (md A/rad2)
+and Xijk;, is the Wilson angle45(degrees) between                  RT, =  (9)
+the bond j-1 and the plane i-j-k. The three angles
+that arise at a given center, j , are all assigned the
+same k oopr,, : force constant; the "in-plane" an-
+gles use "normal" bond angles and are described
+by eq. (3). For trigonal nonplanar centers, this
+formulation allows angle-bending reference values
+that average less than 120" to be used to make the
+
+JOURNAL OF COMPUTATIONAL CHEMISTRY                                        495
+HALGREN                                                trophe is circumvented in MM2X's implementa-
+                                                       tion at the cost of additional complexity in the
+As described el~ewhere,'m~odified values of Ry,        computer code that might prove troublesome in
+and c1, are used to describe hydrogen-bonding          molecular-dynamics applications. MMFF94 and
+interactions. Van der Waals and electrostatic inter-   MM3 employ anharmonic angle bending, an in-
+actions are included whenever atoms i and j be-        trinsically better representation than the simple
+long to separate domains or are separated by three     quadratic form used in MM2 and MM2X, though
+or more chemical bonds; 1,4-vdW interactions are       MMFF truncates its representation at the cubic
+not differentially scaled in MMFF94.                   term.47Moreover, trigonal centers are handled dif-
+                                                       ferently in MMFF94 to allow out-of-plane terms to
+   ELECTROSTATIC INTERACTIONS                          be used for certain centers that have nonplanar
+                                                       equilibrium ge~metries.'~Centers having linear
+   MMFF94 uses the buffered coulombic form:            idealized bond angles are also handled differently,
+                                                       through eq. (4). The same forms for stretch-bend
+      EQ,, = 332.0716q,qI/( D ( R , , + 6 ) " ) (13)   and torsion interaction are used in all four force
+                                                       fields. MMFF94 currently omits MM3's bond-tor-
+where 9, and q, are partial at?mic chargesd R,, is     sion and bend-bend terms; bond-torsion terms
+the internuclear separation in A, 6 = 0.05 A is the    may be included later in certain cases, as may
+"electrostatic buffering" constant, and D is the       angle-torsion terms. MM3 also includes elec-
+"dielectric constant." Normally, the exponent n is     tronegativity-related adjustments to reference bond
+taken as 1, though use of a distance-dependent         lengths that MMFF94 omits but that in certain
+dielectric constant ( n = 2) is also supported. In     cases can be ~ignificant.'~,'~
+MMFF94, 1,4-electrostatic interactions are scaled
+by a factor of 0.75.26The distance buffering, where       The most important differences between
+                                                       MMFF94 and the MM2, MM2X, and MM3 force
+6 > 0, prevents infinite attractive electrostatic en-  fields arise in the description of nonbonded inter-
+                                                       actions. In particular, MMFF94 uses a "buffered"
+ergies from overwhelming the finite repulsive vdW      expression for vdW interactions and employs novel
+interaction contained in eq. (8) as oppositely         combination rules for the vdW parameters. Unlike
+charged atomic centers coalesce.                       MM2X>6 MMFF94 properly treats intramolecular
+                                                       and intermolecular electrostatic interactions in the
+   The partial atomic charges q1 used in eq. (13)      same manner. Moreover, MMFF94 normally uti-
+are constructed from initial full or fractional "for-  lizes a unit dielectric constant, thereby allow-
+mal atomic charges" qp (usually zero, but, e.g.,       ing the force field to be applied without modifica-
+                                                       tion to condensed-phase simulations employing
++ 1/3 for guanidinium nitrogen) by adding contri-      explicit solvent. In addition, like AMBER,5
+                                                       CHARMM,7CVFF?, CFF93,I6and most other force
+butions from bond charge increments w K l that         fields used in molecular-dynamics simulations,
+describe the polarity of the bonds to atom i from      MMFF94 describes hydrogen-bonding interactions
+attached atoms k. Specifically, MMFF94 computes        as being essentially electrostatic in nature, whereas
+41 as                                                  MM2 (1987 parameters and later) and MM3 obtain
+                                                       up to 6 kcal/mol of stabilization energy4 from an
+where w K , = - w I K .The procedure used to assign    attractive Exp-6 term.
+the qp is specified in part V of our s t ~ d y . ' ~
+                                                          CFF93 and MMFF94 both use a quartic expan-
+  Comparison of MMFF94's Functional                    sion for bond stretching, treat stretch-bend inter-
+  Form to MM2, MM2X, MM3, and CFF93                    actions in the same way, and employ equivalent
+                                                       representations for torsion interactions.I6 Both, in
+   MMFF94 closely resembles MM2 and MM3, as            addition, define partial atomic charges in terms of
+well as MM2X, our previous generation force            bond charge increments, describe electrostatic in-
+                                                       teractions solely in terms of charge-charge interac-
+          in functional form. For bond stretching,     tions (i.e., avoid special "hydrogen-bond"
+MMFF94 and MM3 each use a quartic expansion            terms5r7), and use novel vdW combination
+in which the cubic and quartic force constants are     rules39,49in conjunction with a vdW potential
+related to the quadratic force constants in a prede-   (Lennard-Jones 9-6 or Buf-14-7) that differs from
+termined way. Each thereby avoids the "cubic           the more commonly used Lennard-Jones 12-6
+stretch" catastrophe, in which progressive elonga-
+tion of a chemical bond eventually drives the MM2
+or MM2X energy to negative infinity. This catas-
+
+496                                                    VOL. 17, NOS. 5 & 6
+                                                       MERCK MOLECULAR FORCE FIELD. I
+
+form. Minor differences include MMFF94's use of        TABLE 1.
+a cubic rather than quartic expansion for angle        Conformers Consideredin ParameterizingCore
+bending and its use of a special form [eq. (4)] to
+describe "linear bond angles." One major differ-       M M FF94.'
+ence is that CFF93 includes many more "cross
+terms." These terms allow CFF93 to describe cer-       Amides and peptide analogs
+tain elements of geometry more accurately, an
+example being the elongatio? of a conjugated sin-      AMOla -formamide
+gle bond by as much as 0.1 A upon bond rotation.
+The additional cross terms also allow CFF93 to         AMOlt -formamide, N planar
+reproduce vibrational spectra more accurately than
+can MMFF94. As noted earlier, however, MMFF94          AM02a -N-methylformamide, cis
+does not seek to predict vibrational spectra to high
+accuracy but rather to describe conformationaland      AM02b -N-methylformamide, trans
+intermolecular interaction energies as well as pos-
+sible. With respect to these latter considerations,    AM02j -N-methylformamide, trans,
+major differences in parameterization that may
+materially affect performance arise from differ-       h-c-n-c              = 60"
+ences in the data and methodology ~ s e d ? ~ - ' ~
+                                                       AM02k -N-methylformamide, trans,
+  Survey of Systems for Which MMFF94
+  is Parameterized                                     h-c-n-c              = 30"
+
+   To define the range of organic and bio-organic      AM021 -N-methylformamide, trans,
+systems covered in the core parameterization of
+MMFF94, the set of compounds and molecular             h-c-n-c              = 0"    - anti ts,
+conformations for which optimized MP2/6-31G*                                        - anti ts,
+geometries have been employed are listed in            AM02s -N-methylformamide,
+Table I. Each structure is identified by a five-char-                               - anti ts,
+acter conformational index of the form "XYNMc,"        h-n-c=o              = 115"
+where "XY" defines the compound class (e.g., AM                                     - anti ts,
+for amides and related compounds), "NM" speci-         AM02t -N-methylformamide,    - syn ts,
+fies the compound number within the class, and
+"c" identifies the conformation. The conforma-         h-n-c= o = 120"              --syn ts,
+tional designations "u" through "i" correspond to                                     syn ts,
+equilibrium conformers; "j" through "2" indicate       AM02u -N-methylformamide,
+conformations optimized while holding a particu-                                    - syn ts,
+lar torsion angle fixed, except that "t" and some-     h-n-c= o = 125"
+times "s" usually denote a symmetry-determined
+conformationaltransition state. To characterizethe     AM02v -N-methylformamide,
+conformation, the compound name is followed,
+where appropriate, by a brief description of the       h-n-c= o = 130"
+geometry.
+                                                       AM02n-N-methylformamide,
+   Among "monofunctional" chemical families,
+MMFF94 has been parameterized for alkanes,             h-n-c= o = 55"
+alkenes, alcohols, phenols, ethers, aldehydes, ke-
+tones, ketals, acetals, hemiketals, hemiacetals,       AM02x -N-methylformamide,
+amines, amides, peptide analogs, ureas, imides,
+carboxylic acids, esters, carboxylate anions, ammo-    h-n-c= o = 60"
+nium cations, thiols, mercaptans, disulfides,
+halides (chlorides and fluorides), imines, iminium     AM02y -N-methylformamide,
+
+                                                       h-n-c= o = 65"
+
+                                                       AM02z -N-methylformamide,
+
+                                                       h-n-c= o = 70"
+
+                                                       AM03a -acetamide
+
+                                                       AMO3t -acetamide, N planar
+
+                                                       AM04a -N-methylacetamide, trans
+
+                                                       AM04b -N-methylactamide, cis
+
+                                                       AM04j -N-methylacetamide, trans,
+
+                                                       h-c-c= o = 0"
+
+                                                       AM04k -N-methylacetamide, trans,
+
+                                                       h-c-c= o = 30"
+
+                                                       AM041 -N-methylacetamide, trans,
+
+                                                       h-c-c= o = 60"
+
+                                                       AM04m-N-methylacetamide, cis,
+
+                                                       h-c-c= o = 0"
+
+                                                       AM04s -N-methylacetamide, cis,
+
+                                                       N planar
+
+                                                       AM04t -N-methylacetamide, trans,
+
+                                                       N planar
+
+                                                       AM05a -N, N-dimethylformamide
+
+                                                       AM06a -urea, puckered
+
+                                                       AM06t -urea, planar
+
+                                                       AM07a -N-formylformamide,
+
+                                                       both o= c-n-h cis
+
+                                                       AM07b -N-formylformamide,
+
+                                                       o= c-n-h cis, trans
+
+                                                       AM08a -formylglycinamide
+
+                                                       AM09a -glycine dipeptide analog, C7
+
+                                                       AM09b -glycine dipeptide analog, C5
+
+                                                                                    (Continueson next page)
+
+JOURNAL OF COMPUTATIONAL CHEMISTRY                                                                 497
+HALGR EN
+
+TABLE I.                                       TABLE 1.
+(continued)                                    (continued)
+
+AMO9s -glycine dipeptide analog, C7, N planar  Carboxylate anions
+                                               AN01a -formate anion
+AMO9t -glycine dipeptide analog, C5, N planar  AN02a -acetate ion
+                                               AN03a -propionate anion
+AMlOa -alanine dipeptide analog, C7eq          AN04a - propenoate anion
+
+AMlOb -alanine dipeptide analog, C5            Aromatic and heteroaromaticcompounds
+                                               ARO1a -benzene
+AMlOc -alanine dipeptide analog, C7ax          AR02a -pyridine
+                                               AR03a - pyrimidine
+AMlOd -alanine dipeptide analog, a'            AR04a - pyridazine
+                                               AR05a - 1,3,5-triazine
+AMlOe -alanine dipeptide analog, p2            ARO6a -pyrrole
+                                               AR07a -furan
+AMlOf -alanine dipeptide analog, aL            AR08a -thiophene
+                                               ARO9a - imidazole
+AM11a -propionamide,c -c -c -n anti            ARlOa -pyrazole
+                                               AR11a -1,2,4-triazoIe
+AM12a -N-ethylformamide,                       AR12a -1,2,3,4-tetrazoIe(N1 tautomer)
+                                               AR13a -1,2,3,5-tetrazole(N2 tautomer)
+     c- c- n - c gauche                        AR14a -oxazole
+                                               AR15a - isoxazole
+AM12a -N-ethylformamide,c -c -n -c = 180"      AR16a - 1,3,4-0xadiazole
+                                               AR17a - 1,2,4-0xadiazole
+AM13a -N-OH,N-methylacetamide,                 ARi 8a -thiazole
+                                               AR19a -isothiazole
+     o -n -c= o trans                          AR20a - 1,3,4-thiadiazole
+                                               AR21a -pyridine N-oxide
+AM13b -N-OH,N-methylacetamide,                 AR22a -toluene
+                                               AR23a -ethylbenzene, c -c -c -c skew
+     o-n -c= o cis                             AR23t -theylbenzene, c -c -c -c = 0"
+                                               AR24a -N-ethylpyrrole,c -n -ch, -ch, ca. 90"
+AM13s -N-OH NMA, o -n -c= o trans,             AR25a - indole
+
+     N planar                                  Carboxylic acids
+
+AM13t -N-OH NMA, o -n -c= o cis,               CAOla -methanoicacid, o= c -o -h cis
+                                               CAOl b -methanoicacid, o= c -o -h trans
+     N planar                                  CA02a -ethanoic acid, o= c -o -h cis
+                                               CA02b -ethanoic acid, o= c -o -h trans
+AM14a -N-OH,N-Et acetamide,
+                                                CA03a -propanoic acid, c -c -c= o cis
+     o -n -c= o trans,                          CAO3b -propanoic acid, c -c -c= o skew
+
+     c-c-n-ogauche                             CA04a -glyoxalic acid, o= c -c= o trans,
+                                                           o= c -o -h cis
+AM14b -N-OH,N-Et acetamide,
+                                                CA04b -glyoxalicacid, o=c-c= o trans,
+     o -n -c= o trans,                                       o=c-o-h trans (h-bond)
+
+     c - c - n -o trans                         CA05a -glycolic acid, o= c -c -o cis (h-bond)
+                                               CA05b -glycolic acid, o= c -c -o skew (h-bond)
+AM14c -N-OH,N-Et acetamide,
+                                                CAO6a -benzoic acid
+     0- n - c = o cis,                          CA07a -propenoic acid, c= c -c= o trans
+                                                CA07b -propenoic acid, c= c -c= 0 cis
+     c-c-n-c(=o)          skew                  CA08a -oxalicacid, o=c-c=o trans,
+
+AM14d - N-OH, N - Et acetamide,                            both o= c -o -h trans
+
+     o -n -c= o cis,                            CA08b -oxalicacid, o=c-c=o trans,
+
+     c -c- n -c(=o) gauche                                 both o= c - 0 - h cis
+
+AM15a -N-OH, N-Me propionamide,                                                           (Continueson next page)
+
+     0- n -c= o trans,
+
+     c- c- c= o cis
+
+AM15b -N-OH, N-Me propionamide,
+
+     o -n -c= o trans,
+
+     c- c- c= o skew
+
+AM15c -N-OH, N-Me propionamide,
+
+     o -n -c= o cis,
+
+     c-c-c=o      cis
+
+AM15d -N-OH, N-Me propionamide,
+
+     o - n -c= o cis,
+
+     c - c- c= o skew
+
+AM16a -glycine dipeptide, C7
+
+AM16b -glycine dipeptide, C5
+
+AM17a --lanine dipeptide, C7eq
+
+AM17b --lanine dipeptide, C5
+
+AM17c --lanine dipeptide, C7ax
+
+AM17d --lanine dipeptide, a'
+
+AM17e -alanine dipeptide, p2
+
+AM17f -alanine dipeptide, aL
+
+498                                            VOL. 17, NOS. 5&6
+                                                               MERCK MOLECULAR FORCE FIELD. I
+
+TABLE 1.                                          TABLE 1.
+(continued)                                       (continued)
+
+CAO8c -oxalic acid, o= c -c= o trans,             CJ1Oa   - acetophenone
+             one o= c - 0 - h trans               CJ11 a  - styrene
+                                                  CJ12a   - 2-phenylpropene
+CAO9a -pyruvic acid, o= c -c= 0,                  CJ12j   -2-phenylpropene,framework planar
+            o =c -o -h trans (h-bond)             CJ13a   -1,3-pentadiene, s-trans, c -c= c -c trans
+                                                  CJ13b   -1,3-pentadiene, gauche, c -c= c -c trans
+CAO9b -pyruvic acid, o= c -c= 0,                  CJ13c   -1,3-pentadiene, s-trans, c -c= c -c cis
+                                                  CJ14a   - cyclopentadiene
+             o=c-0-hcis
+
+Carboxylic acid esters
+
+CEOla -methyl formate, o= c -o -c cis
+
+CEO1b -methylformate, o= c -o -c trans            Aldehydes and ketones
+
+CEO1j -methylformate, o= c -o -c trans,           COO1a -formaldehyde
+
+h-C-0-C                 = 180"                    C002a -acetaldehyde
+
+CEO1k -methylformate, o= c -o -c trans,           C003a -propionaldehyde,c -c -c= o cis
+
+h-C-0-C                 = 150"                    C003b -propionaldehyde,c -c -c= o
+
+CEO1I -methylformate, o= c -o -c trans,           C004a -acetone
+
+h-C-0-C                 = 120"                    C005a -butanone c -c -c -o = 0"
+
+CE02a -methyl acetate, o= c -o -c trans           C005b -butanone c -c -c -o skew
+
+CE02b -methyl acetate, o= c -o -c cis             C005j -butanone, c -c -c= o = 0"
+
+CE05a -vinyl formate, o= c -o -c cis,             C005k -butanone, c -c -c= o = 30"
+
+c= c -o -c trans                                  COO51 -butanone, c -c -c= o = 60"
+
+CE05b -vinyl formate, o= c- o -c cis,             C006m- butanone, c -c -c= o = 90"
+
+c= c-0- c cis                                     C005n -butanone, c -c -c= o = 120"
+
+CEOGa -ethyl formate, o= c -o -c cis,             COO50 -butanone, c -c -c= o = 150"
+
+c -o -c -c anti                                   C005p -butanone, c -c -c= o = 180"
+
+CEOGb -ethyt formate, o= c -o -c cis,             COO6a -methyl isopropyl ketone,
+
+c-0-c-c                 gauche                            o= c -c(ch,), -h trans
+
+CE07a -isopropylformate, c -c -o -c = g, a        C006b -methyl isopropyl ketone,
+
+CE07b -isopropylformate, c -c -o -c = g, g                o= c -c(ch,), -h cis
+
+- CE08a -phenyl acetate                           C007a -butyraldehyde,c -c -c -c anti
+
+CE08b -phenyl acetate, c -c( = 0)-o -c 90"        C007b -butyraldehyde,c -c -c -c gauche
+CEOSa -propiolactone
+                                                  C008a -but-3-enalc= c -c -c skew, c -c -c= o cis
+
+CElOa -methyl glycolate, o= c- c -o cis (h-bond)  C008b -but-3-enal c= c -c -c skew - ,
+
+CE1Ob -methyl glycolate,                                  c- c- c= o skew+
+
+o =c -c -o skew (h-bond)                          C008c -but-3-enalc= c -c -c skew+ ,
+
+Conjugated systems                                        c- c- c= o skew+
+CJOla -1,3-butadiene, gauche
+C J O l b -1,3-butadiene, s-trans                 C009a -3-methyl-but-3-ena1,c= c -c -c skew,
+CJOlt -1,3-butadiene, c= c -c= c = 0"
+CJ02a -2-methyl-l,3-butadiene,gauche                      c- c- c= o cis
+CJ02b -2-methyl-l,3-butadiene,s-trans
+CJ03a -2-methyl-but-1-ene-3-one, c= c -c= o cis   C009b -3-methyl-but-3-ena1,c= c -c -c skew,
+CJ03b -2-methyl-but-1-ene3-one, c= c -c= o trans
+CJ04a -2-methylpropenamide,c= c -c= o cis                 c- c- c= o skew
+CJO4b -2-rnethylpropenamide, c= c -c -o skew
+CJ05a -propenamide,c= c -c= o cis                 COlOj -isobutyraldehyde, h-c(=o)-c-    h = 0"
+CJ05b -propenamide,c= c -c= o skew
+CJO6a -but-1-ene-3-one, c= c -c= o cis            COlOk -isobutyraldehyde,h -c(=o) -c -h = 30"
+CJOGb -but-1-ene-3-one, c= c -c= o trans
+CJ07a -acrolein, c= c -c= o cis                   COlOl -isobutyraldehyde, h-c(=o)-c-h    = 60"
+CJ07b -acrolein, c= c -c= o trans
+CJ08a -2-methylpropenal,c= c -c= o cis            CO1Om- isobutyraldehyde,
+CJ08b -2-methylpropenal,c= c -c= o trans
+CJO9a -2-methylpropenoicacid, c= c -c= o trans            h-c(=o)-C-h=90"
+CJO9b -2-methylpropenoicacid, c= c -c= o cis
+                                                  CO1On -isobutyraldehyde,
+
+                                                          h--C(=o)-C-h      = 120"
+
+                                                  C0100 -isobutyraldehyde,
+
+                                                          h-C(=O)-C-h       = 150"
+
+                                                  CO1Op -isobutyraldehyde,
+
+                                                          h-C(=O)-C-h       = 180"
+
+                                                  C011a -cyclobutanone
+
+                                                  C011t -cyclobutanone,planar
+
+                                                                            (Continues on next page)
+
+JOURNAL OF COMPUTATIONAL CHEMISTRY                                                             499
+HALGREN
+
+TABLE 1.                                         TABLE I.
+(continued)                                      (continued)
+
+C012a -2-formylpropana1,o -c -c -c(= 0)anti      Ketals, acetals, and hemiacetals
+                                                 KT02a -2-methoxytetrahydropyran,equatorial
+C012b -2-formylpropanal,
+                                                 KT02b -2-methoxytetrahydropyran,axial,
+     0-c-c-c(=o)          gauche
+                                                              me-0-c-canti
+C013a -4-oxobutanal, o=c-c-c,
+                                                 KT03a -2,4 dioxapentane,c -o -c -o g+ ,
+     c-c-c=o cis, c-c-c-ctrans
+                                                              0-c-0-cg+
+C013b -4-oxobutanal, o= c-c-c,
+                                                 KT03b -2,4 dioxapentane,c -o -c -o g,
+     c-c-c=o      cis, c-c-c-c        gauche
+                                                              0-c-0-ca
+C014a -2,3-butanedione,c -c -c -c trans
+                                                 KT04a -2,5-dimethyl-l,3-dioxane (5-equatorial)
+C014t -2,3-butanedione,c -c -c -c cis
+                                                 KT04b -2,5-dimethyl-l,3-dioxane(5-axial)
+Halides
+                                                 KT05a -methoxymethanol,c -o -c -o g + ,
+HLOla -fluoromethane
+                                                              o-c-o-hgi-
+HL02a -difluoromethane
+                                                 KT05b -methoxymethanol,c -o -c -o g + ,
+HL03a -1,l -difluorethane
+                                                              0-C-0-hg-
+HL04a -1,2-difIuoroethane,f -c -c -f anti
+                                                 KT05c -methoxymethanol,c -o -c -o g,
+HL04b -1,2-difluoroethane,f -c -c -f gauche
+HL05a -1,e-dichloroethane,cI -c -c -cI anti                   o-c-0-ha
+HL05b -1,Bdichloroethane,cI -c -c -cI gauche
+                                                 Cations
+HLO6a -1,l ,l-trifluoroethane
+                                                 NCOla -ammonium cation
+HL07a -l,l,l-trichloroethane
+                                                 NC02a -N-methylaminecation
+HL08a -chlorocyclobutane
+                                                 NC03a -N-ethylaminecation
+HLO8j -chlorocyclobutane, planar
+                                                 NC03t -N-ethylaminecation, h -n -c -c = 0"
+HLO9a -fluoropropane, c -c -c -f anti
+                                                 NC04a -N,N-dimethylaminecation
+HLO9b -fluoropropane, c -c -c -f gauche
+                                                 NC05a -N-propylaminecation,
+HL1Oa -chloropropane,c -c -c -cl anti
+HL1Ob -chloropropane,c -c -c -cI gauche                   c-c-c-n     gauche
+
+                                                 NC05b -N-propylaminecation, c -c -c -n anti
+
+Imines, guanadines, and amidines                 NCO6a -guanidine cation
+
+IMOla -formamidine, h -n=c -n cis,               NC07a -ethylguanidine cation, c -c -n=c anti
+
+             N puckered                          NC07b -ethylguanidine cation, c -c -n= c
+
+IM01b -formamidine, h -n= c -n anti,                      gauche
+
+             N puckered                          NC08a -formamidine cation
+
+lMOlt -formamidine, h -n= c -n cis, N planar     NCO9a -methylguanidinecation
+
+IM02a -N-methylformaldehydeimine,                NC1Oa -N-methylformaldehydeiminecation
+
+     h -c -n= c cis                              NCl 1a -N-methylformamidinecation,
+
+IM02t - N-methylformaldehydeimine,                        c-n-c=ncis
+
+     h-c-n=c=     180"                           NC11b -N-methylformamidinecation,
+
+IM03a -formaldehydeimine                                  c -n -c= n trans
+IM04a -N-methylformamidine,n -c= n -c cis,
+                                                 NC12a -imidazolium cation
+
+     N puckered                                  NC13a -formaldehydeiminecation
+
+IM04b -N-methylformamidine,n -c= n -c trans,     NC14a - t-butylamine cation
+
+     N puckered                                  OCO1a -hydronium ion
+
+IM04t -N-methylformamidine,n -c= n -c cis,       Amines
+                                                 NHO1a -methylamine
+             N planar                            NH02a -propylamine, c -c -c -n anti
+                                                 NH02b -propylamine, c -c -c -n gauche
+IM05a -guanidine, N puckered                     NH03a -isopropylamine,C1 (c- h gauche to n -Ip)
+IM05t -guanidine, planar                         NH03b -isopropylamine,Cs (c- h anti to n -Ip)
+IM06a -N2-methylguanidine,N puckered             NHO3j -isopropylamine, h -c -n -h = 120"
+IM06t -N2-methylguanidine,N planar               NH03k -isopropylamine, h -c -n -h = 150"
+1M07a -butadiene Schiff base, c= c -c= n         NH031 -isopropylamine, h -c -n -h = 180"
+                                                 NHO3m- isopropylamine, h -c -n -h = 210"
+             s-trans, h -n= c -c cis             NH03n -isopropylamine, h -c -n -h = 240"
+                                                 NH03p -isopropylamine, h -c -n -h = 270"
+IM07b -butadiene Schiff base, c= c -c= n s-cis,  NH03p -isopropylamine, h -c -n -h = 300"
+
+     h -n= c - c trans
+
+                                                                              (Continueson nextpage)
+
+500                                                                           VOL. 17, NOS. 5 & 6
+                                                           MERCK MOLECULAR FORCE FIELD. I
+
+TABLE 1.                                      TABLE 1.
+(continued)                                   (continued)
+
+NH04a -cyclohexylamine, equatorial            OH02j -ethanol, c -c -o -h = 0"
+
+NH04b -cyclohexylamine, axial                 OH02k -ethanol, c -c -o -h = 30"
+
+NH05a -dimethylamine                          OH021 -ethanol, c -c -o -h = 60"
+
+NHO6a -azetidine,n -h equatorial              OH02m- ethanol, c -c -o -h = 90"
+
+NHO6j -azetidine,ring planar                  OH02n -ethanol, c -c -o -h = 120"
+
+NH07a -piperidine, n -h equatorial            OHO2o-ethanol,c-c-o-h          = 150"
+
+NH07b -piperidine, n -h axial                 OH02p -ethanol, c -c -o -h = 180"
+
+NH08a -trimethylamine                         OH03a -n-propanol, c-c-c-o     a, c-c-o-h   g
+
+NHO9a -N-methylpiperidine,equatorial          OH03b -n-propanol, c -c -c -o g - ,
+
+NHO9b -N-methylpiperidine,axial                            c-C-O-hg+
+
+NHlOa -ammonia                                OH03c -n-propanol, c -c -c -o g + ,
+
+NHlOt -ammonia, planar                        c-C-O-hg+
+
+N H l la -ethylamine, c -c -n -Ip gauche      OH03d -n-propanol,c -c -c -o a,
+
+N H l l b -ethylamine, c -c -n -Ip anti       c-c-0-ha
+
+NH12a - f-butylamine                          OH03e -n-propanol,c-c-c-og,        c-c-0-h  a
+
+NH13a -vinylamine                             OH04a -isopropanol, h -c -o -h gauche
+
+NH14a -aniline, N puckered                    OH04b -isopropanol, h -c -o -h anti
+
+NH14t -aniline, planar                        OH041 -isopropanol, h -c -o -h = 0"
+
+NH15a -pyrrolidine, n -h equatorial           OH04k -isopropanol, h -c -o -h = 30"
+
+NH15j -pyrrolidine, ring planar               OH041 -isopropanol, h -c -o -h = 60"
+
+NH16a -3-aminopropene,c= c -c -n skew,        OH04m- isopropanol, h -c -o -h = 90"
+
+c-c-n-lpgauche                                OH04n -isopropanol, h -c -o -h = 120"
+
+NH16b -3-aminopropene,c= c- c -n cis,         OH040 -isopropanol, h -c -o -h = 150"
+
+c- c- n -Ip gauche                            OH04p -isopropanol, h -c -o -h = 180"
+
+NH16c -3-aminopropene,c= c -c -n skew,        OH05a - t-butanol
+
+c- c- n -Ip anti                              OH06a -cyclopentanol,equatorialCs
+
+NH17a -2-me,3-aminopropene, c= c -c -n skew,  OH06b -cyclopentanol,axial Cs
+
+c - c - n -Ip gauche                          OH06c -cyclopentanol,equatorialC1
+
+NH17b -2-me,3-aminopropene, c= c -c -n cis,   OH06d -cyclopentanol,axial C1
+
+c- c- n -Ip gauche                            OH06j -cyclopentanol,Cs, ring planar
+
+NH18a -ethylenediamine, n -c- c -n anti,      OH07a -cyclohexanol, equatorialCs
+
+c-c-n-lpg+,                 g+                OH07b -cyclohexanol,axial Cs
+NH18b -ethylenediamine, n -c -c -n g + ,
+                                              OH07c -cyclohexanol,equatorialC1
+
+c-c-n-lpg+,g+                                 OH07d -cyclohexanol,axial C1
+
+NHl9a -N-methylaniline,N puckered             OH08a -phenol
+
+NH19t -N-methylaniline,N planar               OH09a -water
+
+NH20a -methylethylamine N-oxide,              OH1Oa -vinyl alcohol, c= c -o -h trans
+
+c- n -c -c anti                               OH1Ob -vinyl alcohol, c= c -o -h skew
+
+NH20b - methylethylamine N-oxide,             OH1l a -benzyl alcohol
+
+c -n -c -c gauche                             OH11b -benzyl alcohol, h -o -c -c anti
+
+NH21a -methylethylhydroxylamine,              OH12a -propen-3-01,c= c -c -o skew,
+
+c -n -c- c anti                               c-c-0-ha
+
+NH21b -methylethylhydroxylamine,              OH12b -propen-3-01, c= c- c- o cis,
+
+c -n - c -c gauche                            c-c-0-ha
+
+NH22a -ethylamine N-oxide, o -n -c -c gauche  OH12c -propen-3-01,c= c -c -o skew,
+
+NH22b -ethylamine N-oxide, o -n -c -c anti    C-c-o-hg
+
+NH23a -ethylhydroxylamine,o -n -c -c gauche   OH13a -2-me-propen-3-01,c= c -c -o s,
+
+NH23b -ethylhydroxylamine, o -n -c -c anti    c-c-0-ha
+
+Alcohols                                      OH13b -2-me-propen-3-01, c= c-c-o c,
+OH01a -methanol
+OH02a -ethanol, c -c -o -h gauche             c-c-0-ha
+OH02b -ethanol, c -c -o -h anti
+                                              OH14a -sec-butanol, ga I agb
+
+                                              OH14b -sec-butanol,ga I ga
+
+                                              OH14c -sec-butanol,gaI gg
+
+                                                                          (Continues on next page)
+
+JOURNAL OF COMPUTATIONAL CHEMISTRY                                                        501
+HALGREN
+
+TABLE I.                                        TABLE I.
+
+(continued)                                     (continued)
+
+OH14d -sec-butanol, ag I ag                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    ~
+OH14e -sec-butanol,ag I ga
+                                                RA03a - propane
+OH14f -sec-butanol,ag I gg                      RA04a -butane, c -c -c -c anti
+                                                RA04b -butane,c -c -c -c gauche
+OH149 -sec-butanol,gg I ag                      RA04t -butane, c -c -c -c = 0"
+                                                RA05a -isobutane
+OH14h -sec-butanol, gg I ga                     RAO6a -cyclobutane
+                                                RAO6t -cyclobutane, ring planar
+OH14i -sec-butaone,gg I gg                      RA07a -cyclopentane, half-chair C2
+                                                RA07t -cyclopentane, ring planar
+OH14r -sec-butanol, cm I ag, approx ts          RA08a -cyclohexane,chair
+                                                RA08b -cyclohexane,twist-boatC2
+OH14s -sec-butanol, cm I g g , approx ts        RA1Oa -methylcyclohexane,equatorial
+                                                R A lOb -methylcyclohexane,axial
+OH14t -sec-butanol,ga I cm, approx ts           RA11a -neopentane
+                                                RA12a -2,3-dimethylbutane,
+OH14u -sec-butanol, ga I mp, approx ts
+                                                              h -c2 -c3 -h gauche
+OH14v -sec-butanol, ga I pc, approx ts          RAl2b -2,3-dimethylbutane,h -c2 -c3 -h anti
+                                                RA13a -cyclopropane
+OH14w-sec-butano1, mplag, approx ts             RA14a -cyclooctane,crown D4d
+                                                RA14b -cyclooctane,boat-chair Cs
+OH14x -sec-butanol,mp I gg, approx ts           RA14c -cyclooctane, twist-boat-chairC2
+                                                RA14d -cyclooctane, S4
+OH14y -sec-butanol,pc I ag, approx ts           RA15a -methylcyclobutane,equatorial
+                                                RA15b -methylcyclobutane,axial
+OH142 -sec-butanol, pc 1gg, approx ts           RA15j -methylcyclobutane,ring planar
+                                                RA16a -cyclononane, [144] C2
+OH15a -1,2-ethanediol,h -o -c -c a,             RA16b -cyclononane, [3331 D3
+                                                RAl6c -cyclononane, [2251C2
+        0-c-c-oa,       c-c-0-h           a     RA16d -cyclononane, [2341C1
+                                                RA16e -cyclononane, [gal C1
+OH15b-1,2-ethanediol, h - 0 - c - c g -      ,
+                                                              (used in validating MMFF94)
+        0-c-c-og+         ,c-c-0-ha
+                                                Alkenes
+OH15c - 1,2-ethanedioI,h -o -c -c g - ,         RE01a -ethylene
+                                                RE02a -propene
+        o-c-c-o~+ ,c-C-o-hg+                    RE03a -1-butene, c= c -c -c cis
+                                                RE03b -1-butene, c= c -c -c skew
+OH15d - 1,2-ethanediol,h -o -c -c g+ ,          RE04a -1 -pentene, c -c -c -c anti
+                                                RE04b - 1-pentene, c -c -c -c gauche
+        O-C-C-Og-         ,c-C-o-hg+            RE05a -2-methyl-1-butene, c= c -c -c skew
+                                                RE05b -2-methyl-1-butene,c= c -c -c cis
+Ethers                                          REO6a -isobutene
+
+OR01a -methyl ethyl ether, c -o -c -c anti      RE07a -1,Cpentadiene,c= c -c -c s + , s -
+
+OR01b -methyl ethyl ether, c -o -c -c gauche    RE07b -1,4-pentadiene,c= c -c -c s - , s -
+                                                RE08a -trans-2-butene
+OR02a -methyl ethyl ether, c= c -o -c cis       RE08b -cis-2-butene
+                                                REO9a -cyclobutene
+OR02b -methyl ethyl ether, c= c -o -c skew      RE1Oa -trans-2-pentene,c -c -c= c skew
+                                                RE1Ob -cis-2-pentene,c -c -c= c skew
+OR03a -diethyl ether, c -c -o -c anti,          RE11a -1,4-~yclohexadiene
+
+        c -0 -c - c anti                        Thiols, sulfides, and disulfides
+                                                SROl a -hydrogen sulfide
+OR03b -diethyl ether, c -c -o -c anti,          SR02a -ethanethiol,c -c -s -h gauche
+
+        c-0-c-c        gauche                                                              (Continues on nextpage)
+
+OR04a -methoxycyclohexane,equatorial Cs
+
+OR04b -methoxycyclohexane,axial C1
+
+OR04c -methoxycyclohexane,equatorial C1
+
+OR05a -oxetane, C2
+
+OR05t -oxetane, planar
+
+OR06a -dimethyl ether
+
+OR07a -tetrahydrofuran, C2
+
+OR07t -tetrahydrofuran, ring planar
+
+OR11a -dioxolane, C2
+
+OR11t -dioxolane, ring planar
+
+OR13a - methyl isopropyl ether,
+
+        h -c -o -ch, gauche
+
+OR13b -methyl isopropyl ether,
+
+        h-c-0-ch,       anti
+
+OR14a -methyl phenyl ether, c -o -c -c cis
+
+OR14j -methyl phenyl ether, c -o -c -c = 90"
+
+Alkanes
+RAOl a - methane
+RA02a -ethane, staggered
+RA02t -ethane, eclipsed
+
+502                                             VOL. 17, NOS. 5 & 6
+TABLE 1.                                                                        MERCK MOLECULAR FORCE FIELD. I
+(continued)
+                                                                broad for some of these chemical families but is
+SR02b   -ethanethiol,c -c -s -h anti                            limited for others. Many of the bifunctional com-
+SR03a                                                           pounds included in the parameterization are un-
+SR04a   -dimethyl sulfide                                       saturated analogs of families listed above, that
+                                                                is, conjugated alkenes and aromatic hydrocar-
+SR04b   -ethyl methyl disulfide,                                bons (e.g., styrenes); a,punsaturated variants of
+SR05a                                                           amides, imines, aldehydes, ketones, carboxylic
+SRO6a   c-c-s-s         gauche                                  acids, esters, and carboxylate anions; vinylic ethers,
+SR07a                                                           alcohols, amines, and esters; and allylic aldehydes,
+SR07t   -ethyl methyl disulfide, c -c -s -s anti                ketones, amines, and alcohols. Other bifunctional
+SR08a                                                           compounds include: P-ketoacids; P-hydroxyesters;
+SR08t   -methyl hydrogen disulfide                              dicarboxylic acids; 1,2-diols, 1,2-diamines, and
+SRO9a                                                           1,2-dithiols; and nonconjugated dienes. A limited
+        -dimethyl disulfide                                     selection of alkanes, amines, ketones, halides, es-
+SRO9b                                                           ters and ethers containing four- or five-membered
+        -thiophenol                                             rings has also been studied. Compounds contain-
+SRO9c                                                           ing SO, and oxyphosphorus groups have been
+        -thiophenol, planar                                     treated as a part of the extension of the core
+SR1 Oa                                                          parameterization described in part V.27
+SRll a  -methyl phenyl sulfide, c -c -s -c ca. 90"
+SRll b                                                             The number of chemical families treated in the
+        -methyl phenyl sulfide, c -c -s -c = 0"                 core parameterization of MMFF94 is therefore
+SRll c                                                          large-certainly over 20-and many, though by
+        -1-propanethiol,s -c -c -c anti,                        no means all, combinations of functional groups of
+SR12a                                                           interest to medicinal and chemical industry
+        h -s-c-c        gauche                                  chemists have been treated. Nevertheless, an in-
+SR12b                                                           crease of severalfold in the number of core
+        - 1-propanethiol,s -c -c -c g - ,                       MMFF94 parameters would probably be needed to
+SR12c                                                           allow the core force field to handle virtually any
+        h-S-C-Cg+                                               organic compound of pharamaceutical interest. To
+SR12f                                                           make MMFF94 as useful as possible, we have
+        - 1-propanethiol,s -c -c -c gauche,                     extended the core force field: (i) by parameterizing
+SR13a                                                           MMFF against a large set of experimental struc-
+        h -s-c-c anti                                           tures extracted from the Cambridge Structural
+                                                                Database and against additional computational
+        -methyl hydrogen sulfide                                data; and (ii) by implementing a well-defined set
+                                                                of default-parameter assignments and carefully
+        -1,2-ethanedithioI,all anti                             calibrated empirical rules for parameters not de-
+                                                                fined by either the structural data or the additional
+        -1,2-ethanedithiol,h -s -c -c anti,                     computational data.27Some indication of the resul-
+                                                                tant range of chemical structures covered by
+           anti; s -c -c -s gauche                              MMFF94 can be gleaned from an examination of
+                                                                Table 111, which characterizes the current MMFF
+        -1,2-ethanedithioI,h -s -c -c anti, g + ;               atom types.
+
+        s-c-c-sg-                                                  We hope to broaden the core, computationally
+                                                                derived, parameterization of MMFF in future work.
+        -methyl propyl sulfide, c -s -c -c gauche,              Even now, however, the current set of core param-
+                                                                eters is, we believe, significantly broader than is
+        s -c- c -c anti                                         provided in other specifically parameterized force
+                                                                field^.^,^,'^ In addition, we believe that the breadth
+        -methyl propyl sulfide, c -s -c -c g - ,                and quality of the extended parameterization com-
+                                                                pares favorably, for organic compounds, with that
+        s-c-c-cg-                                               provided by other force fields that employ generic
+
+        -methyl propyl sulfide, c -s -c -c anti,
+
+        s-c-c-c         gauche
+
+        -methyl propyl sulfide, c -s -c -c anti,
+
+        s -c -c -c anti
+
+        - thiomethanol
+
+aFor brevity, the conformational abbreviations a, g, t, c, and
+
+s are sometimes used for anti, gauche, trans, cis, and skew,
+
+respectively. These designations correspond approximately
+
+to torsion angles of 180", 60",180",0" , and 120". Where
+
+appropriate, the abbreviations "g+ " and " g - " or "s+ "
+
+and "s - " are used to indicate the relativesigns of gauche
+
+or skew angles.
+
+bFor the OH14 conformers (sec-butanol), in the conforma-
+
+tional designations "wx / yz," "w" indicates the conforma-
+
+tion of the c -c- c -o angle, "x" that of the c -c -c -c
+
+angle, "y" that of the h-0-c-ch,     angle, and "2" that
+
+of the h-0-c-ch,        angle; the designations "m" and
+
+"p" conote angles of approximately - 120" and 120", re-
+
+spectively.
+
+cations, amine N-oxides, hydroxylamines, hydrox-
+amic acids, amidines, guanidines, amidinium
+cations, guanidinium cations, imadazolium cations,
+aromatic hydrocarbons, and heteroaromatic com-
+pounds (cf. Table 11). As can be inferred from the
+listing in Table I, the structural coverage is quite
+
+JOURNAL OF COMPUTATIONAL CHEMISTRY                              503
+HALGREN                                               2. Calculations with full geometry optimization
+                                                          at the MP2/6-31G* level for -360 equilib-
+TABLE II.                                                 rium conformers. This level of theory has
+Classes of Compounds Included in MMFF94's                 been shown to give geometries for standard
+Core Parameterization                                     organic functional groups that rival experi-
+                                                          ment in a c ~ u r a c y . ' ~Th, ~eo~retical geometries
+.Alkanes, alkenes, aromatic hydrocarbons,                 are particularly suitable for use in force-field
+  conjugated alkenes and aromatics,                       parameterization because they do not entail
+  nonconjugated alkenes                                   the assumptions and artificial restrictions
+                                                          sometimes made in deriving experimental
+.Five- and six-memberedheteroaromatics                    geometries," do not require sometimes ill-
+                                                          defined corrections for effects of thermal mo-
+.Alcohols, phenols, ethers, 1,2-diols,vinylic             tion," and are unlikely to manifest the large
+  alcohols and ethers, allylic alcohols                   errors to which experimental determinations
+
+.Amines, imines, vinylic amines, allylic amines       - occasionally are subject."
+  a,p-unsaturated imines, amidines, guanidines,
+   1,2-diamines                                       3. Calculations for 380 MP2/6-31G*-opti-
+                                                          mized geometries carried out at the
+.Hydroxylamines, amine N-oxides                           MP2/TZP level using triple-zeta plus polar-
+.Amides, dipeptides, ureas, imides,                       ization basis sets, and at the MP2 and
+                                                          MP4SDQ levels using modified 6-31G* basis
+  a,p-unsaturatedamides, hydroxamic acids                 sets. As described in part IV,26the MP2/TZP
+                                                          calculations and the MP3 and MP4SDQ cor-
+.Aldehydes, ketones, a,p-unsaturated aldehydes            rections obtained using the modified 6-31G*
+  and ketones, allylic aldehydes and ketones              basis set were combined to yield composite
+                                                          energies that we refer to as "MP4SDQ/TZP"
+.Ketals, acetals, hemiketals,hemiacetals                  energies, where the quotation marks indicate
+                                                          an approximation to full MP4SDQ/TZP
+.Carboxylicacids and esters, vinylic esters,              results.
+  a,@-unsaturatedacids and esters,
+  dicarboxylic acids.                               - 4. Single-point MP2/TZP calculations carried
+   p-ketoacids, p-hydroxyesters                           out at 1450 torsionally incremented ge-
+                                                          ometries, derived from MP2/6-31G* geome-
+.Thiols, sulfides, disulfides, 1,2-dithiols               tries and partially optimized using refined
+.Halides (chloridesand fluorides)                         but not yet final MMFF94 parameters.
+
+.Amine, imine, amidine, guanidine, pyridine,          5. Very large basis set calculations on inter-
+  and imidazole cations                                   molecular interactions in nonpolar systems
+                                                          obtained using highly correlated wavefunc-
+.Carboxylateanions, a,@-unsaturated                       tions.
+  carboxylate anions
+                                                      The use of these data in the derivation of
+.Various saturatedand unsaturatedfour- and         MMFF94 is described in what follows.
+  five-memberedring systems
+
+parameters or empirical rules to achieve broad
+nominal coverage.",
+
+  Computational Data Used in
+  Parameterizing MMFF94
+
+   The computational data employed in parame-
+terizing the core force field fall into five main
+categories5':
+
+-1. Calculations at the HF/6-31G* level4' for        Methodology Used in Parameterizing
+       500 HF/6-31G*-optimized geometries.           MMFF94
+   These calculations, carried out using Gauss-
+   ian 88,51 Gaussian 90,52 or Gaussian 92,53         The MMFF94 energy expression presented in
+   covered nearly all of the molecular structures  eq. (1) contains seven terms. For the five valence-
+ - and conformations listed in Table I and also    coordinate terms, MMFF94 employs quadratic
+   included 70 hydrogen-bonded dimers used         force constants for bond stretching, angle bending,
+   in the parameterization of intermolecular in-   stretch-bend interaction, and out-of-plane bend-
+   teractions."
+
+504                                                VOL. 17, NOS. 5 & 6
+                                                                  MERCK MOLECULAR FORCE FIELD. I
+
+ing; reference values for bond stretching and angle     TABLE 111.
+bending; and one or more of the V,, V,, and V,          MMFF94 Symbolic and Numeric Atom Types
+constants for torsion interactions. Grouping the V,
+terms together, MMFF94 therefore utilizes seven               Atom type
+classes of valence-coordinate parameters. MMFF94
+also employs bond-charge increments oKlin eq.           Symbolic  Numeric     Definition [coordination
+(14) and atomic polarizabilities al in eqs. (9) and                         numberla {formal chargeIb
+(12) to generate quantities used in evaluating non-
+bonded interactions. In all, then, MMFF94 employs       CR               1  Alkyl carbon [41
+nine classes of force-field parameters. This section
+outlines the approaches used to derive each such        c=c              2  Vinylic carbon I31
+class of parameters, and specifies how the individ-
+ual approaches were combined to yield a mutually        CSP2             2  .Generic sp' carbon [31
+consistent set of parameters. Full details are given
+el~ewhere.'-2~7                                         c=o              3  Generic carbonyl carbon [31
+
+   NONBONDED VAN DER WALLS AND                          C=N              3  Imine-typecarbon [31
+   ELECTROSTATIC PARAMETERS                             CGD
+                                                        C=OR             3  Guanidine carbon [31
+   As noted earlier, representative values for the
+atomic polarizabilities a;and for the derived mini-     C=ON             3  Ketone or aldehyde
+mum-energy separations RT, for nonhydrogen
+atoms have previously been de~cribed.,A~ prelim-        coo                 carbonyl carbon [31
+inary listing of the associated MMFF atom types
+has also been given;39the current set is specified      COON             3  Amide carbonyl carbon 131
+in Table 111. For aliphatic hydrogens, the (Y and
+R* parameters were determined by fitting to high-       coo0             3  Carboxylic acid or ester
+quality ab initio data on intermolecular interactions   c=os
+for the methanes5and hydrogen dimers. The vdW           c=s                 carbonyl carbon [31
+parameters for the polar hydrogens in water were
+determined by requiring that the water dimer be         C=SN             3  Carbamate carbonyl
+described in geometric and energetic terms similar
+to those found in successfully employed water           cs02                carbon [31
+models. This vdW representation was then trans-         cs=o
+ferred to other types of polar hydrogen atoms.          css              3  Carbonic acid or ester
+Initial values for the bond-charge-increment pa-
+rameters oKl in eq. (14) were obtained by employ-       C=P                 carbonyl carbon [31
+ing the Biosym Consortium program PROBE35to
+                                                        CSP              3  Thioester carbonyl carbon,
+fit the x, y, and z components of the molecular         =C=
+                                                        HC                  double bonded to 0 131
+dipole moments to quantities computed at the
+HF/6-31G* level and scaled, as discussed in part        HSI              3  Thioester carbon, double
+II?* by a factor of 1.10. To make the fit well
+determined, partial atomic charges for polar hy-        -0 -                bonded to S [31
+drogens and other key terminal atoms (and hence         OR
+the associated w K l parameters) were fixed at val-                      3  Thioamide carbon, double
+ues representative of ESP-fit (electrostatic potential  oc=o
+fit)% or Mulliken charges obtained from the ab          oc=c                bonded to S 131
+initio calculations. Crucially, final vdW and elec-
+trostatic parameters for atom types involved in         OC=N             3  Carbon in > C = SO, 131
+hydrogen-bonding interactions were obtained by
+adjusting the initial values to fit appropriately       oc=s             3  Sulfinyl carbon in
+scaled41 interaction energies and hydrogen-bond-
+ing geometriescomputed at the HF/6-31G*                 ON02                > C = S = 0 131
+
+JOURNAL OF COMPUTATIONAL CHEMISTRY                      ON=O             3  Thiocarboxylicacid or
+
+                                                        OS03                ester carbon [31
+
+                                                        os02             3  Carbon doubly bonded to
+
+                                                                            P 131
+
+                                                                         4  Acetylenic carbon [2l
+
+                                                                         4  Allenic carbon 121
+
+                                                                         5  Hydrogen attachedto
+
+                                                                            carbon 111
+
+                                                                         5  Hydrogen attachedto
+
+                                                                            silicon [I]
+
+                                                                         6  Generic divalent oxygen [2]
+
+                                                                         6  Ether oxygen [2l
+
+                                                                         6  Carboxylic acid or ester
+
+                                                                            oxygen 121
+
+                                                                         6  Enolic or phenolic
+
+                                                                            oxygen [21
+
+                                                                         6  Oxygen in 4 - C = N -
+
+                                                                            moiety [21
+
+                                                                         6  Divalent oxygen in thioacid
+
+                                                                            or ester [21
+
+                                                                         6  Divalent nitrate "ether"
+
+                                                                            oxygen [21
+
+                                                                         6  Divalent nitrate "ether"
+
+                                                                            oxygen 121
+
+                                                                         6  Divalent oxygen in sulfate
+
+                                                                            group [21
+
+                                                                         6  Divalent oxygen in sulfite
+
+                                                                            group 121
+
+                                                                            (Continues on next page)
+
+                                                                                                      505
+HALGREN
+
+TABLE 111.                                        TABLE 111.
+(continued)                                       (continued)
+
+        Atom type    Definition [coordination              Atom type     Definition [coordination
+Symbolic Numeric   numberla {formal chargeIb      Symbolic Numeric    numberla {formal chargeIb
+
+oso          6     One of two divalent oxygens    =s o 2  18          Sulfone sulfur, doubly bonded
+                                                                        to carbon
+os=o               attached to sulfur [2]
+                                                                      Sulfur in nitrogen analog of
+-0s          6     Divalent oxygen in             SNO     18            a sulfone
+
+OP03               R(R0)S = 0 [2]                                     Silicon 141
+                                                                      Aliphatic carbon in
+OP02         6     Other divalent oxygen          SI      19
+                                                                        4-membered ring 141
+OPO                attached to sulfur 121         CR4R    20          Hydroxyl hydrogen in
+
+-0P          6     Divalent oxygen in                                   alcohols [I1
+                                                                      Generic hydroxyl
+o=c                phosphate group [2l            HOR     21
+                                                                        hydrogen 11I
+O=CN         6     Divalent oxygen in
+                                                                      Aliphatic carbon in
+O=CR               phosphite group 121            HO      21            3-membered ring 141
+
+o=co         6     Divalent oxygen, one of                            Generic hydrogen on sp3
+                                                                         nitrogen, e.g., in amines [ I ]
+O=N                two oxygens attached to P 121  CR3R    22
+                                                                      Hydrogen on nitrogen in
+o=s          6     Other divalent oxygen
+                                                                        pyrrole [ lI
+o=s=               attached to phosphorus [21     HNR     23          Hydrogen in ammonia [ I1
+
+NR           7     Generic carbonyl oxygen [ l I                      Hydrogen on N in a N-oxide
+N=C                                                                   Hydroxyl hydrogen in
+N=N          7     Carbonyl oxygen in             HPYL    23
+NC=O                                                                     carboxylic acids [ l ]
+NC=S               amides [ II                                        Hydroxyl hydrogen in
+NN=C
+             7     Carbonyl oxygen in             H3N     23             H - 0 - P moiety [ 11
+NN=N                                                                  Phosphate group
+                   aldehydes and ketones [I I     HNOX    23
+F                                                                        phosphorus [41
+CI           7     Carbonyl oxygen in             HOCO    24          Phosphorus with 3 attached
+Br
+I                  acids and esters [ II                                 oxygens [41
+S                                                                     Phosphorus with 2 attached
+             7     Nitroso oxygen [ l ]           HOP     24
+s=c                                                                      oxygens [41
+             7     Doubly bonded sulfoxide                            Phosphine oxide
+s=o
+                   oxygen 111                     PO4     25             phosphorus [41
+> S=N                                                                 General tetracoordinate
+             7     O=S on sulfur doubly
+so2                                                                      phosphorus [41
+S02N               bonded to, e.g., C [ l I       PO3     25          Phosphorus in
+SO3
+SO4          8     Amine nitrogen [31                                    phosphines 131
+                                                                      Hydrogen on imine
+             9     lmine nitrogen [21             PO2     25
+                                                                         nitrogen [I1
+             9     Azo-group nitrogen [2]                             Hydrogen on azo
+
+             10 Amide nitrogen [31                PO      25             nitrogen [ l l
+                                                                      Hydrogen on amide
+             10 Thioamide nitrogen 131
+                                                                         nitrogen [A]
+             10    Nitrogen in N - N=C moiety     PTET    25          Hydrogen on thioamide
+
+                   with deloc. Ip 131                                    nitrogen [I1
+                                                                      Hydrogen on enamine
+             10    Nitrogen in N - N = N moiety   P       26
+                                                                         nitrogen [ I ]
+                   with deloc. Ip 131                                 Hydrogen in H -N -C= N
+
+             11    Fluorine [ lI                  HN=C    27            moiety [ II
+
+             12    Chlorine [ l ]                                     Hydrogen in H -N -N=C
+
+             13    Bromine [ l ]                  HN=N    27            moiety [ l 1
+
+             14    Iodine [ I1                                        Hydrogen in H -N -N = N
+
+             15 Thiol, sulfide, or disulfide      HNCO    28            moiety [1I
+
+                   sulfur [21                                                (Continueson next page
+
+             16    Sulfur doubly bonded to        HNCS    28
+
+                   carbon [ l I
+
+             17    Sulfoxide sulfur [31           HNCC    28
+
+             17 Tricoordinate sulfur doubly
+
+                   bonded to N [31                HNCN    28
+
+             18    Sulfone sulfur [41
+
+             18    Sulfonamide sulfur [41         HNNC    28
+
+             18    Sulfonate group sulfur [41
+
+             18    Sulfate group sulfur [41       HNNN    28
+
+506                                                                   VOL. 17, NOS. 5 & 6
+                                                                 MERCK MOLECULAR FORCE FIELD. I
+
+TABLE 111.                                          TABLE 111.
+(continued)                                         (continued)
+
+          Atom type                                        Atom type
+Symbolic Numeric
+                       Definition [coordination     Symbolic     Numeric    Definition [coordination
+                     numberla {formal chargeIb                            numberla {formal chargeIb
+HNSO  28                                            HIM +             36
+                     Hydrogen on NSO, NS02,                               Hydrogenon imidazolium
+HNC%  28                or NS03 nitrogen 111        HPD+              36     nitrogen 111
+
+HSP2  28             Hydrogen on N triply bonded    HNN +             36  Hydrogenon pyridinium
+                                                                             nitrogen [ I 1
+HOCC  29              to c [ l l                    HNC +             36
+                                                                          Hydrogenon amidinium
+HOCN  29             Generic hydrogen on sp         HGD +             36     nitrogen [ l l
+                        nitrogen [ I ]
+CR4E  30                                            CB                37  Hydrogenon protonated
+                     Enolic or phenolic hydroxyl
+HOH   31                hydrogen 111                NPYD              38    imine nitrogen 111
+
+02CM  32             Hydroxyl hydrogen in           NPYL              39  Hydrogenon guanidinium
+                        HO-C=N moiety [ l l                                  nitrogen [I1
+ONX   32                                            NC=C              40
+                     Olefinic carbon in                                   Aromatic carbon, e.g., in
+O=N   32                                                                     benzene 131
+                        4-membered ring 131
+02N   32             Hydroxyl hydrogen in           NC=N              40  Aromatic nitrogen with (T
+                                                                             lone pair [21
+02N0  32                water 111
+                     Oxygen in carboxylate                                Aromatic 5-ring nitrogen with
+                                                    NC=N              40    m- lone pair [21
+                       group [11 - 1 / 2)
+03N   32                                                                  Enamine or aniline nitrogen,
+                     Oxygen in N-oxides [ lI                                 deloc. Ip 131
+                     Oxygen in nitroso group [ I1   NC%C              40
+                     Oxygen in nitro group [ l1                           Nitrogen in N -C=N with
+0-s   32                                                                     deloc. Ip [31
+                     Nitro-group oxygen in
+                                                    C02M              41  Nitrogen in N -C = P with
+                       nitrate 111                                           deloc. Ip [31
+02s   32             Nitrateanion oxygen [ lI
+                                                                          Nitrogenattached to C -C
+                        1-1 /31                     CS2M              41     triple bond 131
+                     Single terminal 0 on tetra-
+03s   32                                                                  Carbon in carboxylate
+                       coordinatesulfur [ lI                                 anion [31
+                                                    NSP               42
+                     One of 2 terminal 0 ' son                            Carbon in thiocarboxylate
+04s   32                                            NS02              43     anion [31
+                       sulfur [I I{variable)c
+                                                    NS03              43  Triply bonded nitrogen [ lI
+                     One of 3 terminal 0's on
+OSMS  32                sulfur [ l l {variable)c    NC%N              43  Sulfonamide nitrogen 131
+                                                                          Sulfonamide nitrogen 131
+OP    32             Terminal 0 in sulfate anion    STH I             44  Nitrogen attached to
+
+02P   32                [ l l (-1 /21               NO2               45     cyano group 131
+                     Terminal oxygen in thiosul-                          Aromatic 5-ring sulfur with
+                                                    NO3               45
+                       finate anion 111 { - 1I 2 1                          T lone pair [21
+03P   32                                            N=O               46  Nitrogen in nitro group 131
+                     Oxygen in phosphine                                  Nitrogen in nitrate group [31
+                        oxide [ l l                 NAZT              47  Nitrogen in nitroso group 121
+                                                                          Terminal nitrogen in azido or
+04P   32             One of 2 terminal 0's on P
+                                                                            diazo group [ lI
+                       11I{variableIc               NSO               48
+                                                                          Divalent nitrogen replacing
+04CI  32             One of 3 terminal 0's on P                              monovalent0 in SO, group I21
+
+                       111 {variable)c              O+                49  Oxonium oxygen [31 (1 )
+                                                                          Hydrogenon oxonium
+HOS   33             One of 4 terminal 0's on P     HO+               50
+                                                                             oxygen [I1
+NR +  34               [ l1 {variableIc             0=+               51
+                                                    HO= +                 Oxenium oxygen [21 (1 1
+OM    35             Oxygen in perchlorate anion                      52
+                                                                          Hydrogen on oxenium
+OM2   35                [ll (-1 /41                 =N=               53
+                     Hydrogenon oxygen attached                              oxygen [I1
+HNR+  36                                            N +=C             54  Central nitrogen in C=N = N
+                       to sulfur [l1
+                                                                             or N=N=N 121
+                     Quaternary nitrogen [41 { I 1                        lminium nitroaen [3] { 1}
+
+                     Oxide oxygen on sp3                                       (Continueson next page)
+
+                       carbon [ lI - 11
+
+                     Oxide oxygen on sp2 carbon
+
+                        111 (-11
+                     Hydrogen on quaternary
+
+                       nitrogen [ I1
+
+JOURNAL OF COMPUTATIONAL CHEMISTRY                                        507
+HALGREN
+
+TABLE 111.                                               TABLE 111.
+(continued)                                              (continued)
+
+          Atom type     Definition [coordination                  Atom type         Definition [coordination
+Symbolic Numeric     numberla {formal chargeIb           Symbolic Numeric         numberla {formal chargeIb
+
+N +=N    54          Positively charged nitrogen         N5M             76       Nitrogen in 5-ring aromatic
+
+NCN +                  doubly bonded to N [31 (1 1                                anion [2] {variable)c
+
+         55          Either nitrogen in                  CL04            77       Perchlorateanion chlorine [41
+                        N+=C-N: 131 (1 /2)
+                                                         c5              78       General carbon in 5-membered
+                     Guanidinium nitrogen
+NGD+     56                                                                       heteroaromaticring [3]
+                        131 11 /3)
+                     Guanidinium carbon [31              N5              79       General nitrogen in
+                     Carbon in +N=C-N:
+CGD+     57                                                                       5-membered heteroaromatic
+CNN +                   resonance structures [31
+         57          Aromatic nitrogen in                CIM +                    ring [21
+                                                         NIM +
+NPD +                  pyridinium [31 (1 1               N5A +           80       Aromatic carbon between N's
+                                                         N5B +
+         58          Aromatic 5-ring oxygen with         N5 +                     in imidazolium 131
+                       T lone pair 121
+                                                         N5AX            81       Aromatic nitrogen in
+                     lsonitrile carbon [ l l
+OFUR     59          Isonitrile nitrogen 121                                      imidazolium [31 (1 /2)
+                     Anionic divalent nitrogen
+                                                                         81       Positive nitrogen in 5-ring
+                        121 { - 1)
+C% -     60          Aromatic 5-ring C, (Y to                                     alpha position [31 (1 I
+
+NR%      61            N:, 0:,or S: [31                                  81       Positive nitrogen in 5-ring
+                     Aromatic 5-ring C, p to
+NM       62                                                                       alpha position [31 (1 I
+                        N:, 0:,or S: [31
+                     Aromatic 5-ring N, (Y to                            81       Positive nitrogen in other
+
+C5A      63            N:, 0:,or S: [2l                                           5-ring position [31 (1 1
+                     Aromatic 5-ring N, p to
+                                                                         82       N-oxide nitrogen in
+                        N:, 0:,or S: [2l
+C5B      64          sp2-hybridized N-oxide                                       5-ring alpha position [31
+
+                        nitrogen [31                     N5BX            82       N-oxide nitrogen in
+                     sp 3-hybridizedN-oxide
+N5A      65                                                                       5-ring beta position 131
+                        nitrogen [4]
+                     Pyridinium N-oxide                  N50X            82       N-oxide nitrogen in other
+
+N5B      66             nitrogen [31                                              5-ring position [31
+                     Oxygen in water 121
+                     Hydrogenattached to                 FE+2            87       Dipositive iron cation [O] (2)
+
+N20X     67             sulfur [ I ]                     FE+3            88       Tripositive iron cation [OI (3)
+                                                         F-
+                     Hydrogen attached to > S =                          89       Floride anion [Ol { -1 1
+                                                         CL -
+N30X     68             sulfur doubly bonded to N [ l l  BR -            90       Chloride anion [O] -1 1
+                     Hydrogen attached to
+                                                         LI +            91       Bromide anion [O] { -1 1
+                       phosphorus [ l I                  NA +
+NPOX     69                                                              92       Lithium cation [O] (1)
+                     Terminal sulfur bonded to           K+
+                                                         ZN+2            93       Sodium cation [OI (1 1
+                        P [ll
+OH2      70          Anionic terminal sulfur                             94       Potassium cation [OI (1 1
+
+HS       71             [ l l (-11                                       95       Dipositive zinc cation
+                     Terminal sulfur in thiosulfinate
+                                                                                  [OI (21
+                        group 111 ( - 1 /2)
+HS=N     71          Sulfur in anionic sulfinate         CA+ 2           96       Dipositive calcium
+
+                        group 131                                                 cation 101 (21
+                     Tricoordinate sulfur in anionic
+HP       71                                              CU+l            97       Monopositive copper
+                        thiosulfinate group [31          cu+2
+                     Sulfinyl sulfur, e.g., in                                    cation 101 (1)
+
+s-P      72            c=s=o                                             98       Dipositive copper
+
+                     Phosphorus doubly bonded                                     cation [OI 12)
+                        to C [31
+SM       72                                              MG+2            99       Dipositive magnesium
+
+                                                                                  cation [OI (2)
+
+SSMO     72                                                           ~      ~~~
+
+S02M     73                                                  aNumber of attached atoms.
+                                                             blnitial full or fractional charge, from which final MMFF94
+SSOM     73                                                  partial atomic charges are obtained by adding contributions
+                                                             arising from the relative polarity of bonds involving attached
+=s=o     74                                                  atoms.
+                                                             `The formal charge is determined by dividing the net ionic
+                                                             charge on the SO, or PO, group among the equivalent
+                                                             terminal oxygens.
+
+-P=C     75
+
+508                                                                               VOL. 17, NOS. 5 & 6
+   GEOMETRIC PARAMETERS                                                MERCK MOLECULAR FORCE FIELD. I
+
+   The reference bond lengths, ,,Y: and bond an-        to experimental vibrational frequencies. Further
+                                                        details are given in part III.%
+gles, IY~~,,that appear in eqs. (2) and (3) were
+                                                           TORSION PARAMETERS
+determined as follows. Given a trial set of MMFF
+parameters, optimized MMFF geometries for the              The V,, V,, and V , parameters in eq. (7) were
+molecules used in the parameterization were ob-         derived from fits to conformational energies using
+tained from, and then systematically compared to,       TORFIT?* These fits used "penalty function" re-
+the reference ab initio ge0metries.5~For each dis-      straints in connection with a "build-up" protocol
+tinct type of bond or angle (as determined by           in which all but certain twofold parameters ini-
+the MMFF atom types and the "bond-type" or              tially were given zero values. The ab initio refer-
+"angle-type" indexE), the average signed devia-         ence data consisted of relative conformational en-
+tion between the MMFF and the ab initio bond            ergies, nearly all of which were determined either
+lengths or angles was then determined and was           from the composite "MP4SDQ/TZP" calculations
+used to adjust the trial reference value. The itera-
+tive procedure was initiated by setting the trial       - - carried out at MP2/6-31G*-optimized geometries
+reference values equal to the average of the actual
+bond lengths or angles observed in the ab initio        for 380 conformers (Set A) or from single-point
+structures. As discussed in part III,E this approach    MP2/TZP calculations carried out at 1450 tor-
+had to be modified slightly to determine reference      sionally incremented geometries derived from
+angles in small-ring compounds. This procedure          MP2/6-31G*-optimized geometries (Set B). Bench-
+was applied both to the MP2/6-31G*-optimized            mark calculations using still higher levels of the-
+structures and to a similar set of HF/6-31G*-opti-      ory and comparisons to experiment showed these
+mized geometries (ca. 350 structures in each case);     to be the best tractable levels currently available
+the reference bond lengths and angles derived           to us.26 Set A afforded 249 comparisons of
+from fitting to the HF/6-31G* geometries were           "MP4SDQ/TZP" energies for optimized equilib-
+used in the fits to the HF/6-31G* first and second      rium or torsionally constrained conformers. Set B
+derivatives described in the following subsection.      in turn yielded 1192 energy comparisons, each of
+                                                        which relates the MP2/TZP energy of a structure
+   QUADRATIC FORCE CONSTANTS                            derived from a MP2/6-31G*-optimized equilib-
+                                                        rium conformer to that of a "torsion profile" struc-
+   Force constants for bond stretching, angle bend-     ture obtained by rotating one torsion bond by a
+ing, stretch-bend interaction, and out-of-plane
+bending were determined by using the Biosym             specified extent (e.g., k30°, k 60°, ...1. The inclu-
+Consortium program PROBE35 to fit a slightly
+modified version of the MMFF94 energy expres-           sion of these comparisons assured that MMFF94
+sion to the Cartesian first and second derivatives      has a reasonable understanding of torsional pro-
+of the HF/6-31G* energy. The principal modifica-        files and barriers. Full details are given in part
+tion consisted in replacing MMFF94's Buf-14-7 and       Iv.26
+buffered electrostatic terms by Lennard-Jones
+                                                           We view the determination of torsion parame-
+10-6and simple coulombic [ 6 = 0 in eq. (1311terms.     ters as a particularly strong component in the
+                                                        development of core MMFF94. No other force field,
+As earlier work has suggested that valence-             to our knowledge, has employed so broad a range
+coordinate force constants are not strongly affected    of comparably accurate data on conformational
+                                                        energies in its derivation.
+even by the neglect of nonbonded interaction^:^
+                                                           DETERMINATION OF MUTUALLY CONSISTENT
+the substitution of comparable terms seems un-             MMFF PARAMETERS
+likely to have had an appreciable effect on the
+derived force constants. In these fits, only the           Most force fields, have been derived using a
+quadratic force constants were optimized; parame-       "functional group" approach in which, for in-
+ters of all other classes were held constant. Finally,  stance, "hydrocarbon parameters" are determined
+the HF/6-31G*-derived quadratic force constants         by fitting to data on alkanes and are then frozen.
+were modified for use in MMFF94 by applying             When alcohols and ethers, for example, are fit,
+scaling factors chosen to optimize the fit of MMFF      only the parameters that arise from the newly
+                                                        introduced oxygen and polar hydrogen atom types
+                                                        need to be determined. This approach greatly sim-
+
+JOURNAL OF COMPUTATIONAL CHEMISTRY                      509
+HALGREN
+
+plifies the derivation of the force field but fails to  charge increments reproduced the set of 423
+allow for the possibility that correlations between     HF/6-31G* molecular dipole moments, increased
+parameters may veld values that fit the limited         by 10% as described above, with the rms devia-
+original data (e.g., on hydrocarbons) well but are      tions6' shown:
+poorly defined and/or are not optimal for describ-
+ing subsequent data (e.g., for hydrocarbon frag-        Dipole magnitude  MMFF94   MM2X
+ments in alcohols and ethers, etc.).                    Dipole direction
+                                                                           0.39 D   0.64 D
+   A better strategy would be to determine all the                         5.5"    10.8"
+force-field parameters simultaneously from the full
+set of experimental and/or computational data.          Also listed are the results obtained using the less
+Such an approach would ensure that any short-           widely parameterized MM2X force field for a
+comings in the performance of the force field would     somewhat smaller set of HF/6-31G* dipole mo-
+be attributable to its form, or to the quality of the   ments. For comparison, the rms value of the scaled
+data used, rather than to its means of parameteri-      HF/6-31G* dipole moments is 3.42 D. Thus, the
+zation. This approach is computationally impracti-      average MMFF94 error is slightly larger than lo%,
+cal at the present time. Fortunately, however, many     while that for MM2X is closer to 20%. MMFF94 is
+classes of force-field parameters depend only           also considerably more accurate for dipole direc-
+weakly on others. For example, quadratic force          tions. The present performance, and that for inter-
+constants change modestly when small changes            molecular interaction energies and geometries in
+are made in molecular geometries, and reference         hydrogen-bonded dimers,24appears quite reason-
+bond lengths and angles are insensitive to values       able for an approach that is simple enough to
+employed for torsion parameters. This weak de-          allow virtually automatically application to a wide
+pendence allowed us to fashion a composite strat-       range of organic and bio-organic systems. Never-
+egy that provided a computationally tractable           theless, the treatment of electrostatic interactions is
+approximation to the ideal of simultaneous deter-       one area in which improvement particularly needs
+mination of all parameters. We implemented this         to be made in the future.
+strategy by carrying out between three and four
+interactions over the set of procedures described in       EQUILIBRIUM BOND LENGTHS
+the previous three subsections; for good measure,
+we also redetermined the nonbonded parameters              The comparisons shown below involved a total
+for hydrogen-bonding interactions, as described         of 4205 equilibrium bond lengths. They were ob-
+earlier, before the final determination of the tor-     tained by using MMFF to optimize 358 MP2/
+sion parameters. This approach allowed each class       6-31GY equilibrium conformers and by systema-
+of parameters to be determined in the context of        tically comparing the ab initio- and MMFF-
+successively refined values for parameters belong-      optimized geometries.25For MM2X, 324 conform-
+ing to other classes. As a result, nearly all parame-   ers covered by its parameterization were opti-
+ters derived by this set of procedures have been        mized, yielding a comparison of 3850 bond lengths.
+determined in a physically self-consistent fashi0n.5~   The results, cited below, are stated as rms devia-
+                                                        tions in angstroms from the optimized MP2/6-
+  Performance of MM2X and MMFF94                        31G* bond lengths:
+
+   This section summarizes MMFF94's ability to                                                 MMFF94 MM2X
+reproduce ab initio data used in its parameteriza-
+tion and also notes how well MM2X46 performs.              Equilibrium bond lengths 0.006 0.018
+Further details may be found in the accompanying
+studies.24-26                                           Clearly, the results for MMFF94 are excellent, those
+                                                        for MM2X respectable.
+   MOLECULAR DIPOLE MOMENTS
+                                                           EQUIIJBRIUM BOND ANGLES
+   For MMFF94, the partial atomic charges calcu-
+lated from the computationally derived bond                A total of 7021 equilibrium bond angles for
+                                                        MMFF94 and 6462 bond angles for MM2X were
+                                                        examined. The results are stated as rms deviations
+
+510                                                                       VOL. 17, NOS. 5 & 6
+in degrees from the optimized MP2/6-31G* bond                        MERCK MOLECULAR FORCE FIELD. I
+angles:
+                                                      rectly describes the nonplanar equilibrium geome-
+                                     MMFF94 MMW       tries of unsaturated amines, whereas MM2X does
+                                                      not.
+   Equilibriumbond anQles 1.16" 1.70"
+                                                         TORSION ANGLES
+Here, too, the MMFF94 results are quite good.
+MM2X also performs reasonably well.                      Comparisons for a total of 7974 torsion angles
+                                                      for MMFF94 and 7409 for MM2X gave rms devia-
+                                                      tions from the MP2/6-31G*-optimized torsion an-
+                                                      gles as stated below:
+
+   WILSON OUT-OF-PLANE PUCKERING ANGLES                               MMFF94 MM2X
+
+   For MMFF94, 237 conformers had out-of-plane        Torsion angles            5.83"    1 1.38"
+centers involving a total of 1926 out-of-plane an-
+gles. For MM2X, 206 conformers had 1755 such          As discussed in part III,= MMFF94 sometimes
+angles. Many of the comparisons are of little inter-  underestimates and sometimes overestimates the
+est, however, as all the methods find carbonyl and    degree of pyramidalization at nitrogen found in
+olefinic carbon to be essentially planar in un-       the MP2/6-31G* structures for amides. The asso-
+strained compounds. In contrast, nonplanarity at      ciated errors in out-of-plane angles also affect the
+nitrogen is found in the MP2/6-31G* structures        computed torsion angles and contribute signifi-
+for aliphatic amines, for most amides (which in       cantly to the cited overall rms deviation. In addi-
+this work include hydroxamic acids), and for such     tion, in a number of cases involving methyl groups
+"unsaturated" amines as amidines, guanidines,         attached to sp2-hybridizedcenters, the relative en-
+vinylic amines and aromatic amines. For these         ergies for the torsionally incremented (Set B) struc-
+classes, the following MMFF94 and MM2X6' rms          tures on the MP2/TZP surface suggest that the
+deviations were found:                                MP2/6-31G* geometries (to which comparison is
+                                                      being made) are not equilibrium conformers on
+                         MP2     MMFF94               the higher level surface (from which the torsion
+                      rms angle  rms dev.             parameters were largely derived). When question-
+                                                      able cases involving methyl rotations are excluded,
+Arnides (183 angles)  22.6"      9.38"                the rms deviation for MMFF94 falls to about 5" .26
+Unsaturated arnines   43.8"      2.05"
+                      57.5"      0.91"                   CONFORMATIONAL ENERGIES AND TORSION
+   (33 angles)                                           PROFILES
+Saturated arnines
+                                                         As previous described, the torsion parameters
+   (96 angles)                                        were derived in fits to two sets of data on confor-
+                                                      mational energies. The results, stated as rms devia-
+                         MP2      MM2X                tions in kilocalories per mole, were as follows:
+                      rms angle  r m s dev.
+
+Arnides (153 angles)  18.5"      17.5"                     ~~                   MMFF94   MM2X
+Unsaturated arnines   43.8"      43.8"                                             0.31    1.12
+                      56.9"                           Conforrnational energies     0.50    1.57
+   (33 angles)                    2.24"                  (Set A)
+Saturated arnines
+                                                      Torsion-profile energies
+   (84 angles)                                           (Set 6)
+
+Shown for comparison are the rms values of the        For comparison, rms values for the relative ener-
+MP2/6-31G*-optimized Wilson angles.                   gies were 3.88 kcal/mol for the conformational
+                                                      energies and 4.37 kcal/mol for the torsion-profile
+   Clearly, MMFF94 is far superior, though even it    energies for MMFF94, and 2.30 and 4.38 kcal/mol,
+encounters some difficulty with amides, whose         respectively, for MM2XF3 Thus, MMFF94 accounts
+nitrogen center is notoriously easy to deform.62As    for about 90% of the variation in the ab inifio
+we show in part III,= however, MMFF94 gives rms
+values for Wilson angles in primary, secondary,
+and tertiary amides that correctly reproduce the
+degree of puckering found in the MP2/6-31G*
+structures in an overall sense. MMFF94 also cor-
+
+JOURNAL OF COMPUTATIONAL CHEMISTRY                                                                511
+HALGREN                                                 experiment for the extended MMFF94 parameteri-
+                                                        zation are given in part V.27
+relative energies in each case, whereas MM2X ac-
+counts for about 50%.                                      MOLECULAR GEOMETRIES
+
+   We note that Sets A and B each contained exten-         We have compared MMFF94 to experiment and
+sive conformational data on the glycine and ala-        to published MM3 geometries for a series of 30
+nine dipeptide analogs@and on the full, methyl-         organic molecules covering a variety of functional
+capped glycine and alanine dipeptides. As we show       groups. For bond lengths, rms deviations reJative
+in part IV,26 MMFF94 reproduces these data very         to experiment wereo found to be 0.014 A for
+well. All common protein sidechains are also cov-       MMFF94 and 0.010 A for MM3; for bond angles,
+ered in its parameterization. No other published        the rms deviation was 1.2" for each force field.
+force field, to our knowledge, has been derived         Thus, MMFF94 is as successful as MM3 in predict-
+from a comparably extensive set of high-quality         ing experimental bond angles, despite the fact that
+data on conformational comparisons pertinent to         no experimental data on molecular geometries was
+simulations on proteins.                                used in deriving MMFF94. MM3 predicts experi-
+                                                        mental bond lengths more accurately, even in this
+   ADDITIONAL COMPARISONS                               test in which the experimental bond lengths were
+                                                        not strictly limited to the rg values MM3 seeks to
+   For the linear water dimer (optimized with the       emulate, but whether a difference of this magni-
+                                                        tude is of practical significance for molecular sim-
+O-H ...0 angle restricted to 180"), MMFF94 gives        ulations is unknown. Some of the difference in
+                                                        predicting experimental bond lengths arises from
+a dimerization energy ,Of -6.53 kcal/mol, an            small, systematic deviations from experiment in
+                                                        the underlying MP2/6-31G* bond lengths. Part
+0 ...0 distance of 2.75 A, and an angle between         arises from the intrinsic difference between en-
+the 0 ... 0 axis and the acceptor H-0-H plane           ergy-minimized (MP2/6-31G* ) and thermally av-
+                                                        eraged (experimental) bond lengths; as a force
+of 27".24 The analoogous q ~ a n t i t i e s a~r~e      field intended for use in molecular-dynamics sim-
+- 6.50 kcal/ mol, 2.74 A and 27" for TIP3P water;       ulations, MMFF94 reproduces the energy-mini-
+                                                        mum bonds lengths obtained from the ab initio
+-6.59 kcal/ mol, 2.75 A and 26" and for                 calculations, whereas MM3 incorporates thermal-
+water; and -6.24 kcal/mol, 2.74 A and 46" and           averaging effects into its static model. For torsion
+                                                        angles, one particularly notable difference occurs
+for TIP4P water. Thus, "MMFF water" behaves             for the "cisoid" conformation of 1,3-butadiene, for
+similarly in this static test. Work using liquid-phase  which MMFF94 predicts a nonplanar energy-mini-
+simulations is currently underway to test and, if       mized structure, wheeas MM3 gives a planar
+necessary, to reformulate or reparameterize             structure. A more complete discussion, including
+MMFF94.66                                               comparisons to CHARMm9 and UFF" and more
+                                                        detailed comparisons to MM3, is given in part
+   Results for geometries and interaction energies      111.~~
+for an extensive series of hydrogen-bonded dimers
+are presented in part II.', The comparisons show           VIBRATIONAL FREQUENCIES
+that MMFF94 accurately reflects the trends in in-
+teraction energies and geometries manifested in            To further characterize MMFF94's performance,
+the ub initio calculations. The force field therefore   vibrational frequencies were calculated for forma-
+appears to properly balance the strengths of wa-        mide, benzene, formic acid, formaldehyde, acetal-
+ter-water, water-solute, and solute-solute inter-       dehyde, methylamine, ammonia, methanol, water,
+actions. These comparisons suggest that MMFF94          methane, ethane, ethylene, hydrogen sulfide,
+can be used with confidence in computational            guuche-ethanethiol, and dimethyl disulfide. When
+studies of ligand-receptor binding. Also given in       compared with published MM3 and experimen-
+part 1124are comparisons of vdW interaction ener-       tally determined freq~encies?r~ms deviations ver-
+gies for the (CH,), and (H2), homodimers as a           sus experiment were found to be 61 cm-' for
+function of separation and orientation. These com-      MMFF94,57 cm-' for MM3 for the slightly smaller
+parisons show that MMFF94 accounts reasonably
+well for prototype nonpolar vdW interactions.
+
+  Accuracy in Predicting Experiment
+
+   This section summarizes MMFF94's ability to
+reproduce experimental data. Further details may
+be found in parts 111 and IV25,26;comparisons to
+
+512                                                     VOL. 17, NOS. 5 & 6
+subset of molecules for which MM3 vibrational                         MERCK MOLECULAR FORCE FIELD. I
+frequencies had been published, and 60 cm-' for
+MMFF94 for the same set of molecules used in           the organic chemist, that is, as a collection of
+assessing MM3. Thus, MMFF94 and MM3 perform            atoms joined by single, double, or triple bonds,
+comparably on an overall basis. For MM3, how-          some atoms of which may have a nonzero formal
+ever, we noted a number of instances in which its      charge. Aromatic systems may be supplied in any
+parameterization had employed experimental fre-        constituent Kekule form. The program then uses
+quencies that differed significantly-by nearly         the supplied structural information to generate all
+400 cm-I for a B,, stretching mode in                  additional information needed to carry out the
+benzene- from other published experimental val-        calculation. It automatically determines the tor-
+ues that themselves had been shown to be compat-       sional "tree structure," perceives and classifies
+ible with theoretically calculated frequencies. Such   rings, defines symbolic atom types based on local
+instances illustrate one of the hazards of deriving a  connectivity, detects aromaticity, and creates ap-
+force field from experimental data: such data, at      propriate lists of bond, angle, and torsional inter-
+times, can contain large errors that then become a     actions. As previously des~ribed?t~he symbolic
+part of the derived force field.25                     atom types (cf. Table 111) are then translated into
+                                                       the numeric values used to assign force-field pa-
+   COFORMATIONAL ENERGIES AND                          rameters to the force-field interaction terms.
+   ROTATIONAL BARRIERS
+                                                          In establishing the relationship between param-
+   Energy differences calculated using MMFF94          eters and force-field interactions, the parameter
+reproduce a diverse set of 37 experimentally de-       files, which are kept in "canonical order" based on
+termined gas-phase and solution conformational         indices derived from the numerical atom types,
+energies, enthalpies, and free energies (rms value     are processed using a rapid binary search algo-
+2.3 kcal/mol), with an rms deviation of 0.38 kcal/     rithm. If present, the fully qualified parameter cor-
+mol, as opposed to 0.37 kcal/mol for both the          responding to the precise set of atom types (sup-
+supporting "MP4SDQ/TZP" calculations and for           plemented, in ambiguous situations, by defined
+MM3.26Moreover, MMFF94 reproduces 28 experi-           bond, angle, stretch-bend, or torsion "interaction
+mentally determined rotational barriers (rms value
+3.7 kcal/mol) with a rms deviation of 0.39 kcal/       type^''*^^^^) is retrieved and used. For vdW, bond
+mol. Importantly, these comparisons, and others
+discussed in part IV,26 demonstrate that fitting       stretching, stretch-bend, and bond-charge-
+MMFF94 to high-quality theoretical data has si-        increment parameters, no equivalences are recog-
+multaneously conferred the ability to fit experi-      nized. For angle bending, out-of-plane bending,
+ment. MMFF94 can be expected to perform equally        and torsion interactions, however, MMFF94 exe-
+well for the wide range of systems for which it has    cutes a staged "step-down" procedure in which
+been parameterized but for which little or no ex-      increasingly generic values are sought whenever
+perimental data are available.                         the "fully qualified" parameter is not found. This
+                                                       protocol is governed by the entries in Table IV,
+  Implementation of MMFF in OPTIMOL,                   where the "Level 1" atom types define the fully
+  CHARMm, and BatchMin                                 qualified parameters. Entries from Levels 2-5 are
+                                                       employed as needed in subsequent searches; those
+   In this section, we discuss some pertinent ele-     at Level 5, always "0" except for atomic ions,
+ments related to the implementation of MMFF94          serve as wild cards. Such wild card values are used
+in OPTIMOL,46the host molecular-mechanics plat-        only for peripheral atoms in an angle bending or
+form for which MMFF94 and MM2X were devel-             torsional interaction or for noncentral atoms in an
+oped; the same elements also apply to the recent       out-of-plane interaction. Level 4 generally corre-
+implementations of MMFF93 in CHARMm% and               sponds to the atomic species, and Level 3 to atomic
+of MMFF94 in Bat~hMin.2~                               species plus hybridization. Currently, the first two
+                                                       levels employ identical numerical atom types.
+   In each of these implementations, the user (or      Unique values for Level 1 may be specified later if
+the invoking modeling platform) simply repre-          certain atom types need to be defined more specif-
+sents the subject molecule in language familiar to     i ~ a l l yT. h~e~protocol used in the step-down proce-
+                                                       dure depends on the type of interaction (angle,
+                                                       torsion, out-of-plane).68 If no parameter is found,
+                                                       one of a series of carefully calibrated empirical
+                                                       rules is invoked (cf. part VZ7?. This staged-
+                                                       search/default-rule procedure allows applications
+                                                       to go forward when specific parameters are un-
+
+JOURNAL OF COMPUTATIONAL CHEMISTRY                     513
+HALGREN
+
+TABLE IV.                                  TABLE IV.
+NumericalAtom Type EquivalencesUsed in     (continued)
+
+Assigning MMFF94 Parameters
+
+                                           MMFF             Equivalence levelb
+
+     MMFF      Equivalence levelb          sym bola     1   2      3   4        5
+
+symbola    1   2   3   4                5                       -
+
+                                           HO= +        52  52  21     5        0
+
+CR         1   1   1   1                0  =N=          53  53  42     8        0
+
+c=c        2   2   2   1                0  N+=C         54  54     9   8        0
+c=o
+           3   3   3   1                0  NCN +        55  55     10  8        0
+CSP
+HC         4   4   4   1                0  NGD+         56  56     10  8        0
+OR
+           5   5   5   5                0  CGD+         57  57     2   1        0
+o=c
+           6   6   6   6                0  NPD+         58  58     10  8        0
+NR
+N=C        7   7   7   6                0  OFUR         59  59     6   6        0
+NC=O
+           8   8   8   8                0  C%           60  60     4   1        0
+F
+           9   9   9   8                0  NR%          61  61  42     8        0
+CL
+BR         10  10  10  8                0  NM           62  62     10  8        0
+I
+S          11  11  11  11               0  C5A          63  63     2   1        0
+
+s=c        12  12  12  12               0  C5B          64  64     2   1        0
+so
+           13  13  13  13               0  N5A          65  65     9   8        0
+so2
+SI         14  14  14  14               0  N5B          66  66     9   8        0
+CR4R
+HOR        15  15  15  15               0  N20X         67  67     9   8        0
+CR3R
+HNR        16  16  16  15               0  N30X         68  68     8   8        0
+HOCO
+PO4        17  17  17  15               0  N POX        69  69     9   8        0
+P
+HN=C       18  18  18  15               0  OH2          70  70     70  70       70
+HNCO
+HOCC       19  19  19  19               0  HS           71  71     5   5        0
+CE4R
+HOH        20  20  1   1                0  S2CM         72  72     16  15       0
+02CM
+HOS        21  21  21  5                0  S02M         73  73     18  15       0
+                                           =s=o
+NR +       22  22  22  1                0               74  74     17  15       0
+
+OM         23  23  23  5                0  -P=C         75  75  26     25       0
+HNR+
+CB         24  24  24  5                0  NM5          76  76     9   8        0
+NPYD
+NPYL       25  25  25  25               0  CL04         77  77     12  12       0
+NC=C
+C02M       26  26  26  25               0  c5           78  78     2   1        0
+NSP
+NS02       27  27  28  5                0  N5           79  79     9   8        0
+STHl
+NO2        28  28  28  5                0  CIM +        80  80     2   1        0
+N=O                                        NIM +
+NAZT       29  29  29  5                0               81  81     10  8        0
+NSO
+O+         30  30  2   1                0  N5AX         82  82     9   8        0
+HO+
+0=+        31  31  31  31               0  FE+2         87  87  87     87       87
+
+           32  32  7   6                0  FE+3         88  88  88     88       88
+
+           33  33  21  5                0  F-           89  89     89  89       89
+
+           34  34  8   8                0  CI -         90  90  90     90       90
+
+           35  35  6   6                0  Br -         91  91  91     91       91
+                                           LI +
+           36  36  36  5                0               92  92  92     92       92
+
+           37  37  2   1                0  K+           93  93  93     93       93
+
+           38  38  9   8                0  NA +         94  94  94     94       94
+
+           39  39  10  8                0  ZN+2         95  95  95     95       95
+
+           40  40  10  8                0  CA+2         96  96     96  96       96
+
+           41  41  3   1                0  CU+I         97  97  97     97       97
+
+           42  42  42  8                0  cu+2         98  98  98     98       98
+
+           43  43  10  8                0  MG+2         99  99  99     99       99
+
+           44  44  16  15               0  ashown are representative MMFF94 symbolic atom types
+                                           (cf. Table Ill).
+           45  45  10  8                0  bThe Level 1 numerical atom types are the primary values.
+                                           The usage of the equivalences reflected in Levels 2-5 is
+           46  46  9   8                0  described in the "Implementation of MMFF94 in OPTIMOL,
+                                           CHARMm, and BatchMin" section.
+           47  47  42  8                0
+
+           48  48  9   8                0
+
+           49  49  6   6                0
+
+           50  50  21  5                0
+
+           51  51  7   6                0
+
+514                                                             VOL. 17, NOS. 5 & 6
+available, though inevitably with a loss in reliabil-                  MERCK MOLECULAR FORCE FIELD. I
+ity.
+                                                       available data and are then frozen, While practical
+Concluding Discussion                                  limitations of the "functional group" approach
+                                                       have not yet been convincingly demonstrated, we
+This and the accompanyig ~tudies'~-'in~tro-            prefer an approach that, by construction, yields
+                                                       mutually consistent values for the parameters.
+duce MMFF94, the initial published version of the
+                                                          These attributes of its functional form and pa-
+Merck Molecular Force Field. As was noted in the       rameterization combine to produce a force field
+                                                       that, by contemporary standards, performs very
+Introduction, this version of MMFF is primarily        well. In particular, both computational data and
+                                                       experimental data are described well-the latter to
+intended for use in molecular-dynamics studies; a      a degree comparable to that achieved by MM3.
+                                                       These comparisons demonstrate that MMFF94's
+modified version intended for use in energy-mini-      parameterization against computational data has
+                                                       simultaneously conferred the ability to reproduce
+mization studies is under development?'                experiment. Consequently, MMFF94 can be ex-
+                                                       pected to perform equally well throughout the
+MMFF94`s formulation and parameterization              range of its parameterization from high-quality
+                                                       computational data, even for the many systems for
+has a number of distinguishing features. One is        which relevant experimental data is unavailable.
+                                                       This attribute constitutes a particularly strong ad-
+that MMFF94 uses a unique functional form for          vantage of a computationally derived force field
+                                                       like MMFF94. Comparisons in functional form,
+describing van der Waals interactions and employs      performance, and/or manner of derivation for such
+                                                       other force fields as MM3, CFF93, OPLS, AMBER,
+novel combination rules that embody a systematic       CHARMm, UFF, and DREIDING are given in the
+                                                       accompanying s t ~ d i e s .-'2~7
+correlation of vdW parameters with those that
+                                                          While the computational data used in its
+describe experimentally well-characterized interac-    derivation necessarily relate to small molecules, it
+                                                       should be emphasized that MMFF94 has con-
+tions involving small molecules and rare-gas           sciously been designed to be both a "small
+                                                       molecule" and a "protein" force field. Among
+atoms.39                                               other factors, the excellent results obtained for
+                                                       conformationalenergies for dipeptide analogs and
+A second distinguishing feature is that                for dipeptidesZ6 and the uniform and balanced
+                                                       parameterization that has been pursued for non-
+MMFF94`s core parameterization is primarily based      bonded solvent-solvent, solvent-solute, and so-
+
+on a large amount of computational data obtained       lute-solute interaction^?^ when taken together
+
+from ab initio calculations-approximately 500          with the reproduction of experimental data for
+                                                       small molecules with an accuracy comparable to
+molecular structures optimized at the HF/6-31G*        that of MM3, suggest that MMFF94 should per-
+                                                       form well in both domains.
+level, 475 structures optimized at the MP2/6-31G*
+                                                          Despite encouraging success, certain limitations
+level, 380 structures evaluated at the composite       are evident. One of particular importance arises
+                                                       from the fact that MMFF94 uses static atom-
+"MP4SDQ/TZP" levelz6 using MP2/6-3lG*-opti-            centered charges. As such, it neglects both higher
+                                                       order multipoles and electrostatic effects that arise
+mized geometries, and 1450 structures evaluated        from molecular polarizability. Because of these
+                                                       simplifications, MMFF94, like a number of other
+in single-point calculations at the MP2/TZP level.     force fields, employs "enhanced" charge distribu-
+                                                       tions that emulate the effect of polarizability in
+While ab initio data have been used in force devel-    amplifying electrostatic interactions for favorable
+                                                       contacts in a high-dielectric medium. Unfortu-
+opment for at least two    no other effort,            nately, these enhanced charge distributions also
+                                                       amplify electrostatically unfavorable iteractions,
+to our knowledge, has used so much data of such
+
+high quality.
+
+A third distinguishing feature is that the core,
+
+computationally derived, portion of MMFF94 has
+
+been parameterized for an unusually wide variety
+
+of chemical systems. As a result, MMFF94 pro-
+
+vides well-defined parameters for more than 20
+
+chemical families and treats many frequently oc-
+
+curring combinations of functional groups. The
+
+range of coverage for the extended parameteriza-
+
+tion is far larger stiiP7
+
+The methodology used in parameterizing
+
+MMFF94 represents a fourth distinguishing fea-
+
+ture. Specifically, nearly all MMFF94 parameters
+
+have been determined in a mutually consistent
+
+fashion59 from the full set of available computa-
+
+tional data. Other force-field derivations have usu-
+
+ally employed a "functional group" approach in
+
+which certain parameters are fit to a portion of the
+
+JOURNAL OF COMPUTATIONAL CHEMISTRY                     515
+HALGREN                                                back to an objective that underlies this work but
+                                                       has not yet been clearly stated: to define a forcefield
+whereas proper account of polarizability would         that describes gas-phase molecular properties accurately
+diminish them. They also improperly enhance            and that behaves properly when the gas-phase system is
+electrostatic interactions in gas-phase or low-di-     embedded in the condensed phase. This objective can-
+electric environments. Furthermore, they may not       not fully be met in a force field that treats electro-
+be optimal for describing intramolecular interac-      static interactions as simplistically as does the pre-
+tions, and may thereby limit the ability of the force  sent version of MMFF. Ultimately, however, it will
+field to account for differences in conformational     be met, because "only" physics is involved, and
+energies. Indeed, compounds containing two or          because that physics is becoming increasingly well
+more strongly polar functional groups in close         understood?',
+proximity have proven to be the most problematic
+in this respect, though good results have been           Acknowledgment
+obtained in most cases to date.z6 Other significant
+limitations include: the overly simplistic nature of      The author thanks the many colleagues at the
+the bond-charge-increment scheme used to assem-        Merck Research Laboratories who have supported
+ble the partial atomic chargesz4;the lack of confor-   this work; have contributed to the development of
+mational dependence of the resultant chargesz4;        OPTIMOL, in which MMFF94 was first imple-
+and the omission of bond-torsion (and certain          mented; have developed computational tools used
+other) cross terms needed to account for significant   in MMFF94's derivation; have created and main-
+geometrical changes that can occur when a torsion      tained the computational environment at Merck;
+angle varies,25 an example being the elongation        or have utilized MMFF94 and its predecessor force
+                                                       fields in their own research. Many of these contri-
+of ap amide partial C-N double bond by up to           butions are explicitly cited in the accompanying
+                                                       articles.z4- z7
+0.1 A when conjugation is broken. A further signif-
+icant limitation is that no account is taken of          Supplementary Material
+metal-ligand interactions beyond that afforded by
+a relatively simplistic model that includes only          Appendix A (definition and role of the 16
+electrostatic and van der Waals nonbonded              MMFF94 parameter filesI7' and Appendix B (com-
+interactions.                                          puter-readable ASCII file containing the MMFF94
+
+   What can be expected from future efforts at         parameter filesz31 are available in Supplementary
+force-field development? First and foremost, better
+physical forms will need to be employed, particu-      Material.
+
+larly for electrostatic interaction^.^" For example,     References
+
+even highly regarded water models such as SPC           1. J. B. Hendrickson, J . A m . Chem. Soc., 83, 4537-4547 (1961).
+and TIP3P are known to describe certain configu-            For an even earlier reference, see: F. H. Westheimer,
+rations for the water dimer very poorly.71In addi-          in Steric Effect in Organic Chemistry, M. S. Newman, Ed.,
+tion, a broader selection of cross terms than are           Wiley, New York, 1956, Chapter 12.
+employed in MMFF94 will almost certainly be
+needed, and other enhancements can also be envi-        2. D. H. Wertz and N. L. Allinger, Tetrahedron, 30, 1579 (1974).
+si0ned.2~2-7 We expect that a computational ap-         3. (a) N. L. Allinger, \. A m . Chem. Soc., 89, 8127 (1977);
+proach based almost solely on the use of ab initio
+data will become indispensable and that reliance            (b) U. Burkert and N. L. Allinger, Molecular Mechanics;
+on experimental data will diminish. The problem,            American Chemical Society, Washington, DC, 1982; (c) N.
+ultimately, is one of information: too many force-          L. Allinger and Y. Yuh, QCPE, 12,395 (1980).
+field parameters, too little experimental data, and
+in many instances too nebulous a relationship be-       4. N. L. Allinger, Y. H. Yuh, and J-H. Lii, 1. A m . Chem. SOC.,
+tween the two. Fortunately, significant improve-
+ments in computer technology can be expected to             111, 8551-8566 (1989). See also: N. L. Allinger and L. Yan,
+make it increasingly feasible both to use more              J . A m . Chem. Soc., 115, 11918-11925 (1993), and references
+complex force fields in molecular simulations and           therein.
+to employ ever more rigorous computational mod-         5. W. D. Cornell, P. Cieplak, C. I. Bayly, I. R. Gould, K. M.
+els to generate the data needed to derive them. But        Merz Jr., D. M. Ferguson, D. C. Spellmeyer, T. Fox, J. W.
+of course this approach will still yield a gas-phase
+force field, whereas most applications of interest to      Caldwell, and P. A. Kollman, I . A m . Chem. Soc., 117,
+pharmaceutical and medicinal chemists take place
+in the condensed phase. This observation brings us         5179-5197 (1995);S.J. Weiner, P. A. Kollman, D. T. Nguyen,
+                                                            and D. A. Case, J . Comput. Chem., 7, 230-252 (1986); S. J.
+
+516                                                    VOL. 17, NOS. 5&6
+     Weiner, P. A. Kollman, D. T. Nguyen, D. A. Case, U. C.                           MERCK MOLECULAR FORCE FIELD. I
+     Singh, C. Ghio, G. Alagona, S. Profeta Jr., and P. Weiner,
+    J. Am. Chem. SOC.,106, 765-784 (1984).                                1. Phys. Chern., 95,2283-2291 (1991), and references therein.
+
+ 6. (a) W. L. Jorgensen and J. Tirado-Rives, J. Am. Chem. SOC.,           (d) S.-8. Zhu, S. Yao, J.-B. Zhu, S. Singh, and G. W. Robin-
+     110, 1657-1666 (1988), and references therein; (b) H. A.
+     Carlson, T. B. Nguyen, M. Orozco, and W. J. Jorgensen,              son, J. Phys. Chem., 95,6211-6217 (1991); (e) s.W. Rick, s.J.
+    J. Comput. Chem., 14, 1240-1249 (19931, and references
+     therein.                                                             Stuart, and B. J. Beme, J. Chem. Phys., 101, 6141-6156
+                                                                          (1994); (f) D. N. Bemardo, Y. Ding, K. Krough-Jespersen,
+ 7. B. R. Brooks, R. E. Bruccoleri, B. D. Olafson, D. J. States,          and R. M. Levy, J. Phys. Chem., 98, 4180-4187 (1994); (g)
+    S. Swaminathan, and M. Karplus, J. Comput. Chem., 4,                   For an early implementation of induced-dipole effects, see
+     187-217 (1983).                                                      also L. Dosen-Micovic, D. Jeremic, and N. L. Allinger, J.
+                                                                           Am. Chem. Soc., 105, 1716, 1723(1983).
+ 8. S. Lifson, A. T. Hagler, and P. Dauber, J . Am. Chem. SOC.,
+     101,5111-5121 (19791, and references therein.                    22. S. Dasgupta and W. A. Goddard 111, J. Chem. Phys., 90,
+                                                                           7207-7215 (1989).
+ 9. F. M. Momany and R. Rone, J . Comput. Chem., 13, 888-900
+     (1992).                                                          23. The MMFF94 parameters (Appendix B, Supplementary Ma-
+                                                                           terial) are available in computer-readable form (see foot-
+10. S. L. Mayo, B. D. Olafson, and W. A. Goddard 111, J. Phys.
+     Chem., 94, 8897 (1990).                                              note * on first page of this article).
+
+11. A. K. RappC, C. J. Casewit, K. S. Colwell, W. A. Goddard 111,     24. Part 11: T. A. Halgren, J. Comput. Chem. (this issue).
+    and W. M. Skiff, J. Am. Chem. SOC.,114,10024-10035 (1992),
+     and references therein.                                          25. Part 111: T. A. Halgren, J . Comput. Chem. (this issue).
+
+12. A. Vedani and D. W. Huhta, J. Am. Chem. SOC., 112,                26. Part IV T. A. Halgren and R. B. Nachbar, J. Comput. Chem.
+     4759-4767 (1990).                                                     (this issue).
+
+13. V. S. Allured, C. M. Kelly, and C . R. Landis, J. Am. Chem.       27. Part V: T. A. Halgren, J. Comput. Chem. (this issue).
+     SOC., 113, 1 (1991).
+                                                                      28. This collaboration involved Prof. Martin Karplus (Harvard
+14. D. M. Root, C. R. Landis, and T. Cleveland, J. Am. Chem.               University) and Dr. Ryszard Czerminski and others of
+     SOC., 115, 4201-4209 (1993).
+                                                                          Molecular Simulations, Inc. (San Diego, CAI. Currently, a
+15. J. R. Maple, U. Dinur, and A. T. Hagler, Proc. Natl. Acad.
+    Sci. USA, 85, 5350-5354 (1988). A. T. Hagler, J. R. Maple,             version of CHARMm that supports the earlier and less
+    T. S. Thacher, G. B. Fitzgerald, and U. Dinur, In Computer             widely parameterized MMFF93 force field (which lacks,
+    Simulation of Biomolecular Systems, W. F. van Gunsteren and            e.g., the ability to recognize a number of the ionic species
+    P. K. Weiner, Eds., ESCOM, Leiden, 1989, pp. 149-167.                  parameterized in ref. 27; see also refs. 25 and 26) is avail-
+    U. Dinur and A. T. Hagler, in Reviews in Computational                 able from MSI. However, while the local Merck code for
+     Chemistry, K. B. Lipkowitz and D. B. Boyd, Eds., VCH                  CHARMm employs MMFF94, arrangements for including
+    Publishers, New York, 1991, Vol. 2, pp. 99-163. See also:              MMFF94 in the distributed MSI version have not yet been
+    J. Palca, Nature, 322, 586 (1986).                                     concluded.
+
+16. (a) J. R. Maple, M.-J. Hwang, T. P. Stockfish, U. Dinur,          29. P. S. Shenkin and T. A. Halgren (work in progress). The
+    M. Waldman, C. S. Ewig, and A. T. Hagler, J. Comput.                   MacroModel program suite and its BatchMin module, de-
+    Chem., 15, 161-182 (1994); M.-J. Hwang, T. P. Stockfish, and           veloped in the laboratories of Professor Clark Still, are
+    A. T. Hagler, J. Am. Chem. SOC.,116,2515-2525 (1994).                  available from Columbia University (New York, NY).
+
+17. N. L. Allinger, K. Chen, and J.-H. Lii, J . Comput. Chem. (this   30. OPTIMOL has been developed and maintained by the au-
+     issue).                                                               thor, but is based in part on computer code adapted from a
+                                                                           public domain version of MM2 or written by Drs. R. B.
+18. (a) W. J. Hehre, L. Radom, P. v. R Schleyer, and J. A. Pople,          Nachbar, B. L. Bush, G. M. Smith, E. F. Fluder Jr., and J. D.
+    Ab lnitio Molecular Orbital Theoy, Wiley, New York, 1986,              Andose of the Merck Research Laboratories.
+    Chapter 6; (b) D. J. DeFrees, B. A. Levi, S. K. Pollack, W. J.
+    Hehre, J. S. Binkley, and J. A. Pople, J. A m . Chem. SOC., 101,  31. Distribution of OPTIMOL by the Quantum Chemistry Pro-
+     4085-4089 (1979).                                                     gram Exchange (Indiana University) would permit free
+                                                                           usage of the program but would prohibit its commercializa-
+19. For a recent example of a significant experimental error               tion.
+    which was corrected on the basis of information from ab
+    initio calculations, including calculations at the MP2/6-         32. T. A. Halgren and R. 8. Nachbar (work in progress).
+    31G* level used in the present work, see: 8. J. Smith and
+    L. Radom, J . Am. Chem. SOC.,112,7525-7528 (1990).                33. The Merck Index, 11th ed., S. Budavari, Ed., Merck & Co.,
+                                                                           Rahway, NJ, 1989.
+20. See, for example: (a) U. Dinur and A. T. Hagler, I . Chem.
+                                                                      34. Fine Chemicals Direct0y Handbook, Fraser Williams (Scien-
+    Phys., 91, 2949-2958 (1989); (b) U. Dinur and A. T. Hagler,            tific Systems), London, 1983-1985. Connection tables dis-
+                                                                           tributed by Molecular Design Ltd., Hayward, CA.
+    1. Chem. Phys., 91,2959-2970 (1989); (c) U. Dinur, J . Comput.
+    Chem., 12,91-105 (1991); (d) U. Dinur, J . Comput. Chem., 12,     35. PROBE is a computer program used to derive molecular-
+                                                                           mechanics parameters in least-squares fits to data obtained
+    469-486 (1991); (e) U. Dinur, J. Phys. Chem., 94, 5669-5671           from ab initio calculations. PROBE was created for the
+    (1990).                                                                Biosym Consortium on Potential Energy Functions by
+                                                                           Biosym Technologies, Inc. (now Molecular Simulations,
+21. See, for example: (a) G. Corongiu, M. Migliore, and E.                 Inc.); cf. refs 15 and 16a. The derivation of MMFF94 used a
+    Clementi, J. Chem. Phys., 90, 4629 (1989); (b) L. X. Dang,             1991 version of PROBE.
+    J. E. Rice, J. Caldwell, and P. A. Kollman, J. Am. Chem. SOC.,
+    113, 2481-2486 (19911, and references therein; (c) M. Sprik,      36. See, for example, G. C. Lie and E. Clementi, Phys. Rev.,
+                                                                           33A, 2679 (1986).
+
+                                                                      37. H. J. C. Berendsen, J. P. M. Postma, W. F. van Gunsteren,
+                                                                          and J. Hermans, In Intermolecular Forces, B. Pullman, Ed.,
+                                                                           Reidel, Dordrecht, Holland, 1981, pp. 331-342.
+
+JOURNAL OF COMPUTATIONAL CHEMISTRY                                    517
+HALGREN                                                                    ber of the molecules employed in the derivation of MMFF94
+                                                                           are summarized in A. St.-Amant, W. D. Cornell, T. A.
+38. B. M. Pettit, in Computer Simulation of Biomolecular Systems,         Halgren, and P. A. Kollman, J. Comput. Chem., 16,1483-1506
+     W. F. van Gunsteren and P. K. Weiner, Eds., ESCOM,                    (1995).
+     Leiden, 1989, pp. 94-100.
+                                                                      55. See, for example, G. Chalasinski, M. M. Szczesniak,
+39. T. A. Halgren, J. A m . Chem. Soc., 114, 7827-7843 (1992).
+                                                                          P. Cieplak,, and S. Scheiner, J. Chem. Phys., 94, 2873-2883
+40. W. J. Hehre, L. Radom, P. v. R Schleyer, and J. A. Pople, A b
+    Znitio Molecular Orbital Theory, Wiley, New York, 1986,                (19911, and references therein.
+    Chapter 4. The 6-31G* basis sets also known as 6-31G(d).
+                                                                      56. The ESP-fit calculations were carried out with a version of
+41. A. D. MacKerell Jr. and M. Karplus, J. Phys. Chem., 95,                Gaussian 88 to which Dr. M. D. Miller (Merck Research
+     10559-10560 (1991); A. D. MacKerell Jr., J. Wi6rkiewicz-              Laboratories) had interfaced PDM88 (D. E. Williams, QCPE,
+     Kuczera, and M. Karplus, J. A m . Chem. Soc. (in press).              Program No. 568, 1988).
+
+42. M. J. Frisch. J. E. Del Bene, J. S. Binkley, and H. F. Schaeffer  57. In these MMFF optimizations, weak penalty-function re-
+     111, J . Chert]. Pkys., 84,2279-2289 (1986).                          straints were applied to the torsion angles to insure that
+                                                                          comparable MMFF and nb initio conformations were being
+43. T. A. Halgren, J. Am. Chem. Soc., 112, 4710-4723 (1990).               compared (cf. ref. 26).
+44. M. Orozco and F. J. Luque, 1. Comput. Chem., 14, 881-894
+                                                                      58. TORFIT is a versatile program developed at the Merck
+     (1993).                                                               Research Laboratories which derives torsional parameters
+                                                                           via least-squares fits to relative conformational energies (cf.
+45. E. B. Wilson Jr., J. C. Decius, and P. C. Cross, Molecular             ref. 26).
+     Vibrations, Dover, New York, 1955, Chapter 4.
+                                                                      59. The procedure used is not strictly "mathematically" self-
+46. M. K. Holloway, J. M. Wai, T. A. Halgren, P. M. D. Fitzger-            consistent, however, because formal couplings between pa-
+    ald, J. P. Vacca, B. D. Dorsey, R. B. Levin, W. J. Thompson,           rameters belonging to different classes (e.g., between refer-
+    L. J. Chen, S. J. deSolms, N. Gaffin, A. K. Ghosh, E. A.               ence values and force constants for angles at trigonal cen-
+    Giuliani, S. L. Graham, J. P. Guare, R. W. Hungate, T. A.              ters) have not been addressed. Further iterations would
+     Lyle, W. M. Sanders, T. J. Tucker, M. Wiggins, C. M.                  probably cause a slow drift away from the parameter val-
+    Wiscount, 0.W. Woltersdorf, S. D. Young, P. L. Darke, and              ues reported in this work. We view the parameters as being
+    J. A. Zugay, J . Med. Chenz., 38, 305-317 (1995).                      "physically" self-consistent, however, in the sense that such
+                                                                           further iterations would not materially improve the fit to
+47. Note that this truncation does not lead to a "cubic-bend"              the computational data.
+     catastrophe because the range of the angle is limited to 180"
+     and the cubic-bend constant is relatively small.                 60 The cited rms deviations in dipole directions are weighted
+                                                                           rms deviations constructed to avoid overemphasizing large
+48. See, for example, the "vdW and hydrogen bonding" pa-                   errors in directions for dipole moments of small magnitude
+     rameters listed in Table I of J.-H. Lii and N. L. Allinger,           (cf. ref. 24).
+     J . Comput. Chem., 12, 186-199 (1991).
+                                                                      61. We should note that MM2X actually uses the Allinger
+49. M. Waldman and A. T. Hagler, J . Comput. Ckem., 14,                    (MM2/MM3) definition for out-of-plane angles. To clarify
+     1077-1084 (1993).                                                     the comparison to MMFF, however, we have used the
+                                                                           Wilson definition in analyzing the MM2X-optimized ge-
+50. Most of the ab initio calculations used in parameterizing              ometries. The Allinger angles typically are about three
+     MMFF were performed on the Merck Research Laboratories                times smaller in magnitude.
+     Cray YPMSi/4-128 supercomputer.
+                                                                      62. See, for example: M. W. Wong and K. B. Wiberg, J . Phys.
+51. M. J. Frisch, M. Head-Gordon, H. B. Schlegel, K. Rag-                  Chem., 96, 668-671 (1992).
+
+   havachari, J. s. Binkley, C. Gonzalez, D. J. Defrees, D. J. Fox,   63. The first rms value is much lower for MM2X because some
+                                                                           high-energy structures in the transition state region for
+     R. A. Whiteside, R. Seeger, C. F. Melius, J. Baker, R. L.             C-N amide bond rotation in N-methylformamine were
+    Martin, L. R. Kahn, J. J. P. Stewart, E. M. Fluder, S. Topiol,         poorly treated by MM2X and had to be removed from the
+     and J. A. Pople, Gaussian 88, Gaussian, Inc., Pittsburgh, PA,         test set (cf. ref. 26).
+     1988, as modified at Merck for improved 1 / 0 performance
+     by E. M. Fluder.                                                 64. For structures, see T. Head-Gordon, M. Head-Gordon, M. J.
+                                                                           Frisch, C. L. Brooks 111, and J. A. Pople, J . Am. Chem. Soc.,
+52. M. J. Frisch, M. Head-Gordon, G. W. Trucks, J. 8. Foresman,            113, 5989-5997 (1991).
+     H. B. Schlegel, K. Raghavachari, M. Robb, J. S. Binkley,
+     C. Gonzalez, D. J. Defrees, D. J. Fox, R. A. Whiteside,          65. W. L. Jorgensen, J. Chandrasekhar and J. D. Madura,
+     R. Seeger, C. F. Melius, J. Baker, R. L. Martin, L. R. Kahn,          J . Chem. Phys., 79, 926-935 (1983).
+    J. J. P. Stewart, S. Topiol, and J. A. Pople, GAUSSIAN 90
+     (Revision J), Gaussian, Inc., Pittsburgh, PA, 1990.              66. (a) B. L. Bush, J. L. Banks, R. Czerminski, and T. A. Halgren
+                                                                           (work in progress), using a local version of CHARh4m into
+53. M. L. Frisch, G. W. Trucks, M. Head-Gordon, P.M. W. Gill,              which MMFF94 has been integrated; (b) T. A. Halgren, S.4.
+                                                                           So, and M. Karplus (work in progress).
+     M. W. Wong, J. B. Foresman, B. G. Johnson, H. B. Schlegel,
+     M. A. Robb, E. S. Replogle, R. Gomperts, J. L. Andres,           67. As an example, we might at some point wish to define
+     K. Raghavachari, J. S. Binkley, C. Gonzalez, R. L. Martin,            different bond-charge increments for C = O groups in
+     D. J. Fox, D. J. Defrees, J. Baker, J. J. P. Stewart, and J. A.       amides, esters, ketones, etc., for which differing symbolic
+     Pople, GAUSSIAN 92 (Revision C), Gaussian, Inc., Pitts-               atom types but common numeric atom types currently are
+     burgh, PA, 1992.                                                      assigned. The equivalence procedure provides a convenient
+                                                                           way to d o so without requiring that atom types and param-
+54. Calculations at the MP2/6-31G*//MP2/6-31G* level are                   eters describing common bond, angle, torsion, and other
+     used as the basis of structure determination in the high-level        interactions simultaneously be modified.
+     composite G1 and G2 methods developed by Pople and
+     coworkers; cf. L. A. Curtiss, K. Raghavachari, G. W. Trucks,
+
+    and J. A. Pople, I . Chem. Phys., 94, 7221-7230 (1991), and
+
+     references therein. Comparisons to experiment for a num-
+
+51 8                                                                  VOL. 17, NOS. 5 & 6
+68. For bending of the i-j-k angle, a five-stage process based                   MERCK MOLECULAR FORCE FIELD. I
+
+in the level combinations 1-1-1,2-2-2,3-2-3,4-2-4,  and               this work were used in developing a force field for carbonyl
+                                                                     compounds: N. L. Allinger, M. T. Trible, and M. A. Miller,
+5-2-5 is used. For i-j-k-2 torsion interactions, a five-stage        Tetrahedron, 28, 1173-1190 (1972) (N. L. Allinger, private
+                                                                     communication).
+process based on level combinations 1-1-1-1, 2-2-2-2,
+                                                                 70. W. F. van Gunsteren, In Computer Simulation of Biornolecular
+3-2-2-5, 5-2-2-3, and 5-2-2-5 is used, where stages 3                Systems, W. F. van Gunsteren and P. K. Weiner, Eds.,
+                                                                      ESCOM, Leiden, 1989, pp. 27-59.
+and 4 correspond to "half-default" or "half-wild-card" en-
+tries. For out-of-plane bending ijk; I , where j is the central  71. M. Mezei and J. J. Dannenberg, 1. Phys. Chem., 92,5860-5861
+atom [cf. eq. (511, the five-stage protocol 1-1-1; 1, 2-2-2; 2,
+                                                                     (1988).
+3-2-3;3, 4-2-4;4, 5-2-5;5 is used. The final stage pro-
+                                                                 72. Appendix A is available in Supplementary Material (see
+vides wild-card defaults for all except the central atom.
+                                                                     footnote * on the first page of this article).
+69. N. L. Allinger and M. J. Hickey, Tetrahedron, 28, 2157-2161
+
+(1972). Although not specifically referenced, the results of
+
+JOURNAL OF COMPUTATIONAL CHEMISTRY                               519
+

@@ -1,0 +1,2444 @@
+Merck Molecular Force Field. 11.
+MMFF94 van der Waals and
+Electrostatic Parameters for
+Intermolecular Interactions*
+
+THOMAS A. HALGREN
+
+Department of Molecular Design and Diversity, Merck Research Laboratories, P.O. Box 2000,
+Rahway, New Jersey 07065
+
+Received 20 March 1995; accepted 31 August 1995
+
+ABSTRACT
+
+This article defines the parameterization and performance of MMFF94 for
+intermolecular interactions. It specifies the novel "buffered" functional forms
+used for treating van der Waals (vdW) and electrostatic interactions, and
+describes the use of (1) high quality ab initio data to parameterize vdW
+interactions involving aliphatic hydrogens; and ( 2 ) HF/6-31 G* calculations on
+hydrogen-bonded complexes to parameterize nonbonded interactions in polar
+systems. Comparisons show that appropriate trends in the HF/6-31G* data are
+well reproduced by MMFF94 and that intermolecular interaction energies and
+geometries closely parallel those given by the highly regarded OPLS force field.
+A proper balance between solvent-solvent, solvent-solute, and solute-solute
+interactions, critically important for prospective success in aqueous simulations,
+thus appears to be attained. Comparison of MMFF94, OPLS, CHELPG
+electrostatic potential fit, QEq, Gasteiger, and Abraham charges for 20 small
+molecules and ions also shows the close correspondence between MMFF94 and
+OPLS. As do OPLS and all current, widely used force fields, MMFF94 employs
+"effective pair potentials" which incorporate in an averaged way the increases
+in polarity which occur in high dielectric media. Some limitations of this
+approach are discussed and suggestions for possible enhancements to MMFF94's
+functional form are noted. 0 1996 by John Wiley & Sons, Inc.
+
+   * This article includes Supplementary Material available           CCC 0192-8651I961050520-33
+
+from the author upon request or via the Internet at
+ftp.wiley.com/public/journals/jcc/supprnat/l7/520 or
+http://journals.wiley.com/jcc
+
+Journal of Computational Chemistry,Vol. 17, Nos. 5 &6,520-552 (1996)
+0 1996 by John Wiley & Sons, Inc.
+  Introduction                                                      MERCK MOLECULAR FORCE FIELD. II
+
+P art I in this series'-4 summarized the form,         in its parameterization. It also compares MMFF94
+       parameterization, and performance of the        and OPLS results for hydrogen-bonded dimers and
+newly developed Merck Molecular Force Field            shows that the two approaches usually agree
+(MMFF94). This second part provides a full de-         closely. Finally, the concluding discussion summa-
+scription of the parameterization and performance      rizes this work and notes enhancements needed to
+of the core, computationally derived, portion of       further improve the accuracy with which an em-
+MMFF94 for nonbonded van der Waals (vdW) and           pirical force field such as MMFF94 can describe
+electrostatic interactions. As in Part I, comparisons  nonbonded interactions.
+will also be presented to characterize the perfor-
+mance of our previous-generation MM2X force              The MMFF94 van der Waals and
+field. The nonbonded interactions with which this        Electrostatic Potentials
+study is concerned are critical ones for a molecular
+force field to describe accurately, as they largely       VAN DER WAALS INTERACTIONS
+serve to determine how successful the force field
+will be at describing solvation and the energetics        As previously indicated,' MMFF uses a special
+of host-guest binding.                                 "Buffered-14-7" (Buf-14-7) form [eq. (l)]for the
+                                                       van der Waals (vdW) potential in place of the
+   The next section of this article fully defines the  Lennard-Jones or Exp-6 potentials employed in
+expressions used for treating vdW and electro-         force fields such as MM2: MM3,6 AMBER: VFF?
+static interactions and discusses the basis for the    and CHARMm? The Buf-14-7 form is defined as'':
+choices made in MMFF94. The third section de-
+scribes MMFF94's parameterization for nonbonded        ( 1.07RTJ  1.12 Ry:
+interactions in aliphatic systems, using high-qual-
+ity quantum-mechanical data as benchmarks, and         EvdWII = &I' R i j + 0.07RTj)7[RYj + 0.12RT:
+shows the degree to which MMFF94, MM2X, MM2,
+MM3, and CHARMm (QUANTA 3.2 parameteri-                where R i j is the interatomic distance. The parame-
+zation) reproduce the quantum-mechanical data.         ters el, and RT, are the well depth in kilocalories
+The fourth section then specifies the data and         per mole and the minimum-energy separation in
+procedures used to determine initial electrostatic     angstroms. These quantities are written using capi-
+parameters and to adjust selected vdW and elec-        talized subscripts to indicate that they depend on
+trostatic parameters to reproduce quantum-mecha-
+nically calculated values and trends in intermolec-    the MMFF atom types I and J to which atoms i
+ular interaction energies and geometries. The fifth
+section presents representative values for the de-     and j correspond. As we have shown elsewhere,"
+rived parameters and specifies how the complete        the Buf-14-7 potential describes the experimentally
+set can be obtained; the related vdW parameters        well-characterized interactions of rare-gas atoms
+and partial atomic charges used for an enzyme-site     far more accurately than do the Lennard-Jones or
+"context molecule" in OPTIMOL/MMFF calcula-            Exp-6 potentials. As is commonly done, vdW and
+tions' are specified in Appendix A (Supplementary      electrostatic interactions are computed whenever
+Material). The sixth section compares the approach     atoms i and j belong to separate domains or are
+taken in MMFF with OPLS, CHELPG, QEq,                  separated by three or more chemical bonds. 1,4-
+Gasteiger, and other procedures for determining        vdW interactions are not scaled in MMFF94.
+partial atomic charges, and also shows that
+MMFF94 charges usually agree well with OPLS               For like-pair interactions, the minimum-energy
+charges but differ in characteristic ways from         separations are obtained from assigned atomic po-
+charges given by the other methods. The seventh        larizabilities, a1,via the relationship
+section then shows MMFF94's ability to reproduce
+values and trends in the HF/6-31G* data on inter-      where A , is a scale factor that is usually taken to
+molecular interactionenergies and geometriesused       be invariant across a row of the periodic table."
+                                                       To obtain the minimum-energy separations RTJ for
+
+JOURNAL OF COMPUTATIONAL CHEMISTRY                                                                   521
+HALGREN                                               molecules with one another. Some of the atomic
+                                                      polarizabilities used in computing vdW radii were
+unlike pairs, MMFF94 uses an "augmented arith-        obtained from additive decompositions of experi-
+metic mean":                                          mentally determined molecular polarizabilities."
+                                                      Others, as described below, have been adjusted to
+This mean behaves similarly to the previously         best reproduce values and trends in ab initio inter-
+described "cubic mean" when RT, and RT, differ        molecular interaction energies and geometries (cf.
+by less than about a third, as is normally the case.  the third and fourth sections of this article).
+Both increase RT, relative to the commonly
+used5-7~9arithmetic mean, which gives RT, =              Modifications are made to eqs. ( 3 ) and ( 5 ) for
+                                                      interactions involving polar hydrogens. Specifi-
+0.5(RT1 + RT,). When applied to the data in Table     cally, when either i or j corresponds to such an
+                                                      atom, we use the simple arithmetic mean [or,
+V of a previously published report,'" the root        equivalently, use B = 0.0 in eq. (3)] to obtain RT,.
+mean square (rms) deviation fromothe rare-gas         In addition, if 1-1 is classified as a donor-acceptor
+minimum-energy distances is 0.042 A for the aug-      interaction, we further scale RT, by the factor
+mented arithmetic mean when the values used in        DARAD = 0.8, and scale as given by eq. (5)
+                                                      (and calculated using the unscaled RT,) by the
+MMFF94 (B = 0.2 and p = 12) are employed; This        factor DAEPS = 0.5. This procedure in effect re-
+                                                      duces polar hydrogens in size when they interact
+rms deviation is comparable to that of 0.040 A rms    with hydrogen-bond acceptors, as we have found
+for the cubic-mean ryle, and is substantially better  to be needed to properly describe hydrogen-bond-
+than that of 0.133 A found for the simple arith-      ing interactions, but retains their "normal" (larger)
+metic mean.'" The performance of MMFF94 there-        size in other cases. We found in part IV' that the
+fore remains comparable to that reported for the      larger vdW size is needed to reproduce conforma-
+novel combination rules recently introduced by        tional energies in key cases, for example, for cyclo-
+the Waldman and Hagler," who included the             hexanol.
+cubic-mean rule in their comparisons. The aug-
+mented arithmetic and cubic means differ signifi-        In addition to the article on combination rules
+cantly, however, as y,, approaches unity. Depend-     by Waldman and Hagler," two other recent stud-
+ing on the methodology employed, this limit can       ies on vdW interactions are of interest. In the first,
+be reached in thermodynamic integration and per-      Hart and Rapp6I3 showed that the Morse function
+turbation studies" when atoms are made to disap-      is superior to the Lennard-Jones 12-6 (LJ-12-6)and
+pear. When the arithmetic mean is used, RT,           Exp-6 forms for describing the shape of the vdW
+approaches 0.5RT1 as RT, approaches zero. In con-     potential in reference systems. The Morse form
+trast, RTr approaches l.ORTi when the cubic mean      also avoids the excessive repulsion of the LJ-12-6
+is employed, but approaches 0.6RT,, a seemingly       form at short contact distances and, like the Buf-
+more reasonable limit, when the augmented arith-      14-7 and the experimental rare-gas potentials,"
+metic mean is used with B = 0.2.                      rises more quickly than R - 6 for distances beyond
+                                                      the vdW minimum. This form, however, requires
+   For vdW well depths, a Slater-Kirkwood-based       an additional "shape" parameter whose value de-
+formula is used for both like- and unlike-pair        pends on the types of the interacting atoms. In our
+interactions:                                         view, the more complex exponential form and the
+                                                      need for a third interaction-dependent parameter
+where Nl and N, are the Slater-Kirkwood effec-        make the Morse potential less attractive than the
+                                                      Buf-14-7 form for use in molecular-mechanics cal-
+tive numbers of valence electrons, and GI and G,      cula tions.14
+are scale factors. As previously described,'" the G
+                                                         In another study, Cambi et al.15 relate atomic
+and N parameters are taken to depend on the           polarizability to minimum-energy separations, R*,
+                                                      and well depths, E , in manners qualitatively simi-
+atomic species (rather than on the full MMFF94        lar to ours.*"Furthermore, their calculation of well
+atom types) and are obtained from systematic rela-    depths involves systematic relations for the
+tionships based on high-quality experimental data
+on vdW interactions of rare-gas atoms and of small    Slater-Kirkwood effective number of electrons N,,,,
+
+                                                      that are analogous to, but broader than, those for
+
+                                                      the equivalently defined N,given in eqs. (20)-(24)
+
+522                                                   VOL. 17, NOS. 5 & 6
+                                                       MERCK MOLECULAR FORCE FIELD. II
+
+of our previous article." Formal comparison of the     polarity of the bonds to i from attached atoms k.
+respective formulas for E shows that 1.44'Ne,, =       Specifically, we take:
+
+GfN,. Thus, their approximation for N,,,incorpe        9; = 9: + C W K I  (7)
+
+rates some of the enhancement from C,, C,,, and        where 4: is the integral or fractional formal atomic
+higher order dispersion terms that our approach
+accomodates through the scale factors GI. The sys-     charge (e.g., +1/3 on guanidinium nitrogens) and
+
+tematic relationships they define for N,,,may pro-     wKz represents the partial charge contributed to
+                                                       atom i from the i-k bond (note that wIK= - w K I ) .
+vide some guidance for how NI should behave            A similar approach has long been used in MM2X,18
+outside the ranges for which we have defined it.       our previous-generation force field, but the assign-
+Unfortunately, however, their approach appears to      ment of the 9: in some cases is more elaborate for
+be too inflexible. For example, the well depth for     MMFF. For certain atom types-currently, those
+He a * - He calculated using their approach is 0.068   assigned a negative integral or fractional formal
+kcal/mol, or three times the experimental value of     atomic charge in the primary atom-typing process
+0.022 kcal/mol. Moreover, their relationship be-       -a portion (e.g., half) of the initially assigned
+tween atomic polarizability and R , ( R * in our       formal charge is transferred to (shared with) the
+notation) leads to an infinite value for RyI as RTr    bonded atom(s) k. Charge sharing is discussed in
+goes to zero. This behavior does not seem physi-
+cally appropriate.                                     part v.4
+
+   ELECTROSTATIC INTERACTIONS                            Parameterization of Nonbonded
+                                                          Interactions in Aliphatic Systems
+   MMFF uses a simple modification of the stan-
+dard coulombic form:                                      In this section, we describe how MMFF94 has
+                                                       been parameterized and validated for intermolecu-
+EQii = 332.07169,qj/( D ( R i j +   (6)                lar interactions involving aliphatic hydrogens. We
+                                                       also show how well MM2X, MM2, MM3, and
+where 9i and 9 j are partial charges on atoms i and    CHARMm (QUANTA 3.2 parameterization) repro-
+j , Rii is the internuclear separation in angstroms,   duce the ab initio data on intermolecular interac-
+S = 0.05 A is the electrostatic bufering constant,     tions used in MMFF94's parameterization.
+and D is the dielectric constant. As in the case of
+vdW interactions, only terms involving atoms sep-         PARAMETERIZATION OF MMFF94
+arated by three or more bonds are retained; for
+reasons addressed in part IV? electrostatic 1,4-          We determined the vdW parameters for
+interactions are scaled by a factor of 0.75. The       aliphatic hydrogen by fitting to quantum-mechani-
+"distance buffering" provided by the positive          cal interaction energies calculated for the methane
+value for 6 is needed to prevent infinite attractive   and hydrogen dimers as a function of separation
+electrostatic energies from overwhelming the           and orientation. As in MM2 and MM3, we take the
+bounded (but large) repulsive vdW term in eq. (1)      partial charge on hydrogen atoms attached to an
+as oppositely charged atomic centers coalesce. As      aliphatic carbon as zero. For the methane dimer,
+                                                       we utilized the interaction energies calculated by
+in the case of eq. (11, the motivation for this form
+                                                       Scheiner and coworker^.'^ Their calculations were
+derives from the use of distance buffering in re-
+lated context^.'^,'^ Both constant ( n = 1) and        performed for the six orientations A-F shown in
+distance-dependent ( n = 2) dielectric models are      Figure 1of their article, and used Sadlej's "medium
+supported; the default values are D = 1.0 and          polarized" basis sets." Though of moderate size,
+n = 1. In contrast to MM2 and MM3, which use a         (lOs,6p,4d/5s,4p) contracted to [5s,3p,2d/3s,2 p],
+default dielectric constant of 1.5, MMFF94's value     these basis sets contain sufficiently diffuse polar-
+has been chosen to facilitate application to con-      ization functions to allow high-quality interaction
+densed phase processes, particularly ones with         energies to be obtained." The interaction energies
+water as explicit solvent.                             cited in Table I as DE") are the results they ob-
+                                                       tained at second order after correction for basis-set
+   The partial atomic charges 9 in eq. (6) are as-     superposition errors using the Boys counterpoise
+sembled from initial (usually zero) integral or frac-  method?'
+tional formal atomic charges by adding bond-
+charge-increment contributions, wK that reflect the
+
+JOURNAL OF COMPUTATIONAL CHEMISTRY                                        523
+HALGREN
+
+TABLE 1.
+Interaction Energies (kcal/ mol) for the Methane Dimer.
+
+     Rcc (a,)         DE(')~        MMFF94               MM2X     MM2     MM3                              CHARMrnb
+
+Orientation A (HCH,   ... H,CH)        0.66               - 0.29  - 0.46    0.41                              - 0.69
+                                    - 0.24                - 0.59  - 0.91  - 0.27                              - 0.74
+           6.0                0.73  - 0.40                - 0.57  - 0.84  - 0.41                              - 0.59
+           6.5             -0.15    - 0.36               - 0.46   - 0.66  - 0.38                              - 0.43
+           7.0             - 0.33   - 0.27                - 0.36  - 0.49  -0.31                               - 0.31
+           7.5             - 0.35   - 0.20                - 0.28  - 0.35  - 0.24                              - 0.22
+           8.0             - 0.29   -0.14                 - 0.21  - 0.25  -0.18                               -0.16
+           8.5             - 0.22   - 0.07                -0.12   -0.14   -0.10                               - 0.09
+           9.0             -0.16
+          10.0             - 0.09      1.91                 0.39    0.70    1.31                              -0.13
+                      ... H,CH,)       0.12              - 0.42   - 0.59    0.05                              - 0.67
+Orientation B (HCH,                 - 0.32               - 0.54   - 0.78  - 0.31                              - 0.61
+                              1.84  - 0.35               - 0.48   - 0.67  - 0.36                              - 0.46
+           6.0                0.29  - 0.28               - 0.38   -0.51   -0.31                               - 0.34
+           6.5             - 0.20   -0.15                - 0.22   -0.27   -0.18                               -0.17
+           7.0             - 0.31   - 0.08               -0.12    -0.14   - 0.10                              - 0.09
+           7.5             - 0.28
+           8.0             -0.17    - 0.29               - 0.39   - 0.53  - 0.31                              - 0.36
+           9.0
+          10.0             - 0.09      9.11                 6.24    6.34    5.02                                8.56
+                                       2.76                 1.18    1.32    1.52                                 1.04
+Orientation C (H,CH,   ... H,CH,)      0.55              -0.11    - 0.20    0.23                              - 0.31
+                                    -0.11                - 0.38   - 0.54  -0.18                               - 0.45
+           8.0             - 0.28   - 0.24               - 0.37   - 0.51  - 0.26                              - 0.37
+                                    - 0.21               - 0.31   - 0.40  - 0.24                              - 0.27
+Orientation D (HCH,   ... HCH,)     - 0.16               - 0.24   - 0.30  -0.19                               - 0.20
+                                    - 0.09               -0.14    -0.16   - 0.20                              -0.10
+           6.0               4.59
+           6.5                1.37  -0.19                - 0.36   - 0.47  - 0.20                              - 0.38
+           7.0               0.16
+           7.5             - 0.22   153.44               843.18   76.06   32.42                            5560.65
+           8.0             - 0.29    11.10                14.73     7.70    4.89                               31.50
+           8.5                         3.18                 2.52    1.88    1.51                                3.80
+           9.0             -0.26       0.72                 0.24    0.17    0.32                                0.24
+          10.0             - 0.21   -0.13                - 0.24                                               - 0.22
+                           -0.11    -0.10                -0.16    - 0.29  -0.15                               - 0.12
+Orientation E (H,CH,                                              -0.18   -0.12
+                       ... HCH,)
+           8.0
+                           -0.20
+Orientation F (H,CH
+                      ... HCH,)
+           6.0
+           7.0              27.88
+           7.5               4.08
+           8.0                1.37
+           9.0               0.33
+          10.0
+                           -0.13
+                           -0.11
+
+a Total interaction energy through second order from ref. 19.
+ CHARMm parameters as accessed by QUANTA (Version 3.2) from Molecular Simulations, Inc. (Burlington, MA).
+
+For the hydrogen dimer, we calculated inter-             orientation and by the separation parameter, R,, ,
+                                                         which in each case measures to the shortest contact
+molecular interaction energies for the "crossed"         distance between hydrogen atoms in different H
+
+(D,,), "linear" (     "parallel" (D,,), and "tee"        monomer^?^ As in Scheiner's work," the Boys
+
+(C,,) orientations discussed by Wiberg and Mur-          counterpoise method was used to correct for basis-
+                                                         set superposition error. The computed interaction
+cko.22We used the Sadlej basis set for hydrogen2'        energies are listed in Table 11.
+
+supplemented by one set of Gaussian d functions             In parameterizing MMFF94, we used the pub-
+                                                         lished vdW parameters for aliphatic carbon"
+having an exponent of 0.075, a value chosen to be        (MMFF numerical atom type 1) and varied the
+                                                         atomic polarizability 0 1 ~and the scale parameter
+about midway between those of the two most               A , [eq. (2)] for hydrogen (numerical atom type 5)
+
+diffuse p functions (0.1027 and 0.0324). The calcu-
+
+lations were performed at the MP4(SDTQ) levelz3
+
+with Gaussian 8824using the 5D representation for
+
+the d functions. Each dimer is characterized by its
+
+524                                                                       VOL. 17, NOS. 5 & 6
+                                                                 MERCK MOLECULAR FORCE FIELD. II
+
+TABLE II.
+Interaction Energies (kcal / moll for the Hydrogen Dimer.
+
+R, (A)          MP4       MMFF94                           MM2X  MM2       MM3                            CHARMma
+
+Crossed           2.080     0.493                       0.106      1.1 14    1.122                          - 0.019
+        2.381     0.728   - 0.004                     -0.142       0.01 7    0.234                          - 0.168
+        2.646   - 0.037   - 0.036                     - 0.064    -0.110    - 0.065                          - 0.043
+        3.704
+                  2.354b    4.734                       4.71 4     4.947     3.345                            7.743
+Linear            0.621     1.042                       0.603      0.937     0.858                            0.665
+        1.700     0.344     0.415                       0.145      0.288     0.376                            0.117
+        2.010   - 0.028   - 0.041                     - 0.073    -0.115    - 0.059                          - 0.055
+        2.170
+        3.000     6.443     3.258                       1.992      6.444     4.551                            2.034
+                  1.762     0.342                       0.026      0.764     0.857                          - 0.074
+Parallel          0.625   - 0.031                     - 0.150    - 0.058     0.1 58                         -0.165
+        2.010   - 0.029   - 0.034                     - 0.061    -0.105    - 0.063                          - 0.041
+        2.381
+        2.646     1.305     1.208                       0.61 7     1.677     1.438                             0.565
+        3.704     0.634     0.462                       0.131      0.595     0.664                             0.058
+                - 0.075   - 0.041                     - 0.071    -0.117    - 0.065                          - 0.050
+Tee
+        2.1 17
+        2.275
+        3.334
+
+a CHARMm parametersas accessed by QUANTA (Version 3.2)from Molecular Simulations, Inc. (Burlington, MA).
+  MP3 result; the MP4 calculation was unstable. See text for basis set and procedure used.
+
+until a good fit to the calculated interaction ener-       hydrogen to be required to best fit the molecular
+gies was obtained. The final values were ai = 0.25         electron density with spherical atoms. A similar
+                                                           hydrogen offset undoubtedly would help in
+A3 and A, = 4.20 All4. The value for A i differs           MMFF. For now, however, we omit it in the inter-
+                                                           est of computational speed.
+slightly from the published" H, He value of 4.40
+All4, which it supersedes. These yalues give =                Table I also shows that none of the other tested
+0.0216 kcal/mol and RT, = 2.970 A. These parame-           force fields performs as well as MMFF94 or MM3.
+ters are used for all hydrogens attached to carbon         The QUANTA 3.2 parameters for CHARMm give
+(i.e., all hydrogens of numerical atom type 51.'           far too repulsive an interaction at short H . - - H
+MM3 uses a similar well depth (0.020 kcal/mol),            contacts for head-to-head orientation F , as would
+but employs a somewhat larger minimum-energy               be expected from the improper short-range behav-
+sepaytion (defined as twice the vdW radius) of             ior of the LJ-12-6potential." Interestingly, the same
+3.24 A.6                                                   parameters also give insufficient repulsion at close
+                                                           contact distances for the interdigitated orientations
+   COMPARISON OF RESULTS FOR MMFF94,                       A and B and lead to too-negative interaction ener-
+   MM2X, MM2, MM3, AND CHARMM                              gies in the region of the potential-energy mini-
+                                                           mum. The MM2 potential and the very similar
+   Tables I and I1 show that the MMFF94 parame-            MM2X potential also fare poorly. Both are much
+ters fit the ab initio results for the methane dimer       too stabilizing in the region of the vdW minima, as
+fairly well but, while clearly of the right scale,         had previously been noted for MM2F6
+describe the hydrogen dimer less satisfactorily. For
+the methane dimer, only the MM3 interaction en-               For the hydrogen dimer, MM3 again fares best
+ergies agree as well as do those for MMFF94.               (Table 111, although it appears to be too stabilizing
+Moreover, MM3 is superior for the repulsive head-          in the attractive well region (an alternative inter-
+to-head orientation F. It appears to benefit from          pretation would be that the quantum-mechanical
+the hydrogen offset that foreshortens the C-H              calculations significantly underestimate the well
+bond and increases the effective H . - . H contact         depths). Again, MMFF94 also performs reasonably
+distance. This foreshortening is amply supported           well. Except for the linear case, the orientations
+                                                           examined in Table I1 probe the vdW properties
+- by X-ray crystallographic stu$ies that find compa-       near the center of the H-H bond and thus partic-
+
+rable shortenings of 0.1 A in bond lengths to
+
+JOURNAL OF COMPUTATIONAL CHEMISTRY                                                                        525
+HALGREN
+
+ularly strongly highlight the utility of the bond more complex computational models would prove
+
+foreshortening used in MM3.27 MM2X again is superior.
+
+much too stabilizing in certain instances, as to a         As described in more detail in the following
+
+- lesser degree are MM2 and CHARMm. In each                subsections, the parameterization of MMFF94 was
+                                                           carried out in three stages. In the first, we deter-
+case, the well depth eH of 0.040 kcal/mol ap-              mined bond charge increments, wKf [eq. (711, from
+pears to be too large. For CHARMm, in addition,
+
+the minimum-energy separation R*HH of 2.66                 fits to HF/6-31G* dipole moments. The HF/6-
+
+seems to be too                                            31G* model usually exaggerates observed gas-
+                                                           phase dipole moments by 10-20%, approximately
+
+                                                           the amount needed in a method that employs
+
+Parameterization of vdW and                                effective-pair potentials to account in an averaged
+Electrostatic Interactions in                              way for the increase in polarity that occurs in a
+Hydrogen-Bonding Systems                                   high-dielectric medium as a consequence of molec-
+                                                           ular p~larizability.I~n~the second stage, we ad-
+
+                                                           justed particular vdW and bond-charge-increment
+
+The computational data employed in the pa- parameters to best reproduce scaled HF/6-31G*
+
+rameterization consisted of two parts: (1) HF/6-           interaction energies and hydrogen-bond geome-
+
+31G* c a l c ~ l a t i o n so~f ~molecular dipole moments tries. In these fits, the targeted interaction energies
+
+for 423 HF/6-31G*-optimized geometries,3o for were 10-15% larger in magnitude than the HF/6-
+
+most of which we also obtained electrostatic- 31G* values and the targeted heter9atom distances
+
+potential fit charges by fitting to the HF/6-31G* in hydrogen bonds were 0.2-0.3 A shorter. Mac-
+
+molecular electrostatic potential using Williams'          Kerell and K a r p l u ~h~av~e recently employed a
+PDM88 method3'; and (2) HF/6-31G* calculations             very similar approach, on which the present ap-
+for the 66 HF/6-31G*-optimized dimers shown in             proach is patterned. These adjustments are also
+Figure 1. HF/6-31G* calculations are reported to           compatible with those Jorgensen and coworkers
+give good descriptions of hydrogen-bonded com-             have found to be needed in parameterizing
+p l e x e ~W. ~h~ile these calculations use neither large  OPLS.32,3I7n the third and final stage, we achieved
+basis sets nor correlated wave functions, it should        self-consistency by rederiving an appropriate sub-
+be noted that interaction energies and dipole mo-          set of the bond charge increments from fits to
+ments are notoriously difficult to calculate accu-         scaled HF/6-31G* dipole moments, and by then
+rately even when large basis sets and correlated           refitting the scaled HF/6-31G* data for the dimers.
+
+wave functions are used. The extensive study by
+
+Frisch et al. of the H,O dimer and of the monomer          INITIAL FIT 'ro H F / ~ - N G * DIPOLE
+dipole moment is both illuminating and sobering
+                                                           MOMENTS
+
+in this          as is the length to which Bartlett           This fit used the Biosym Consortium program
+                                                           PROBE38 to determine bond-charge-increment pa-
+and coworkers had go to define the gas-phase               rameters w K f . It employed a simultaneous least-
+                                                           squares fit to HF/6-31G* dipole moment compo-
+dimerization energy with reasonable precisi0n.3~           nents p l , p,,,, and p, for a set of 423 molecular
+                                                           conformers that covered the full range of the core
+Furthermore, even accurate data on gas-phase sys-          MMFF94 parameterization.' An inherent limitation
+                                                           of this approach is that the dipole moment is not a
+tems would be of limited utility, for MMFF94 uses          "local" quantity. As a result, certain linear combi-
+                                                           nations of the w KI , and hence, of the partial atomic
+effective-pair potentials that reflect in an averaged
+
+way the enhancement of the molecular dipole mo-
+
+ment in an aqueous medium due to molecular
+
+polarizability. To examine the sensitivity of the
+
+calculated interaction energies to the choice of the-
+
+oretical model, we also corrected the HF/6-31G* charges, can be varied to a large degree without
+
+interaction energies for basis-set superposition er-       substantially increasing the error in the least-
+                                                           squares-fit criterion. A better approach would have
+ror, and we carried out single-point MP2/6-31 +
+
+G** calculations at the HF/6-31G* g e ~ m e t r i e s . ~ ~ been to determine the wKI by carrying out a simul-
+
+For a few systems, we also optimized the geome- taneous fit to an equivalent set of HF/6-31G*
+
+tries at the MP2/6-31G* level. We found, in some electrostatic potentials, but we lacked this capabil-
+
+cases, distinct differences in interaction energies ity. To make the fit to the dipole moments deter-
+
+and geometries (discussed later), but no indication minant, we constrained certain of the charges
+
+that a parameterization based on any of these (usually those of hydrogens and other terminal
+
+526                                                        VOL. 17, NOS. 5 & 6
+atoms) by fixing the associated bond-charge-incre-                MERCK MOLECULAR FORCE FIELD. It
+ment parameter in the following ways: (a) For
+hydrogen attached to saturated carbon (numerical     vdW and electrostatic parameters involved in the
+atom types 5 and 1,respectively), we set the charge  HF/6-31G* dimer systems. To choose the vdW
+on hydrogen to zero, as do MM2 and MM3. Other        representation for polar hydrogens, we sought pa-
+procedures, for example, those discussed later (see  rameters that would reproduce the properties of
+"Comparison of Methods for Determining Partial       the isolated linear water dimer given by the widely
+Atomic Charges" section) typically give nonzero      used SPC;' TIP3P,43 and TIP4P43models as well
+charges that range up to about +0.15 for aliphatic   as possible. These effective-pair-potential models
+hydrogens, although the Bader procedure usually      have been shown to reproduce the properties of
+yields a negative charge of -0.05 to -0.10?9 We
+show elsewhere3 that the choice, qH = 0, is a rea-   - liquid water fairly well. Each gives an 0 ...0 dis-
+sonable one. In particular, MMFF torsion parame-
+ters derived when a positive charge of +0.05 to      tance of 2.75 A and an interaction energy of
+                                                     about -6.4 kcal/m01!~ The cornpadson to the
++0.10 is assigned to such hydrogens are unable to    HF/6-31G* gas-phase values of 2.97 A and -5.62
+                                                     kcal/mol, respectively, illustrates the manner in
+reproduce certain significant patterns in conforma-  which the HF/6-31G* results need to be
+tional energies. (b) For hydrogen attached to        adj~sted~~-thaits, down for heteroatom dis-
+olefinic and aromatic carbon (MMFF type 5 for        tances, and up (in magnitude) for intermolecular-
+hydrogen, types 2 and 37 for carbon), we fixed the   interaction energies. We then transferred the
+                                                     derived hydroxyl-hydrogen representation to all
+charge on hydrogen at +0.15. This value has been     polar hydrogens.
+
+shown to account for the trace of the molecular         In seeking to reproduce the behavior of the SCP,
+quadrupole moment of benzene and to be apprcl        TIP3P, and TIP4P water models in MMFF, we
+priate for reproducing the preference for the edge-  found it necessary to assign a relatively small
+face orientation for the benzene dimer.@In OPLS,     value for the atomic polarizability (Y for the hy-
+Jorgensen and coworkers employ a similar, though     droxyl hydrogen and to modify the associated A
+
+somewhat smaller, charge of +0.115 for aromatic      and N parameters [cf. eqs. (2) and (511. For reasons
+
+hydrogens:l (c) Because too little computational     noted previously, we also used the simple arith-
+data were available for substituted cyclobutanes     metic-mean combination rule for vdW interactions
+and cyclobutenes (MMFF atom types 20 and 30 for      involving polar hydrogens. The derived value for
+carbon), we set the bond charge increments to the
+values found in comparable acyclic systems. (d)         yields a minimum-eqergy separation Ry, of 1.6
+Finally, for polar hydrogen atoms, we fixed the      A (vdW radius of 0.8 A) for the hydroxyl hydro-
+associated bond charge increments at values that     gen in water. This value is roughly half that found
+reflected trends found in the HF/6-31G* electro-     for aliphatic hydrogen. The comparison is not un-
+static potential fit and/or Mulliken charges.        reasonable, we think, based on the reduction in
+                                                     electron density around a polar hydrogen and on
+   With these constraints in place, we carried out   the likelihood that an even greater bond foreshort-
+the least-squares fit to the HF/6-31G* dipole mo-    ening than that used in MM2 and MM3 for
+ments. Typically, the calculated variances in the    aliphatic hydrogens should apply in this case.44
+derived bond-charge-increment parameters             The well depth, E,,, on the other hand, has about
+showed that fit was still indeterminant in a few     the same value, roughly 0.02 kcal/mol, as that
+instances. In such cases, we fixed additional bond   found for aliphatic hydrogen.
+charge increments at values chosen by analogy
+with trends observed in other, better determined        In contrast to MMFF94, OPLS,45 AMBER: and
+parameters or in the dielectrostatic-potential-fit   CVFF' all use a zero (or essentially zero) vdW
+charges, and then repeated the least-squares fit.    radius and well depth for polar hydrogens, as
+Ultimately, a determinant fit was achieved with-     indeed do the SPC, TIP3P, and TIP4P models for
+out undue difficulty.                                water.43Each of these other approaches compen-
+                                                     sates to some degree by adopting a somewhat
+   INITIAL FIT TO H F / 6 - 3 1 6 *                  larger vdW radius for the attached heteroatom.
+   INTERMOLECULAR INTERACTION ENERGIES               However, this approach makes polar hydrogens
+   AND GEOMETRIES                                    "invisible" to electrostatically uncharged atoms.
+                                                     Computational evidence suggests otherwise. Con-
+   Except for polar hydrogens, the procedures de-    sider, for example, the linear H-F...Ne and
+scribed earlier provided initial values for all the  F-H Ne dimers of hydrogen fluoride with
+                                                     neon. The fact that the large basis set CEPA calcu-
+                                                     lations of ONeil et a1.& show that the F-..Ne
+
+JOURNAL OF COMPUTATIONAL CHEMISTRY                   527
+HALGREN                                                  MMFF distance was too large, we reduced a z
+                                                         and/or ax.In contrast, the calculated binding
+distance at the potenLia1-energy minimum is largzr       energies depend primarily on the partial atomic
+                                                         charges of the interacting atoms, and thus on the
+in F-H ...Ne (3.31 A) than in H-F ...Ne (3.15 A)         associated bond charge increments. Where the
+                                                         MMFF binding energy was too small in magnitude
+implies that the strongly polar hydrogen in H-F          relative to the scaled HF/6-31G* value, we ad-
+has a finite vdW size. Moreover, these investiga-        justed the bond charge increment for the H-X
+tors also show that F-H *.* Ne is more stable than       bond or for one or more of the other bonds to X or
+                                                         Z to strengthen the electrostatic interaction. For
+H-F ... Ne. They argue, persuasively we think,           the interaction between a donor water molecule
+                                                         and the acceptor nitrogen of pydidine, for exam-
+that this greater stability arises because the electric  ple, we adjusted the polarity of pyridine's C-N
+field in H-F is stronger near hydrogen than near         bonds. This procedure required roughly a dozen
+fluorine; this stronger electrostatic field in turn      iterations. The final parameters may partially re-
+produces a much more strongly attractive in-             flect the starting values, but probably not to an
+duced-dipole (polarization) interaction with neon        inordinate degree. The quality of the fit to the ab
+                                                         initio data is discussed later.
+in F-H ... Ne and, therefore, reduces the equilib-
+                                                            ITERATION TO SELF-CONSISTENCY
+rium F...Ne distance to a greater extent in
+                                                            In addition to modifying some of the vdW pa-
+F-H...Ne . Consequently, in the absence of the           rameters, the just-described fit to the HF/6-31G*
+induced-dipole attraction, the F ... Ne distance in      interaction energies and geometries increased
+                                                         many of the bond charge increments for the hydro-
+F-H ... Ne would exceed that in H-F ..-Ne by             gen-bonding moieties. To "systematize" this in-
+even more than the 0.16 A obtained in the CEPA           crease in polarity, we examined the fit of the
+                                                         resultant MMFF dipole moments to scaled HF/6-
+calculations.                                            31G* dipole moments for the set of 423 structures
+   We see no way to account for this qualitative         employed previously. We found that the best fit
+                                                         resulted when the latter were increased by about
+difference other than by attributing a nonzero vdW       10%. Accordingly, we rederived the bond charge
+radius to hydrogen in H-F. Note, however, that           increments by fitting to HF/6-31G* dipole mo-
+                                                         ments multiplied by this factor of 1.1. To preserve
+- the theoretical calculations do no: imply that the     the adjustments made in fitting to the dimer data,
+                                                         we added to the constraint set the bond charge
+polar hydrogen radius is 0.16 A. Giv$n that the          increments optimized in the dimer fit. Then, using
+vdW radius for fluorine is roughly 1.5 A and that        the rederived bond charge increments as new ini-
+                                                         tial values, we repeated the fit to the dimer data.
+the H-F bond length is about 1 A, a vdW radius           These adjustment required little further change to
+for hydrogen of less than about 0.5 A in effect          either the vdW parameters or the bond charge
+                                                         increments, indicating that a reasonably self-
+would be hidden within that for fluorine. Thus,          consistent set of nonbonded parameters had been
+the real vdW radius for the hydroge? atom in HF          obtained.
+must be somewhat greater than 0.5 A. Additional
+computational support for the conclusion that po-           PARAMETERS FOR METAL AND OTHER
+lar hydrogens have significant vdW radii may be             IONS
+found in the anisotropy observed for exchange-
+repulsion interactions in the dimers of ammonia             As described elsewhere, preliminary parameters
+and water with argona7 and in calculations we            have also been obtained for such protein metals as
+have performed for the linear H-F...He and               Zn2+,Ca2+,Mg2+,Cu2+,Cu+, Fez+,and Fe3+,as
+                                                         well as for the hydronium and hydroxide ions and
+F-H ... He dimers4' that find the F ... He dis-          for various halide and alkalai metal ions!
+
+- tances at the zero-crossiFg point and at the vdW
+
+minimum to be 0.25 A greater in the latter.
+   The adjustment of key vdW and electrostatic
+
+parameters was carried out iteratively. At each
+step, the HF/6-31G* dimers were optimized using
+the current estimates for the nonbonded parame-
+ters. Then, the optimized HF/6-31G* and MMFF
+binding energies were tabulated, as were the X-..Z
+and H-..Z distances and the X-H...Z angles,
+where X-H represents the hydrogen-bond donor
+and Z represents the heteroatom acceptor. As
+noted above, we sought to a$ust the X . * . Z dis-
+tances to make them 0.2-0.3 A smaller than their
+HF/6-31G* counterparts wherever possible. These
+distances are affected mainly by the minimum-en-
+ergy separations RTI, and hence by the atomic
+polarizabilities a I [cf. eq. (2)l. Thus, where the
+
+528                                                      VOL. 17, NOS. 5 & 6
+                                                                MERCK MOLECULAR FORCE FIELD. II
+
+  MMFF94 van der Waals and                              the Ith atom type is considered to be a hydrogen-
+  Electrostatic Parameters                              bond donor ("D"), acceptor (`'A''), or neither
+                                                        ("-"). As noted previously, vdW interactions in-
+   In this section we describe a subset of the          volving donors and acceptors are treated specially.
+MMFF94 nonbonded parameters. The full set of            For ease of readability, column 7 lists a representa-
+parameter, including those defined for the ex-          tive MMFF symbolic atom type; as previously dis-
+tended MMFF parameterization described in Part          cussed, two or more symbolic atom types often
+V: contains approximately 500 bond charge incre-        map to the same numeric atom type. In the exam-
+ments and is too large to present here. The full set,   ples shown, as is generally the case, the first char-
+however, is available in computer-readable form         acter of the symbolic atom type corresponds to the
+as supplementary material.49 The corresponding          atomic species. Finally, the entry in column 8 indi-
+MM2X parameters have been published as supple-          cates the origin of the parameter. The entries la-
+mentary material to a previous article.50Listed in      beled "C94" specify parameters obtained in the
+Tables I11 and IV are the parameters that arise         fits to computational data described in this article,
+from the following MMFF numerical atom types:           while entries labeled "E94" employ parameters
+1, 2, 3, 5, 7, 10, 28, 31, and 70. The first seven      taken from the previous study." In the full param-
+describe saturated carbon, olefinic carbon, car-        eter file, entries labeled "X94" represent parame-
+bony1 carbon, hydrogen attached to carbon,              ters obtained in the extension of the parameteriza-
+carbonyl oxygen, amide nitrogen, and amide hy-          tion described in part V.4
+drogen, respectively. The last two are used for
+hydrogen and oxygen in water. Thus, these atom             The bond-charge-incrementparameters used in
+types cover simple alkanes, alkenes, aldehydes,         eq. (7) are shown in Table IV. The BTIK are the
+ketones, and amides, in addition to water.              "bond type indices" described in part JIL2 Note
+                                                        that the "0 1 2" line indicates that an olefinic
+   Table I11 lists the vdW parameters. Column 1         carbon atom of type "2" in a "1-2" C-C bond
+contains the MMFF numerical atom type, and col-         gains a charge of -0.1382 from the polarity of the
+umn 2 contains the associated atomic polarizabil-       bond, while the aliphatic carbon atom of type "1"
+ity ( a , ) in units of cubic angstroms. Note that the  gains an equal and opposite charge of +0.1382.
+                                                        Thus, each bond charge increment gives the charge
+effective-electronnumbers N and the scale factors       contributed to the second-listed atom, always the
+                                                        one of higher MMFF atom type. The parameter file
+A and G in columns 3-5 usually depend only on           is ordered by the integer canonical index:
+the atomic species for the interacting atoms i and
+j, rather than on the full MMFF numeric atom                    CXQ = MC*(Z*MA + K ) + BT,,  (8)
+type. Column 6, labeled ''LAI'' specifies whether
+
+TABLE 111.
+
+Partial List of MUFF94 vdW Parameters Used in Eqs. (2) - (51.'
+
+MMF
+
+type  ai     Ni      Ai                                 Gi      D4  Symb.b                   OriginC
+
+1 1.050 2.490 3.890 1.282 - CR E94
+2     1.350  2.490   3.890                              1.282   -   c=c
+                                                                                             E94
+                                                                    c=o
+3     1.100  2.490   3.890                              1.282   -                            E94
+
+5     0.250  0.800   4.200                              1.209   -   HC                       c94
+
+7     0.650  3.150   3.890                              1.282   A   o=c                      c94
+
+10    1.000  2.820   3.890                              1.282   A   NC = 0                   E94
+
+28    0.150  0.800   4.200                              12 0 9  D   HNCO                     c94
+
+31    0.150  0.800   4.200                              1.209   D   HOH                      c94
+
+70    0.870  3.1 50  3.890                              1.282   A   OH2                      c94
+
+a The vdW parametersuse the following values: B = 0.2, p = 12.0, DARAD = 0.8, and DAEPS = 0.5.
+
+  See ref. 1 for a complete listing of MMFF94 numeric (column 1) and symbolic atom types. The symbolic atom types in this column
+are representativeexamples of the corresponding numeric atom type. In each case shown the first character identifies the atomic
+species.
+
+ Indicates the source for or procedure used in developing the parameters (see text).
+
+JOURNAL OF COMPUTATIONAL CHEMISTRY                                                           529
+HALGREN
+
+TABLE IV.                                                  BOND-CHARGE-INCREMENT APPROACH
+Partial List of MMFF94 Bond-Charge-Increment
+Parameters Used in Eq. (7).                                A principal virtue of the bond-charge-increment
+                                                        approach is that it allows MMFF94 to be applied
+Class MMFF Types  a         Origin / commentb           straightforwardly to a wide range of chemical
+                  OK/                                   structures. This attribute is an especially important
+                                                        one in a pharmaceutical setting, in which it is
+0    1   1        0.0000    #C94                        difficult enough for a computational chemist to
+                              c94                       keep pace with the panoply of ideas and structures
+0    1   2        - 0.1382                              generated in a rapidly evolving medicinal chem-
+                            #C94                        istry project even when all needed parameters are
+0    1   3        - 0.0613  #C94                        at hand. Fortunately, this approach also enables
+                                                        c~nformationaal~nd intermolecular-interactionen-
+0    1   5        0.0000      c94                       ergies (cf. next section) to be reproduced reason-
+                            #C94                        ably well. To be sure, it is too simplistic. To cite
+0    1   10       - 0.3001  #C94                        just one aspect, the polarity of a chemical bond of
+                                                        a given type is improperly taken to be constant,
+0    2   2        0.0000      c94                       but in fact can depend significantly on the chemi-
+                            #C94                        cal environment. For example, an individual C-F
+1    2   2        0.0000                                bond in CF, is significantly less polar than the
+                              x94                       analogous bond in CH,F because of "saturation"
+1    2   3        - 0.0144  #C94                        effects related to the finite ability of carbon to
+                            #C94                        donate electrons. Nevertheless, the bond-charge-
+0    2   5        0.1500    #C94                        increment approach meets the tests of generality
+                                                        and accuracy adequately for the present purposes.
+0    2   10       -0.1348     c94                       Any other approach suitable for use in a force field
+                            #C94                        like MMFF would also need to be able to do so.
+1    3   3        0.0000    #C94
+                            #C94
+0    3   5        0.0600
+
+0    3   7        - 0.5700
+
+0    3   10       - 0.0600
+
+0    10 10        0.0000
+
+0    10 28        0.3700
+
+0    31 70        - 0.4300
+
+aSee eq. (7). bSee "MMFF94 van der Waals and Electrc-
+static Parameters" section.
+
+where M C is an integer equal to at least the              OPLS APPROACH
+
+maximum permissible bond-type index + 1, M A is            Jorgensen and coworkers have derived OPLS
+                                                        nonbonded potentials for many common organic
+an integer equal to the maximum numerical               functional g r o ~ p s ? I~n ,T~ab~le V, OPLS charges
+                                                        for 20 small molecules and ions are compared to
+atom-type index + 1, and atom type I is less than       MMFF94 and other charge sets. The first 13
+                                                        molecules were used by Carlson et al. in a study
+or equal to K. Parameter lines identified by the        characterizing the ability of Mulliken and ESP
+label "#C94" in the "Origin/comment" column             charges to account for absolute and differential
+list core MMFF94 bond charge increments that            free energies of hydrati0n.3~To increase the struc-
+were included in the final constraint set cited pre-    tural diversity and to incorporate ionic species, we
+viously; the "C94" label denotes parameters ob-         have included seven additional systems. Note that
+tained in that fit. The full file also contains param-  OPLS, which usually uses a united atom model,
+eters labeled "X94," #X94," and "E94."4                 includes explicit hydrogens on carbon atoms only
+                                                        for benzene and for aniline (among cases consid-
+   The related nonbonded parameters used in OP-         ered). Except for pyridine and imidazole, however,
+TIMOL/MMFF calculations that utilize a rigid            the correspondence with MMFF is unaffected, be-
+enzyme "active site" as a "context molecule"'*          cause MMFF94 assigns zero charge to aliphatic
+are specified in Appendix A (Supplementary Ma-          hydrogen atoms.
+terial).51
+                                                           While no account of the OPLS charges was
+  Comparison of Methods for                             taken in deriving MMFF94, comparison shows that
+  Determining Partial Atomic Charges                    the two charge sets usually behave very similarly.
+                                                        In particular, charges for polar hydrogens in
+   In this section we compare the bond-charge-          uncharged molecules and for electronegative ele-
+increment approach with alternative approaches          ments or groups attached to sp3-hybridized car-
+for determining partial atomic charges.
+
+530                                                     VOL. 17, NOS. 5 & 6
+bons usually differ by 0.05 or less. A larger differ-               MERCK MOLECULAR FORCE FIELD. II
+ence occurs for CH,SH, where OPLS assigns a
+                                                       methylammonium cation, and 0.471 for the imada-
+larger charge to the polar hydrogen (+0.27) than       zolium cation.
+does MMFF94 (+0.18). This difference highlights
+                                                          ELECTROSTATIC POTENTIAL (ESP)
+one central distinction between MMFF and OPLS.            CHARGES
+Thus, while some OPLS parameters were obtained
+from simulations on neat liquids, others were de-         This approach uses charges obtained in fits to
+rived by fitting to experimental enthalpies of hy-     the quantum-mechanically calculated molecular
+dration or by emulating gas-phase energies and         electrostatic potential performed using one of a
+geometries for HF/6-31G* dimers. In contrast, all      variety of algorithms that differ in how the electro-
+core MMFF94 nonbonded parameters were de-              static potential is sampled and, in some cases, in
+rived in a common manner.                              how the least-squares criterion is defined.31'52-55
+                                                       Because they produce different sets of charges,
+   The two charge sets differ most dramatically for    even when the same quantum-mechanical wave
+imidazole and for the methylammonium cation.           function (often HF/6-31G*) is used, the reader
+For imidazole, the charge on N1 is - 0.57 for OPLS     should bear in mind that comparisons and conclu-
+but +0.033 for MMFF94, and that on the attached        sions based on one set of ESP charges may not
+hydrogen is +0.42 for OPLS but only +0.27 for          apply when another set is used.
+MMFF94. We note that N1 is a "pyrrole-type"
+nitrogen that contributes a pi-electron pair to the       The ESP charges listed in Table V were obtained
+aromatic system and bears a formal positive charge     from HF/6-31G* wavefunctions using the
+in the "Kekule" structures that express the aro-       CHELPG procedureM implemented in Gaussian
+matic delocalization. In contrast, N3 and the three    92.56 They compare closely to the HF/6-31G*-
+carbons each bear a negative formal charge in one      based CHELPG charges tabulated by Carlson et
+of the resonance structures. As a result, while N1     al., but differ slightly because we have used HF/6-
+need not bear a positive charge, it should at least    31G*-otpimized rather than standard geometries.
+be less negatively charged than N3. The MMFF94         To simplify the presentation, we have averaged
+and ESP charges (Table V) reflect this ordering,       the charges for hydrogens made equivalent
+but the OPLS charges, whose origin has not been        through rotations about single bonds, as Carlson et
+described in detail, do not.                           al. did and as symmetry considerations require be
+                                                       done for use in molecular mechanics or dynamics
+   For methylammonium, the MMFF94 charge set           calculations. Bayly et al. have shown, however,
+shows a much stronger polarization of the bonds        that any such a posteriori averaging merits careful
+to nitrogen. Partially as a result, the comparisons    attention, as it can change the molecular dipole
+in the next section (third subsection) find the        moment and the strength of computed intermolec-
+CH,NHl OH, dimerization energy to be more              ular interactions s~bstantiallyF.~or~frans-N-meth-
+negative for MMFF94 than for OPLS. MMFF's              ylacetamide and methanol, the cases they most
+charge distribution was derived by assuming a
+N-H bond charge increment of 0.45, as we did           - closely studied, such averaging raised the calcu-
+not think that hydrogen attached to cationic nitro-
+gen should bear a smaller positive charge than         lated dipole moment by 10%. As a further
+hydrogen attached to neutral nitrogen. We note         word of caution, we note, however, that we have
+                                                       found that the effect on the dipole moment is not
+that MMFF94 uses the same charge ( + 0.45) for the     uniform. Thus, while the dipole moment calcu-
+                                                       lated for trans-N-methylacetamide also increases
+acidic hydrogens in the imidazolium cation and         when either the CHELPG54 and Besler-
+                                                       Merz-K~llmanc~h~arges for the methyl group are
+that OPLS assigns a comparable charge ( +0.46) in      averaged, the dipole moment for cis-N-methyl-
+                                                       acetamide is unchanged or even decreases slightly.
+this case. As noted earlier in this study, the         Although the effects of averaging amount to only a
+MMFF94 charges for polar hydrogens have been           few tenths of a Debye in this case, they alter the
+chosen to mirror trends in ESP charges or, where       relationship between the ab initio dipole moments
+these charges seemed not to be helpful (as in the      of the cis and trans conformers and thus may
+case of methylammonium), in Mulliken charges.          affect the relative free energies of hydration.
+For reference, the HF/6-31G* Mulliken charges for
+                                                          For the most part, the CHELPG charges are
+- polar hydrogens are 0.437 for methanol, 0.332 for    similar to the MMFF94 and OPLS charges. One
+                                                       qualitative difference is that hydrogen atoms at-
+methylamine, 0.090 for methanethiol, 0.39 for
+acetamide, 0.468 for acetic acid, 0.359 for aniline,
+0.399 for imidazole, 0.434 for water, 0.472 for the
+
+JOURNAL OF COMPUTATIONAL CHEMISTRY                     531
+HALGREN                                                 dipeptide (up to 0.76 electron units) and by Stouch
+                                                        and Williams58for glycerylphosphorylcholine(up
+tached to sp3-hybridized carbon usually bear ap-        to 1.32 electron units). This "flighty" aspect may
+                                                        may well inhibit transferability and limit the accu-
+preciable positive charge, often of roughly + 0.1,      racy with which ESP charges for complex
+                                                        molecules, even in principle, could be assembled
+for the CHELPG set. As we pointed out in justify-       from fragment libraries.
+ing MMFF's assignment of zero charge to such
+hydrogens, positive charges of this magnitude              CHARGE / ELECTRONEGATIVITY
+leave MMFF94 unable to reproduce certain key
+conformational energies.,                                  EQUILIBRATION
+
+   Carlson et al. found that their CHELPG charges,         Several approaches have been described that
+when used in conjunction with OPLS                      make use of charge or electronegativity equilibra-
+Lennard-Jones parameters, gave reasonable Val-          tion, among them the methods of Gasteiger?'
+ues for absolute and relative free energies of hy-      Mortier and coworkers,6' Mullay?' and Rappi. and
+dration in most cases.3s They noted, however, that      G ~ d d a r dE. a~c~h bases the charge calculation on
+the CHELPG charges for acetamide, when used in          assigned atomic (rather than atom-pair) properties,
+simulations with TIP4P water, gave a free energy        and hence should easily be able to meet the test of
+of hydration that was about 4 kcal/mol too nega-        generality. Moreover, each produces charges that
+tive. They also found that the CHELPG charges           depend on the chemical topology in a more com-
+gave substantially more negative interaction ener-      plete manner than do bond increment charges,
+gies than did OPLS for dimers in which a molecule       another plus; some also yield charges that depend
+of water donates a hydrogen bond to the carbonyl        on the molecular conformation. Unfortunately,
+oxygen either syn ( - 10.17 kcal/mol) or anti to the    however, the charges given by these methods, as
+nitrogen ( - 8.75 kcal/mol); the OPLS interaction       presently parameterized, differ significantly from
+energies were -9.30 and -6.67 kcal/mol, respec-         those found to be required for MMFF94. For exam-
+tively. Now, the fact that both MMFF and CHELPG         ple, the Gasteiger partial equivalence of orbital
+assign a larger negative charge to carbonyl oxygen      electronegativity (PEOE) charges for polar hydro-
+( -0.57 and -0.637, respectively) than does OPLS        gens, listed in Table V,@ are typically only half as
+( - 0.50) might seem a source for concern, though       large as those given by MMFF94, OPLS, and
+the MMFF94 charge set clearly is less strongly          CHELPG, suggesting that they would give unsat-
+polarized. We have found, however, that MMFF94          isfactory small intermolecular-interaction energies.
+gives interaction energies of -9.14 and -7.18
+kcal/mol for the syn and anti d i m e r ~ , ' ~respec-    The QEq (Rappi.-Goddard) charge^^^,^^ for polar
+tively, in rather close agreement with OPLS, sug-
+gesting that the MMFF94 charges may well yield          hydrogens also tend to be small by comparison to
+good results for acetamide in molecular simula-         MMFF94 and OPLS. In contrast, the QEq charge on
+tions. The difficulty encountered with the CHELPG       chlorine in CH3C1 (-0.43) seems too large. A
+charges, on the other hand, serves to underscore        perhaps more serious problem is that aliphatic
+the fact that the ESP charges result from a fitting     hydrogens typically carry far larger positive
+procedure that takes neither intermolecular-inter-      charges than would be acceptable for MMFF94.3
+action energies nor conformational energies into        Another is that hydrogen atoms that become
+account. Such charges need not give the former          equivalent through single-bond rotations can have
+accurately nor be compatible with previously de-        quite different QEq charges. For the CH, group in
+termined torsion parameters.                            methanol, for example, the gauche (to the hy-
+                                                        droxyl group) and anti hydrogens carry charges of
+   A further concern is that the ESP approach is        0.138 and 0.189, respectively. As we previously
+not sufficiently general for our purposes, because a    noted, one either would need to average such
+preliminary quantum-mechanical calculation is           nonequivalent charges (e.g., use the values listed
+needed to obtain the requisite partial atomic           in Table V), or to recompute them frequently dur-
+charges for each system involving new chemistry;        ing the simulation. But the latter approach would
+extensive libraries of ESP charges for diverse          require readily obtainable analytical derivatives of
+chemical fragments, coupled to robust algorithms        the charges with respect to the nuclear positions,
+for combining such fragments, do not yet exist. A       quantities that may not be straightforward to for-
+related concern is that ESP charges are sometimes       mulate.66
+ill-determined for "interior" (or "buried") charge
+center^.^^^,^^ Examples include the large and seem-
+ingly nonphysical variations in ESP charges with
+conformationobserved by Williamss9for the alanyl
+
+532                                                     VOL. 17, NOS. 5 & 6
+                                                            MERCK MOLECULAR FORCE FIELD. II
+
+TABLE V.
+Comparison of Atomic Charges for MMFF94 and Other Methods.
+
+Molecule  Atom  MMFF   MMFF        OPLSa                     ESP'    QEqg      Gast.'    Abraham'
+                 type
+                                                              0.321  -0.157
+CH,OH     C     1      0.280       0.265                    - 0.017    0.155     0.033   - 0.036
+CH3NH2                             -                        - 0.693              0.052     0.055
+CH,CN     HC    5      0.000                                         - 0.663   - 0.398
+CH,OCH,                                                       0.424    0.355     0.209   -0.458
+CH,SH     0     6      - 0.680 - 0.700                        0.482            - 0.019     0.329
+CH,CI                                                       - 0.064  - 0.351     0.039
+          H     21     0.400       0.435                    - 1.033    0.161   - 0.333   - 0.062
+C2H6                                                          0.372              0.118     0.047
+          C     1      0.270       0.200                    - 0.202  - 0.643     0.023
+CH,CONH,                           -                          0.101    0.255     0.038   - 0.505
+CH,COOH   HC    5      0.000                                  0.408              0.059     0.21 2
+                                                            - 0.509  - 0.374   -0.197
+C6H6      N     8      - 0.990 - 0.900                        0.140    0.134     0.036   - 0.045
+                                                              0.024    0.21 3    0.052     0.049
+C5H5N     H     23     0.360       0.350                    - 0.427            - 0.386     0.362
+                                                              0.025  - 0.242   - 0.021
+C6H5NH2   C     1      0.200       0.150                      0.047  -0.112              - 0.464
+                                   -                        - 0.369              0.034   - 0.033
+          HC    5      0.000                                  0.203    0.128   -0.182
+                                                            - 0.094  - 0.541               0.055
+          C     4      0.357       0.280                      0.101  - 0.293     0.101   - 0.266
+                                                            - 0.210              0.01 1  - 0.021
+          N     42     - 0.557 - 0.430                        0.00     0.162     0.039
+                                                              0.00   - 0.400   -0.129      0.043
+          C     1      0.280       0.250                    - 0.399            - 0.068   - 0.237
+                                   -                          0.105    0.208     0.023
+          HC    5      0.000                                  0.970  - 0.055     0.01 2    0.128
+                                                            - 0.662              0.032     0.039
+          0     6      - 0.560 - 0.500                      - 1.098    0.162     0.207     0.048
+                                                              0.436  - 0.430   - 0.276   -0.184
+          C     1      0.230       0.180                    - 0.343  - 0.464   - 0.330   -0.110
+                                                              0.106              0.145     0.037
+          HC    5      0.000       -                          0.898    0.155     0.021   - 0.037k
+                                                            - 0.637  - 0.302     0.033     0.057
+          S     15     -0.410      - 0.450                  -0.692               0.256     0.252
+                                                              0.455    0.130   - 0.266   - 0.408
+          H     71     0.180       0.270                    - 0.367    0.470   - 0.332   - 0.378
+                                                              0.093  - 0.439     0.220     0.222
+          C     1      0.290       0.250                      0.764  - 0.616   - 0.006   - 0.044
+                                                            - 0.589    0.249     0.031     0.049
+          HC    5      0.000       -                        - 0.505  - 0.232     0.1 27    0.285
+                                                              0.135    0.134             - 0.373
+          CI    12     -0.290      - 0.250                    0.972    0.586   - 0.298   - 0.346
+                                                            - 0.640  - 0.458     0.021     0.330
+          C     1      0.000       0.000                    - 0.504  - 0.663     0.033   - 0.061
+                                   -                          0.120    0.366     0.259     0.046
+          H     5      0.000                                  0.051  - 0.327               0.190
+                                                            -0.100     0.129   - 0.265   - 0.342
+          C     1      0.061       0.000                      0.100    0.335   - 0.319
+                                                            - 0.683  - 0.455                   -
+          HC    5      0.000       -                          0.482  - 0.265     0.046
+                                                              0.008    0.119     0.053       -
+          C     3      0.569       0.500                    - 0.489    0.613   - 0.062
+                                                              0.154  - 0.503     0.062         -
+          0     7      - 0.570 - 0.500                        0.231  - 0.571   - 0.263
+                                                              0.065  - 0.080     0.028       -
+          N     10     - 0.800 - 0.850                        0.369    0.150     0.083       -
+                                                            - 0.945  - 0.097   - 0.044
+          H     28     0.370       0.425                               0.097     0.063         -
+                                                                     - 0.334   - 0.059
+          C     1      0.061       0.080                               0.070     0.062         -
+                                   -                                   0.110     0.124
+          HC    5      0.000                                         -0.105    - 0.302   - 0.1 50k
+                                                                       0.090               0.150
+          C     3      0.659       0.550                             -0.103
+                                                                       0.106             - 0.349'
+          O=    7      - 0.570 - 0.500                                 0.228               0.044
+                                                                     - 0.654               0.088
+          0-    6      - 0.650 - 0.580
+                                                                                         - 0.065
+          H     24     0.500       0.450                                                   0.081
+
+          C     1      0.061       0.062                                                 - 0.024
+                                                                                           0.079
+          HC    5      0.000       -                                                       0.21 5"'
+
+          C     3      0.448       0.300                                                 - 0.372
+
+          0     7      - 0.570 - 0.424
+
+          C     1      0.061       0.050
+                                   -
+          HC    5      0.000
+
+          C     3      0.659       0.550
+
+          O=    7      - 0.570 - 0.450
+
+          0-    6      - 0.430 - 0.400
+
+          C     1      0.280       0.250
+
+          HC    5      0.000       -
+
+          C     37     -0.150      -0.115b
+
+          H     5      0.150       0.1 15
+
+          N     38     - 0.620 - 0.490
+
+          c1    37     0.160       0.230
+                       0.150       -
+          H1    5
+
+          c2    37     -0.150      - 0.030
+
+          H2    5      0.150       -
+
+          c3    37     -0.150      0.090
+                                   -
+          H3    5      0.150
+
+          H     28     0.400       0.400b
+
+          N     40     - 0.900 - 0.900
+
+                                                                               (Continueson next page)
+
+JOURNAL OF COMPUTATIONAL CHEMETRY                                                        533
+HALGREN
+
+(continued)
+
+Molecule        Atom  MMFF   MMFF     OPLSa   ESP'    QEqg    Gast.' Abraham'
+                       type
+
+                c1    37     0.100    0.1 00  0.526   0.147   0.013  0.027
+
+                c2    37     -0.150 -0.115    - 0.349 - 0.062 - 0.044 -0.121
+
+                H2    5      0.150    0.1 15  0.158   0.103   0.063  0.094
+
+                c3    37     -0.150 -0.115    - 0.024 -0.121 - 0.060 - 0.088
+
+                H3    5      0.150    0.1 15  0.101   0.104   0.062  0.091
+
+                c4    37     -0.150 -0.115    -0.215 -0.109 -0.062 -0.128
+
+                H4    5      0.150    0.1 15  0.116   0.1 09  0.063  0.091
+
+Imidazole       N1    39     0.033 - 0.570' -0.256 -0.518 -0.310 -0.137k
+
+CH,NH,(+)       H1    23     0.270    0.420   0.307   0.231   0.152  0.224
+Imidazolium(+)
+                c2    63     0.037    0.41 0  0.275   0.195   0.085  0.126
+
+                H2    15     0.1 50   -       0.077   0.112   0.100  0.109
+
+                N3    66     -0.565 - 0.490 - 0.565 - 0.315 - 0.247 - 0.398
+
+                c4    64     0.077    0.1 00  0.194   0.084   0.043 - 0.079
+
+                H4    15     0.150    -       0.072   0.096   0.084  0.102
+
+                c5    63     - 0.302  0.130 - 0.294   0.01 1  0.013  -
+
+                H5    15     0.150    -       0.189   0.105   0.080  -
+
+                0     70     - 0.860 - 0.834d - 0.816 - 0.702 -0.410 - 0.62"
+
+                H     31     0.430    0.417   0.408   0.351   0.205  0.31
+
+                C     1      -0.106 -O.lOoe - 0.262 - 0.338 - 0.025  0.043k
+
+                HC    5      0.000    -       0.01 1  0.01 7  0.029  0.056
+
+                C     41     0.906    0.700   0.969   0.582   0.039  0.009
+
+                0     32     - 0.900 - 0.800 - 0.872 - 0.647 - 0.550 - 0.545
+
+                C     1      0.503    0.310e -0.014 -0.119 -0.073 -0.039
+
+                HC    5      0.000    -       0.1 13  0.265   0.006  0.059
+
+                N     34     - 0.853 - 0.300 - 0.288 - 0.702  0.427  0.1 40
+
+                H     36     0.450    0.330   0.321   0.342   0.209  0.253
+
+                N1    81     - 0.700 - 0.540' -0.190 - 0.443  0.250 - 0.058k
+
+                H1    36     0.450    0.460   0.369   0.314   0.310  0.306
+
+                c2    80     0.650    0.500   0.142   0.299   0.242  0.1 14
+                             0.150     -      0.211   0.218   0.158  0.158
+                H2    5
+
+                c5    78     0.200    0.330 - 0.076   0.166   0.128 - 0.037
+
+                H5    5      0.150    -       0.221   0.205   0.112  0.1 53
+
+                0     32     - 0.900 - 0.800' - 0.846 - 0.475h - 0.550h -0.545'
+
+                C     41     0.900    0.700   0.916   0.671   0.042  0.009
+
+                N     34     - 0.853 - 0.300 - 0.552 - 0.833  0.218  0.140
+
+                H     36     0.450    0.330   0.363   0.247   0.199  0.253
+
+aUnless othetwise noted, from W. L. Jorgensen, J. M. Briggs, and M. L. Contreras, J. Phys. Chem., 94, 1683-1686 (1990).
+
+  From ref. 41.
+
+ Based on charges for amino-acid sidechains given in ref. 45.
+
+ TlP3P charges from ref. 43.
+
+eFrom W.L. Jorgensen and J. Gao, J. Phys. Chem., 90, 2174-2182 (1986).
+ Electrostatic potential fit charges obtained from HF/ 6-31G* wavefunctions for HF/ 6-31G*-optimized geometries using the
+CHELPG procedure (ref. 54) implemented in GAUSSIAN 92 (ref. 56).
+ Obtained for MP2 / 6-31G*-optimized geometries using the QEq procedure (ref. 63) as implemented in Cerius Version 3.2
+(Molecular Simulations, Inc., Burlington, MA).
+
+ Obtained for the MMFF94-optimizedgeometry for the extended conformation.
+
+' Gasteiger partial equilization of orbital electronegativity (PEOE) charges (ref. 60) obtained using the implementation in SYBYL
+
+Version 5.5 (Tripos Associates, Inc., St. Louis, MO).
+
+' Unless otherwise indicated, CHARGE2 model charges from ref. 69a.
+
+ Based on CHARGE2 charges for protein sidechains given in ref. 69a.
+
+' "DM" method charges from R. J. Abraham and P. E. Smith, J. Comput Chem., 9, 288-297 (1987).
+
+  CHARGE2 charges from ref. 69b.
+
+" Estimated charges based on the calculated dipole moment for water of 1.68 debyes cited in R. J. Abraham and 8. Hudson, J.
+
+Comput Chem., 5 , 562-570 (1984).
+  Inferred from the results listed for CH,CO,(-) and CH,NH,(+).
+
+534                                                           VOL. 17, NOS. 5 & 6
+   To be sure, the dependence of the QEq charges                  MERCK MOLECULAR FORCE FIELD. I I
+on conformation is potentially an important at-
+tribute. In a classic study, Jorgensen and Gao prc-   tem; it does not understand that the zwitterion
+vided strong evidence that the OPLS amide-group       consists of essentially isolated ionic subsystems.
+charges needed to change substantially on going       The same difficulty of course would apply to pro-
+from cis- to tr~ns-N-methylacetamide(N~~MA) in        teins containing charged residues, and would lead
+order to account for the otherwise surprising ex-     to charges that change significantly when distant
+perimental finding that the two conformers have       residues undergo a change in ionization state.
+essentially equal free energies of aqueous hydra-
+tion; one might have expected the trans form to          Last, we consider the Mortier61 and Mullay6'
+have the larger dipole moment in a fixed-charge       methods. The former, which uses an electronega-
+model, and hence to be the more strongly solvated.    tivity equalization approach, gives charges that
+Any such variation of atomic charge with confor-      depend both on the connectivity and on the geom-
+mation, however, must be both of the right magni-     etry. The latter equalizes "bond electronegativi-
+tude and in the proper direction to be helpful. No    ties" and gives charges that depend only on the
+assurance can be given that the classically moti-     connectivity. Both appear to have been parameter-
+vated Mortier and Rapp&Goddard approaches             ized to reproduce STO-3G charges, and both yield
+will behave in this manner; for NMA, it appears       charges for the carbonyl oxygens in the alanyl
+that the QEq charges do not. In particular, they      dipeptide that are only half as large in magnitude
+give dipole moments of 2.80 and 3.90 D, respec-       as the MMFF94 charges. Interestingly, the Mullay
+tively, for trans- and cis-NMA when MP2/6-            approach, unlike QEq, handles zwitterions apprc-
+31G*-optimizedgeometries are used.65In contrast,      priately. Still, the published charges suggest that
+MMFF94 gives dipole moments of 4.44 and 4.55 D        neither those nor any of the other methods consid-
+for the same geometries, and of 4.31 and 4.46 D       ered in this subsection, as currently parameterized,
+when MMFF-optimized geometries are used. For          would yield useful intermolecular-interaction en-
+reference, the ab inifio HF/6-31G* calculationsgive   ergies in the context of a force field like MMFF.
+dipole moments of 3.99 and 4.18 D for HF-6-31G*-
+optimized geometries, and the adjusted Jor-              OTHER APPROACHES
+gensen-Gao OPLS charges for NMA give dipole
+moments of 3.85 and 4.03 D. Thus, QEq rightly            Finally, we briefly consider the methods of Del
+gives a larger dipole moment for cis-NMA, but         Re68and Abraham and c0workers.6~These meth-
+greatly overestimates the magnitude of the differ-    ods either employ a quasi-quantum-mechanical
+ence. In contrast, MMFF94's fixed-charge model        approach (Del Re) or, for extended pi-systems,
+not only reproduces the ab initio ordering but also   include an explicitly quantum-mechanical compo-
+gives reasonable absolute and relative values for     nent (Abraham). For comparison, we list a set of
+the dipole moments; the unmodified OPLS charges,      Abraham charges in Table V, most of which were
+on the other hand, do not satisfy these criteria.     taken from the recent "CHARGE2" parameteriza-
+                                                      t i ~ n . ,T~he table shows that these charges correlate
+   A critical limitation is evidenced by the compar-  fairly well with MMFF94 and OPLS charges, but
+ison in Table V of the QEq charges for the acetate    often are only about half as large. Clearly, such
+and methylammonium ions with those for the            reduced charges would severely underestimate
+(CH ),-bridged ammoniumcarboxylatezwitterion.         electrostatic interactions if used in empirical
+In particular, the QEq group charges on the           force-field calculations. For Del Re, Rappi? and
+CO,(-) and NH,(+) moieites are -0.684 and             Goddard,, give comparisons that show, for exam-
+                                                      ple, that carbonyl oxygens typically are assigned
++0.326, respectively, in the separate ions, but are   charges of about -0.10. Such charges would not
+                                                      be useful for our purposes.
+-0.279 and -0.092 in the zwitterion. The NH,( +)
+                                                         DISCUSSION
+charge in methylammonium and the CO,( - )
+charge in the zwitterion already seem too small,         In concluding this section, we note that a dis-
+but the negative charge for the NH,(+) group in       tinction needs to be made between: (1) the charges
+the latter is clearly inappropriate. Evidently, the   determined in the parameterization of a force field
+head group charges have inappropriately leaked        on prototype systems; and (2) the charges produced
+into the saturated hexamethylene chain, which         by the charge calculation/assembly procedure in
+should instead act as a buffer. This behavior re-     general applications. For some methods, the distinc-
+veals a key failing of the QEq method. Specifically,  tion is an important one. Thus, while it might not
+QEq simply treats the zwitterion as a neutral sys-
+
+JOURNAL OF COMPUTATIONAL CHEMISTRY                    535
+HALGREN                                                 MMFF94's parameterization (Model 1). The left-
+
+be practical to directly parameterize a given           most column identifies the dimers examined. Ex-
+method to reproduce interaction energies, it might
+be feasible to first determine a set of desired target  cept for cyclic dimers, the donor species is listed
+charges in fits to data on interaction energies, and
+then to parameterize the method to reproduce the        first, the acceptor species second. The second
+target charges. These target charges could be those
+derived in the parameterization of MMFF94 or of         through fourth columns compare the HF/6-31G*
+OPLS or in some other suitable manner. To the
+extent, however, that the charges needed to reprc-      and MMFF94 binding energies (in kilocalories per
+duce interaction energies are determined by quan-
+tum-mechanical considerations, a classically moti-      mole); the fifth through seventh compare the het-
+vated scheme based only on atomic properties may
+have insufficient fle~ibility.~In' contrast, a scheme   eroatom distances X...Z (in angstroms) in the
+that, like MMFF's, is based on bond properties,
+while requiring more parameters, possesses an in-       listed hydrogen bonds; and the remaining columns
+herently greater degree of flexibility and may be
+capable of greater accuracy.                            compare the H . . . Z distances, compare the
+
+                                                        X-H...Z angles (in degrees), and specify the per-
+
+                                                        tinent MMFF atom types. Together with the care-
+
+                                                        ful representational structures shown in Figure 1,
+
+                                                        the listed information should suffice to character-
+
+                                                        ize the HF/6-31G* geometries. Except for the cyclic
+
+                                                        ammonia dimer (32, C,,, symmetry) and the
+
+                                                        stacked trans-N-methylacetamidedimer (27), each
+
+                                                        dimer and its associated monomers have been
+
+                                                        fully optimized both ab initio and in the MMFF94
+
+  Performance of MMFF94 and Other                       calculations. For these two systems, MMFF94 gives
+  Force Fields
+                                                        a saddle-point structure that has one imaginary
+   DIPOLE MOMENTS
+                                                        frequency. For the former, the cyclic C,, dimer is
+   The MMFF94 partial atomic charges for the 423
+molecular species/conformations used in its pa-         the minimum at the HF/6-31G* level and the
+rameterization reproduced the scaled HF/6-31G*
+molecular dipole moments (in Debye units) with          "linear" C, dimer (33) is a saddle point?3 At a
+rms deviations7' as shown:
+                                                        number of higher levels,33however, including the
+
+                                                        rather similar HF/6-31+ G*      the linear
+
+                                                        dimer becomes the stable structure, just as we find
+
+                                                        for MMFF94. Whether the stacked trans-hr-methyl-
+
+                                                        acetamide dimer is a minimum on the HF/6-31G*
+
+                                                        surface is unclear, but we should note that the ab
+
+                  MMFF94   MM2X                         irzitio energy minimization was not carried to com-
+
+Dipole magnitude   0.39 D   0.64 D                      pletion and that the two X . . . Z distances already
+Dipole direction   5.5"    10.8"
+                                                        differ slightly.
+
+                                                        For comparison to Model 1, we list dimerization
+
+                                                        energies in Table VII for two other theoretical
+
+In these comparisons, the HF/6-31G* geometries          models (Models 2 and 31, each of which employs
+were used and the ab initio dipole moments were
+scaled by the factor of 1.10 used in the fitting        the HF/6-31G*-optimized geometries used in
+process (discussed earlier). Listed for comparison
+are the results obtained for 398 MM2X conformers,       Table VI. Model 2 utilizes single-point MP2/6 -
+also computed using the scaled HF/6-31G* dipole
+moments." As the rms value of the scaled HF/6-          31 + G** wave functions, while Model 3 uses
+31G* dipole moments is 3.42 D, the average
+MMFF94 error is about lo%, while that for MM2X          HF/6-31G* wave functions, but incorporates a
+is about 20%. Nevertheless, while respectable, the
+errors in dipole magnitude for MMFF94 are larger        standard correction for basis-set superposition
+than we would like to see. The treatment of elec-
+trostatic interactions is one particular area in which  This correction gives A E,- as
+improvement needs to be made.
+                                                        where the calculations on the full system A-B and
+   INTERMOLECULAR INTERACTION ENERGIES
+   AND GEOMETRIES                                       on the molecular subsystems A and B all use the
+
+   Table VI summarizes MMFF94's ability to re-          same A-B dimer basis set. In Table VIII, we also
+produce trends in the HF/6-31G* data used in            report a limited number of dimer energies and
+                                                        geometries obtained from geometry-optimized
+536                                                     MP2/DZP calcualtion~(M~~odel 4). For each of the
+                                                        four models, it is possible to generate "target"
+                                                        dimerization energies by uniformly scaling the in-
+                                                        teraction energies so that the energy for the linear
+
+                                                                                             VOL. 17, NOS. 5 & 6
+                                                                          MERCK MOLECULAR FORCE FIELD. II
+
+TABLE VI.
+Comparisonof MMFF94 and HF/ 6-31G* Hydrogen-BondEnergies and Geometries (cf. Fig. 1).
+
+                                Energy (kcal/ moll             X.. .Z distance (A)        distance X-H. ..Z angle
+                                                                                    HF MMFF HF MMFF Atom types
+Dirner (structure number)       HF MMFF             A       -
+                                                             HF MMFF A
+
+HOH ... OH, (1)                 -5.624 -6.609      -0.984   2.971  2.750  -0.221    2.025   1.776   172.3  170.4  70-31 ... 70
+HOH ... HOH, Cyclic C, (2)      -2.113 -4.909      -2.796   2.776  2.777    0.001   2.609   2.193    90.0  117.0  70-31 ... 70
+                                                            2.776  2.777    0.001   2.609   2.193    90.0  117.0
+HOH...OHCH, (3)                 - 5.544   -6.321   - 0.777  2.951  2.732            2.01 1  1.763   169.0  168.7  70-31 ...70
+CH,OH ... OH, (4)               - 5.590   -6.145   - 0.555  2.961  2.749  -0.219    2.013   1.764   174.9  179.9
+                                - 5.538   - 6.033  - 0.495  2.945  2.726  -0.212    1.998   1.744   174.6  176.9  70-31 ... 6
+CH,OH ...OHCH, (5)              - 5.311   - 5.978  - 0.666  2.946  2.770  -0.219    2.020   1.808   163.9  166.7   6-21 ... 70
+HOH ...O(CH,), (6)              - 7.366   - 8.448  - 1.082  2.901  2.686  -0.175    1.952   1.71 6  174.0  167.5
+                                - 4.71 1  - 5.085  - 0.374  3.031  2.826  -0.215    2.118   1.888   160.8  159.9   6-21 '''6
+C6H,0H...0H, (7)                - 7.434   - 8.481  - 1.046  2.883  2.676  -0.205    1.934   1.689   175.0  176.1
+                                -4.691    - 5.464  - 0.772  3.031  2.809  -0.207    2.109   1.868   163.2  160.4  70-31...6
+HOH...OHC,H, (8)                - 3.640   - 3.775  -0.135   3.026  2.881  -0.222    2.225   1.966   141.6  155.4
+                                                                          -0.145                                   6-29...70
+t-vinyl alcohol ... OH, (9)                        -1.550   2.793  2.617
+HOH ... t-vinyl alcohol (10)                                2.793  2.616                                          70-31 ... 6
+HOH ...furan (11)                                  - 1.761  2.802  2.644                                           6-29... 70
+H,CCOOH ... HOOCCH,,                                        2.834  2.766
+                                                   -2.507                                                         70-31 ... 6
+  cyclic (12)                                               2.760  2.606                                          70-31 ... 59
+                                                   -1.651   2.839  2.597
+                                -15.549 -17.100                           -0.177 1.829      1.634   175.9  169.2 6-24...7
+                                                   -1.199   3.231  2.935  -0.177 1.829      1.634   175.9  169.2 6-24...7
+H,CCOOH ... OHH (13)            -9.943 - 11.704             3.213  2.785  -0.158 1.895      1.674   156.3  163.4 6-24 .. 70
+                                                   -0.066                 -0.068 2.149      2.108   127.9
+                                                            3.154  2.860                                   122.8 70-31...7
+                                                   - 1.035  3.492  3.198
+trans,trans-oxalicacid ...      - 10.209 - 12.716                         -0.154 1.799 1.610 171.5 175.4 6-24... 70
+                                                     0.845  2.969  2.871
+   OHH, cyclic (14)                                -1.464                 -0.242 2.217 1.916 122.2 123.9 70-31 ... 7
+                                                   -0.813   2.995  2.728
+OHH ... cis,cis-oxalicacid,     -4.455 -6.106      - 1.436                -0.296 2.437 2.021 141.1 155.7 70-31...6
+                                                   -0.896   3.018  2.951
+  cyclic (15)                                               2.954  2.715  -0.428 2.345 2.688 151.7 85.4 70-31 ... 7
+                                                     1.176  2.979  2.711
+OHH ... transJrans-oxalic       -3.470 -4.669               3.116  2.839  -0.293 2.268 2.024 155.0 142.5 70-31...7
+                                                   - 0.310  2.938  2.706  -0.294 2.952 2.432 117.5 135.5 70-31 '''6
+  acid, cyclic (16)                                - 2.083
+                                                            2.997  2.813
+HOH ... skew-rnethyl            -4.731 -4.798      -2.109   2.996  2.813  -0.097 2.077 1.938 155.6 159.0 70-31 ... 6
+
+   vinyl ether (17)             - 5.808 - 6.843    -0.881   3.039  2.762  -0.267 2.061 1.748 167.0 177.6 70-31... 7
+                                                            3.075  2.759
+HOH ... methyl formate          -3.473    -2.629   - 0.529                -0.068    2.240   2.1 23  138.7  142.0  70-31... 6
+                                -5.284    -6.749   - 0.225  3.969  3.608  -0.240    2.107   1.742   147.6  170.5
+   (=O) (18)                    -6.249    -7.063            3.987  3.608  -0.268    2.055   1.734   163.1  173.1  70-31 ... 7
+                                - 5.427   - 6.864    0.167                -0.276    2.120   1.81 6  178.3  176.9
+HOH ... methyl forrnate         -7.296    -8.192            2.944  2.712  -0.232    2.000   1.727   167.6  174.2  70-31 '''7
+                                                   -0.594                                                         10-28...70
+   (-0-1 (19)                                               2.852  2.703
+                                                   - 0.269                                                        70-31... 7
+HOH ... formaldehyde (20)                          -0.271   3.061  2.847
+                                -13.440 -12.264    - 1.553                -0.184 1.999 1.794 171.6 173.4 10-28... 7
+HOH ... acetone (21)                                        3.271  3.106
+                                                            3.271  3.106  -0.183 1.998 1.794 171.5 173.4 10-28...7
+t-NMA...OH, (22)                                            3.428  3.037  -0.277 2.094 1.743 156.7 174.4 10-28...7
+                                                            3.428  3.037  -0.317 2.085 1.756 171.8 165.2 10-28...7
+HOH t-NMA (23)                                              3.039  2.798
+Formamide dimer,                                            3.042  2.819  -0.361 3.880 3.490 87.9 88.4 10-28...7
+                                                            3.029  2.824
+   cyclic (24)                                                            -0.380 3.880 3.490 88.9 88.5 10-28...7
+
+Formamide dirner,               - 7.382   - 7.692                         -0.232 2.014 1.732 164.7 174.8 70-31...7
+   parallel (25)                - 6.999   - 9.082
+
+t-NMA dimer, antiparallel (26)  -3.512    -5.621
+t-NMA antiparallel
+
+   stacked (27)
+
+HOH ... N-methylforrnarnide     -7.181    -8.061                          -0.149 1.940 1.716 159.2 175.8 6-21... 70
+                                - 7.464   - 7.994
+   (28)                         - 3.724   - 3.950                         -0.214 2.124 1.873 168.7 175.8 70-31...6
+                                -3.191    -3.023
+t-N-OH,N-methylacetamide.'                                                -0.165    2.604   2.397   123.9  125.4   8-23...8
+                                                                          -0.165    2.605   2.397   123.8  125.4
+  OH, (30)                                                                -0.391    2.423   2.004   179.0  179.9   8-23...8
+HOH ... t-N-OH,                                                           -0.391    3.643   3.206    69.8   71.3   8-23...8
+                                                                          -0.242    2.085   1.817   176.4  173.9   8-23...8
+  N-methylacetarnide(31)                                                  -0.223    2.088   1.841   175.9  173.1  70-31 ... 8
+                                                                          -0.205    2.030   1.808   178.2  175.6
+H,NH ... HNH,, cyclic C,                                                                                          70-31 '''8
+
+   (32)                                                                                                           39-23 ' ' 70
+
+H,NH ...NH,, linear C, (33) -3.073 -3.667
+
+HOH ... NH, (34)                - 6.559 - 6.828
+                                -6.429 -6.700
+HCH...NH,CH, (35)               -6.365 -7.918
+
+lmidazole ... OH, (36)
+
+                                                                                                    (Continueson nextpage)
+
+JOURNAL OF COMPUTATIONAL CHEMISTRY                                                                                537
+HALGREN
+
+TABLE VI.
+(continued)
+
+                             Energy (kcal/ mol)             X...Z distance (A)         H...Z distance X-H...Z angle
+                                                                                         HF MMFF HF MMFF Atomtypes
+Dimer (structure number)     HF        MMFF       A        HF MMFF A
+
+HOH ...imidazole (37)         -7.063    -7.935    -0.871   2.970      2.745  -0.225    2.098   1.807  151.2  158.6  70-31 ... 66
+                              -5.754    -6.507    -0.753   3.050      2.856  -0.194    2.067   1.838  168.3  179.7  39-23 ... 70
+lndole ... OH, (38)           -5.358    -6.276    -0.918   3.064      2.860  -0.203    2.066   1.841  180.0  180.0  39-23 ... 70
+                              -6.030    -7.103    -1.072   3.013      2.790            2.1 18  1.852  155.8  158.9  70-31 ... 38
+Pyrrole... OH, (39)                                                            0.223
+                             - 10.029  - 10.645                       2.967                           143.3
+HOH ... pyridine (40)                             -0.61 5 3.057       2.755  - 0.090 2.196 2.087      151.4  142.8 40-28...70
+Formamidine... H,O,                     -7.952                 2.932         -0.177 2.055 1.798
+                                        -7.476                        2.737                           154.0  162.0 70-31 ... 9
+  cyclic (41)                                                         2.903                           145.4
+                                        -4.609                        2.942                           141.1
+HOH ... formaldehydeimine    -6.131     -4.859    -1.821   2.996      2.872  -0.260    2.111   1.767  164.2  167.6  70-31 ... 9
+                             -7.233     -2.912    -0.243   3.130      2.874  -0.227    2.254   1.982  173.2  148.1  40-28 ... 70
+   (42)                                 -3.480             3.007      3.377  -0.064    2.205   2.114  175.3  141.1
+                                                  -0.813   3.166      3.351  -0.294    2.193   1.845         173.3  70-31 ...40
+Guanidine... OHH (43)                   -3.221    -0.655   3.194      3.351  -0.320    2.199   1.850   97.7  172.8
+                                        -2.713    -0.248   3.619             -0.242    2.295   2.035   97.7  172.8  40-28 ... 70
+Vinylamine ... OH, (44)       -3.796    -3.609    -0.244   3.390      3.549  -0.039    3.129   2.385         170.8  40-28 ' '. 70
+Aniline ... OH, (45)          -4.204    -1.251             3.390      3.690  -0.039    3.130   3.620  147.0         15-71... 70
+HSH ... OH, (46)              -2.664    -1.998                        4.369                           108.4   66.4  70-31 ... 15
+                              -3.236                                  4.019                           132.4         70-31 ... 15
+HOH ... S(CH,), (47)                   - 11.579                       3.491                           175.5
+                              -3.439                0.217  3.673             -0.124    2.840   2.579  175.5  174.6  70-31 ... 15
+OHH ... CH,SSCH,,             -2.420   -10.609    -0.292   3.904      2.655  -0.214    3.500   3.026         126.8
+                              -1.998              -1.611   4.959      3.016  -0.590    4.271   3.546  168.3  144.2  70-31 "'44
+   cyclic (48)                -0.877   - 14.870   -0.373   4.509      2.637  -0.490    3.186   2.698  119.0  167.3
+                              -2.061                       3.775             -0.284    2.828   2.548         163.2  70-31 ... 15
+HOH ...Thiophene (49)                   -7.357      0.064             2.593                            58.5         15-71 ... 15
+HOH ...SCH,H, (50)           - 10.850                                 2.745                                         70-31 ... 15
+                                        -4.472                                                        148.9
+HSH ... SH, (51)                        - 2.838   - 0.729  2.857      2.792  -0.201    1.900   1.659  124.2  174.3   6-24...8
+                                        -3.345    -0,890   3.145      2.879  -0.129    2.534   2.428         115.2   8-28...7
+HOH ... SH, (52)                                           2.859      2.659  -0.222    3.238   2.978  138.5         70-31 ' ' ' 7
+CH,COOH ... NH,,                       - 21.1 73                      3.347                           130.2   60.3
+                                       - 19.024                       2.994                           153.9
+   bidentate (53)                                                                                     143.5
+                                       - 17.599                       2.619                           155.9
+HOH ... pyridine N-oxide (54) -9.719   - 18.747                       2.779
+                                                                      2.779                           173.8
+Methylethylamine             - 14.076  - 19.702   - 0.795 2.705       2.622  - 0.112 1.832 1.657      147.7  154.6 70-31 ' " 7
+                                                               2.867  2.605  -0.123 2.174 2.097       147.7
+ N-oxide ... OHH (55)                  - 21.648                                                       174.5  117.6 68-23 ... 70
+                                                                      2.783                           148.7
+Methylethylhydroxylamine...  -6.738    -22.622    -0.619   2.889      2.782  -0.096    2.107   1.941         143.2   6-21 ...70
+                                                           2.891             -0.012    2.183   2.099  142.6  135.1
+  OH, (56)                                        -0.047   2.939      2.646  -0.280    2.057   1.687  142.6  172.7  70-31 ' ' ' 8
+                                                  - 0.033  3.627             - 0.280   2.821   2.446         153.9
+HOH t.. FCH, (57)             -4.425              -0.508   3.262      2.743  -0.268    2.320   1.972  163.4  171.6  70-31 '.' 11
+                              - 2.805                                 2.743                                         70-31 ... 12
+HOH ... chloropropane (58)    -2.837                                                                  142.9
+                                                                                                      141.8          8-23 ...6
+H,NH ... O(CH,), (59)        - 19.298
+                             - 18.480             - 1.874  2.813             - 0.1 94  1.791   1.572         176.7  34-36 ... 70
+Methylammonium... OH,                             - 0.544  2.972             - 0.1 93  2.076   1.866         146.8
+                                                           2.972             -0.193    2.076   1.866         146.8  56-36... 70
+   (60)                                           - 0.649  2.819             - 0.1 97  1.807   1.591         173.4
+                                                  - 1.771  2.818             - 0.213   1.908   1.572         177.2  56-36 ...70
+Guanidinium...OHH (61)                                                                                              58-36 ''.70
+                                                                                                                    55-36 ... 70
+lmidazolium ... OH, (62)     - 16.950
+Formamidinium... OH, (63)    - 16.976             - 0.113 2.951              - 0.168 2.089 1.893             143.5 55-36 '''70
+                                                               2.950         -0.168 2.088 1.891
+Formamidinium... OH,,        - 19.589                                                                        143.6 55-36 ... 70
+
+  cyclic C, (64)
+
+Formaldehydeiminium...       - 19.984             - 1.664 2.770              - 0.125 1.775 1.610             176.6 54-36 ... 70
+                             -21.848
+   OH, (65)                                       -0.774 2.883               -0.141 2.063 1.867              145.7 70-31 '"32
+                                                               2.892         -0.149 2.080 1.868              145.7 70-31 ...32
+OHH ... (-)O,CCH,,
+
+   bidentate (66)
+
+water dimer (1) is -6.5 kcal/m01,~~and by uni-                        5.6%, 38%, and 3.1%, respectively, and the het-
+
+formly adjusting the ab initio X ... Z distances so                   eroatom distances would have to be reduced by
+
+that the O - . . O $stance for the water dimer is                     - 0.2 A for the first three methods (which all use
+                                                                      - ~F/6-31G*-optimizedgeometries) and by 0.15
+- reduced to 2.75 A. Explicitly, the interaction ener-
+                                                                      A for the fourth. As can be seen, the BSSE-
+gies would have to be enhanced by 15.5%,
+
+538                                                                                                   VOL. 17, NOS. 5 &6
+                                           MERCK MOLECULAR FORCE FIELD. II
+
+                                    H
+
+1                                      2   3
+
+4                                      5   6
+
+7                                      8   9
+
+10                                     11  12
+
+                                               H
+
+13                                     14  15
+
+16                                     17  18
+
+FIGURE 1. Representativestructures for the HF/ 6-31G* dimers used in parameterizing MMFF94. Where appropriate,
+
+the hydrogen-bond donor species is shown to the left.
+
+JOURNAL OF COMPUTATIONAL CHEMISTRY                539
+HALGREN
+
+    Hr0\, H7°                         H          LH               H' 0\ H HC3H3 g
+                                                                                     0
+                "\                           0
+
+                                 CH3         20                         21
+
+                 19
+
+    dCH3                                     H3C\ N, H        kN'H       "YH
+
+        /N-H      OGHH                                       H A0              /"H
+       CH3                                                                   H
+
+                  22                         23                         24
+
+            H                                                H3C
+
+YH (H                                                                     27
+
+rr,O-          H      0 A!                                                          0- H
+
+                  28                                                           k
+
+                                                                  CH3
+
+                                                                           30
+
+                                                             Y*r
+
+                                                              *-  N- H        N4 H
+                                                                              \
+                                                             H                   H
+
+          H                                  32                         33
+                 31
+                                      H          N/CH3
+                 34                                   H
+                                      \
+540                                               H
+                                       0- H
+
+                                                    35                  36
+
+                                      FIGURE 1. (continued)       VOL. 17, NOS. 5 & 6
+                                                               MERCK MOLECULAR FORCE FIELD. II
+
+                                     H
+
+4O-H Ng
+
+      37                                        38             39
+
+                                                        H               H
+                                                HI N'                 /
+                                                                    N
+                                        H'4
+                                                                  \
+                                                                          CH2
+
+      40                                        41                          42
+
+              H                                                            H
+
+' Hd0 "N'{FH N,                                                            45
+                     H0 \H
+                                                               Hh.o/ H rCH3
+      43                                        44
+                                                                           48
+                 /H                     H
+s-H              0
+A                \                      v
+                    H
+H                                       0
+
+      46                                        47
+
+     H                                    H                H   H
+                                         f            S'
+       \OO                              0,                     v
+                                                50             S-H
+          49                                 H
+                                                                                                   H
+H             S
+                                                                            51
+I             \
+                                                                            54
+0- H               H
+                                                                                                   541
+      52                                        53
+
+                                        FIGURE 1. (continued)
+
+JOURNAL OF COMPUTATIONAL CHEMISTRY
+HALGREN
+
+                                                                     H FfH3
+
+                                                                         57
+
+                         t-PN-H                           /CH3       y+- H
+                                                         0
+                                   59                             H4.
+                                                          \         H
+
+                                                             CH3            60
+
+                58
+
+         H                                                        H  H
+                                                                  \
+
+                    \ -
+
+H        ,N- H
+
+     H                                                                  63
+
+                61                                   62
+
+     H
+
+                           N+- H
+                         HI
+
+                                                     65                 66
+
+                         FIGURE 1. (continued)
+
+corrected HF/6-31G* set gives the smallest dimer-       The four sets of generated target interaction
+ization energies and requires the greatest enhance-  energies (not shown) agree fairly well (e.g., to
+ments. Conversely, the MP2 models require the        f0.5 kcal/mol) in most cases, with some notable
+smallest enhancements. These MP2 models add          exceptions. In particular, the BSSE-corrected set
+both real correlation stabilization to the dimers    gives uniformly more negative scaled interaction
+and a basis-set superposition error which, at least  energies for the strongly bound dimers, typically
+in the case of the water dimer, is larger than that
+for the uncorrelated calculation when the 6-31G*     by 3-4 kcal/mol for the positive ion ... water
+basis set is used.33Taken together, the four models
+afford some measure of how well the dimerization     dimers (60-65). This set also gives the smallest
+energies we wish to reproduce may be said to be      scaled interaction energy for the cyclic water dimer
+known, and provide a background against which        (2) and gives smaller interaction energies for most
+to assess any limitations in MMFF's ability to       dimers involving divalent sulfur. Conversely, the
+reproduce the trends in the HF/6-31G* results        MP2 models give slightly less negative scaled in-
+shown in Table VI.                                   teraction energies for the strongly bound dimers,
+                                                     but usually give significantly more negative val-
+                                                     ues for the cyclic water dimer and the divalent
+
+542                                                                  VOL. 17, NOS. 5 & 6
+                                              MERCK MOLECULAR FORCE FIELD. I1
+
+TABLE VII.
+
+MP2/ 6-31 + G** and Basis-Set-SuperpositionError Corrected HF/ 6-31G* Dimerization Energies (kcal/ mol)
+
+for HF/ 6-31G*-Optimized Geometries.
+
+Dimer (structurenumbeda                           M P2    HF/ 6-31G*
+                                                             BSSE~
+                                              6-31 + G**
+
+HOH .-.OH, (1)                                 -6.157                          - 4.716
+                                               -2.883                          - 1.331
+HOH ... HOH, cyclic Cs (2)                     - 6.739                         - 4.500
+                                               - 6.202                         - 4.675
+HOH...OHCH, (3)                                - 6.886                         - 4.516
+                                               - 6.724                         -4.105
+CH,OH*..OH, (4)                                - 8.604                         - 6.294
+                                               - 5.566                         -3.166
+CH,OH-..OHCH, (5)                              - 8.224                         - 6.568
+                                               -5.134                          - 3.362
+HOH ... O(CH,), (6)                            - 4.096                         - 2.283
+                                              -16.109                        - 14.661
+C,H,OH .*.OH, (7)                             - 10.428                         - 8.697
+                                              - 11.266                         - 9.922
+HOH...OHC,H, (8)                               - 5.316                        - 3.710
+                                               - 3.990                         - 2.514
+t-vinyl alcohol ... OH, (9)                    - 5.788                         - 3.478
+HOH ... t-vinyl alcohol (10)                   - 6.532                         - 4.761
+HOH ...furan (11)                              -4.139                          - 2.209
+H,CCOOH ... HOOCCH,, cyclic (12)               - 5.469                         - 3.767
+                                               - 6.574                         - 4.640
+H,CCOOH ...OHH (13)                            - 6.661                         - 4.542
+                                               - 7.969                         - 5.857
+trans,trans-oxalic acid ... OHH, cyclic (14)  - 14.356                       - 11.918
+OHH ... cis,cis-oxalicacid, cyclic (15)        - 7.856                         - 6.032
+                                               - 8.954                         - 5.673
+OHH ... trans,trans-oxalic acid, cyclic (16)   - 6.726                         - 2.405
+                                               - 7.654                         - 5.579
+HOH ... skew-methylvinyl ether (17)            - 6.798                         - 4.853
+HOH ... methyl formate ( = O )(18)             - 8.909                         - 6.326
+HOH ... methyl formate (-0-1 (18)              - 4.791                         - 2.536
+HOH ...formaldehyde (20)                       - 3.654                         -2.213
+HOH ... acetone (21)                           - 3.685                         - 2.512
+t-NMA ... OH, (22)                             - 7.654                         - 5.882
+                                               - 7.743                         - 5.673
+HOH... t-NMA (23)                              - 7.861                         - 5.831
+                                               - 7.843                         - 5.532
+Formamide, cyclic (24)                         - 7.342                         - 4.890
+                                               - 6.992                         - 4.819
+Forrnamide dimer, parallel (25)                - 7.246                         - 4.604
+                                              - 10.773                         - 8.262
+t-NMA dimer, antiparallel (26)                 - 6.956                         - 4.877
+                                               - 8.295                         - 5.777
+t-NMA dimer, antiparallelstacked (27)          - 4.757                         -3.148
+                                               -5.147                          -3.112
+HOH ... N-methylformamide(28)                  - 3.661                         - 2.078
+N-methylformamide...OH, (29)                   - 3.047                         - 1.641
+t-N-OH,N-methylacetamide ... OH, (30)          -4.104                          - 2.089
+                                               - 3.542                         - 1.584
+HOH ... t-N-OH,N-methylacetamide(31)           - 3.678                         - 1.371
+                                               - 1.568                         - 0.772
+H,NH ... HNH,, cyclic C,, (32)                 - 2.878                         - 1.783
+H,NH ... NH, linear C, (33)                   - 12.1 13                        - 9.684
+
+HOH... NH, (34)                                           (Continues on next page)
+
+HOH 1.. NH,CH, (35)                                                                543
+
+lmidazole... OH, (36)
+
+HOH ... imidazole (37)
+lndole ... OH, (38)
+
+Pyrrole ... OH, (39)
+
+HOH ...pyridine (40)
+
+Formamidine... H,O, cyclic (41)
+
+HOH ...formaldehydeimine(42)
+Guanidine ... OHH (43)
+Vinylamine ...OH, (44)
+Aniline ... OHH (45)
+
+SHH-..OHH (46)
+
+HOH ... S(CH,), (47)
+OHH ... CH,SSCH,, cyclic (48)
+HOH ...thiophene (49)
+HOH ... SCH,H, (50)
+HSH ... SH, (51)
+HOH ...SH, (52)
+CH,COOH ... NH, bidentate (53)
+
+JOURNAL OF COMPUTATIONAL CHEMISTRY
+HALGREN                                                                     M P2                 HFI 6-31G*
+
+TABLE VII.                                                             6-31 + G**                   BSSEb
+(continued)
+                                                                           - 9.044                   - 7.754
+Dimer (structure numberla                                                - 15.457                  - 1 1.098
+
+HOH ... pyridine N-oxide (54)                                              - 9.037                   - 5.304
+                                                                           - 4.300                   - 2.599
+MethylethylamineN-oxide...OHH (55)                                         - 3.279                   - 1.741
+Methylethylhydroxylamine... OH, (56)                                       - 4.096                   - 1.938
+HOH ... FCH, (57)                                                        - 19.798                  - 18.764
+                                                                         - 19.222                  - 17.689
+HOH ... chloropropane (58)                                               -18.192                   - 16.429
+H,NH ...O(CH,), (59)                                                     - 17.360                  - 16.404
+Methylammonium...OH, (60)                                                - 20.248                  - 18.849
+Guanidinium ... OHH (61)                                                 - 20.895                  - 19.492
+lmidazolium ...OH, (62)                                                  - 20.738                  - 19.220
+
+Formamidinium... OH, (63)
+Formamidinium... OH,, cyclic C, (64)
+
+Formaldehydeiminium...OH, (65)
+
+OHH ... (-)O,CCH,, bidentate (66)
+
+    a See Figure 1.
+      Corrected for basis-set-superpositionerror as shown in eq. (9).
+
+sulfur dimers. Notably, the MP2/DZP method                             interactions omitted from the HF model. Taken
+gives a scaled value of -6.09 kcal/mol for the                         together, these comparisons indicate serious diffi-
+HOH I . .S(CH,), dimer (47), a value that seems far                    culties with the MP2-based models (Models 2 and
+too large in magnitude. The correlation contribu-                      4). While Model 3 (BSSE-corrected HF/6-31G* cal-
+tion to the basis-set-superposition error may be                       culations) behaves reasonably in most respects, it
+unusually large when second-row atoms are in-                          does not appear superior to Model 1 (simple
+volved. The MP2/6-31+ G** model also gives a                           HF/6-31G* calculations). Accordingly, we have
+scaled dimerization energy for the stacked f-NMA                       used Model 1, the simplest of the four, in parame-
+dimer (27) of -7.10 kcal/mol, nearly twice the                         terizing MMFF94.
+scaled HF/6-31G* value. This variation may partly
+arise from basis-set-superposition error, though                          Let us now turn to the comparison of the
+one would expect the stacked configuration to be                       MMFF94 and HF/6-31G* results listed in Table
+stabilized to some degree by London dispersion                         VI. Clearly, the MMFF94 results correlate well
+                                                                       with those from the ab inifio calculations. On a
+
+Comparisonof MP2 / DZP and HF/ 6-31G* Energiesand Geometriesfor Hydrogen-BondedDimers.
+
+                                    Energyb                            X ... Z distance'    X-H ... Z angled
+
+Dimer (structure numberla      MP2                   HF                MP2          HF      MP2    HF
+
+HOH ...OH, (1)                  - 6.303               - 5.624          2.909        2.971   174.3  172.3
+                                - 4.029               -2.113           2.951        2.777    99.4   90.0
+HOH ... HOH, cyclic C, (2)      - 3.746               -3.191           3.159        3.271   115.6
+                                                                       3.159        3.271   129.2  123.9
+H,NH ... HNH,, cyclic C, (32)   - 3.925               - 3.073          3.249        3.428   170.7  123.8
+                                - 3.269               - 2.664          3.520        3.61 9  177.5  179.0
+H,NH ... NH,, linear C, (33)    - 5.909               - 3.236          3.268        3.390   147.3  175.3
+SHH ... OHH (46)                - 1.761               - 0.877          4.191        4.509   175.9
+HOH ... S(CH,), (47)            - 3.345               - 2.061          3.543        3.775   170.0   97.7
+HSH ... SH, (51)               - 21.099              - 19.298          2.731        2.81 3  174.1  175.5
+                               -22.510               - 21.848          2.842        2.883   144.8  175.5
+HOH ...SH, (52)                                                                                    176.7
+                                                                                                   145.7
+Methylammonium... OH, (60)
+OHH ... (-)O,CCH, (66)
+
+a See Figure 1. In kilocalories per mole. In angstroms. In degrees.
+
+544                                                                                         VOL. 17, NOS. 5 & 6
+quantitative level, we note that 63 of the 66 listed                MERCK MOLECULAR FORCE FIELD. I I
+interaction energies are indeed more negative for
+MMFF94 than for HF/6-31G*, often by the desired         for a difference of 0.209 A. The largest irregulari-
+10-15%. Overall, the average interaction energies
+are -7.23 kcal/mol for HF/6-31G* and -8.04              ties occur in weakly bound dimers involving sul-
+kcal/mol for MMFF94, 11%larger in magnitude.
+Many comparisons of donor and acceptor abilities        fyr. For example, the 0 ... S distance is nearly 0.4
+suggested by the HF/6-31G* calculations (and
+supported by general chemical knowledge) are            A shorter in the HF/6-31G* dimer of water with
+properly reflected by MMFF94. For example,              dimethyl sulfide (47) than in the dimer of water
+MMFF94 properly understands that phenyl and             with hydrogen sulfide (52); MMFF94 qualita-
+vinyl alcohol are stronger hydrogen-bond donors         tively reproduces this trend but shows a much
+(7, 9) but weaker acceptors (8, 10) than are water,     smaller variation-as does geometry optimization
+aliphatic alcohols, and ethers (1, 3-61, and recog-     at the more sophisticated MP2/DZP ab initio level
+nizes that furan (11) is a weaker acceptor still.       (Table VIII).
+Similarly, MMFF94 properly rates ammonia as a
+stronger acceptor (34) than donor (591, and cor-           Most X-H Z hydrogen-bond angles are well
+rectly assesses vinylamine and aniline as being         produced. Some significant discrepancies are evi-
+stronger donors (44, 45) than ammonia. In addi-         dent, however, a few of which appear to reflect
+tion, MMFF94 closely parallels the HF/6-31G* as-        limitations in the HF/6-31GL model rather than in
+sessments of the strengths of heteroaromatic            MMFF. One discrepancy occurs for the second
+amines such as imidazole, indole, pyrrole, and
+pyridine (36-40). MMFF94 also correctly assigns         listed O-H ...0 interaction for the dimer of H,O
+lesser abilities both as donors and acceptors to
+thiols and sulfides (46-52). Qualitative errors rela-   with cis,cis-oxalic acid (15), where both the long
+tive to HF/6-31G* occur in only a few
+instances-for example, for cyclic formamide (24)        MMFF94 H ...0 distance and the small O-H a . 1 0
+and for the less strongly bound dimer of water
+with methyl formate (191, where the calculated          angle indicate that the force-field and ab initio
+MMFF94 interaction energies are about 1kcal/mol         geometries differ qualitatively. Another occurs for
+less negative than are the HF/6-31G* values. That       the dimer of water with dimethyl sulfide (47),
+Models 2-4 also predict more negative binding           where HF/6-31G* gives a bifurcated structure
+energies in these cases suggests that the MMFF94        while MMFF94 gives a single, essentially linear,
+results are in error. Two of the largest quantitative
+differences arise for the cyclic water dimer (2) and    O-H ... S hydrogen bond. In this case, the
+the stacked t-NMA dimer (271, where the MMFF94
+energies are significantly more negative than those     MP2/DZP model also shows a single, though more
+for the HF/6-31G* model. As noted above, how-
+ever, the MP2 models also give more negative            strongly distorted, O-H ... S hydrogen bond
+binding energies, suggesting that the MMFF94 re-
+sults are not unreasonable.                             (Table VIII). A third case, though not evident from
+                                                        Table VI, occurs for the ammonia dimer. As noted
+   Comparison of the X...Z heteratom distances          above, the cyclic C, structure (32) is a minimum
+in Table VI shows that most of the MMFF94 dis-          on the HF/6-31G* surface, but is a saddle-point
+tances ar,e smaller than the HF/6-31G* values by        for MMFF94 and at various higher levels of ab
+0.2-0.3 A, as desired. Indeed, only for the two         initio t h e ~ r y ?T~h,e~M~P2/DZP model, for exam-
+equivalent 0 - a . 0 interactions in the C, cyclic wa-  ple, like MMFF94, prefers the linear C, dimer (33).
+ter dimer (2) are the MMFF94 distances longer,
+and then only trivially so. Moreover, the MMFF94           We also examined the abilities of the MM2X
+distances are shorter than are those for the            force field76and of an earlier version of MMFF,
+MP2/DZP-optimized geometry (Table VIII) in this         designated "MMFF91," to reproduce the dimer
+case, suggesting that the deficiency may lie in the     data. We found that MM2X also performs fairly
+HF/6-31G* model rather than in MMFF94. In all,          well. Thus, about half of the MM2X interactjon
+the av$rage for the listed heteroat2m distances is      energies were more negative than the unadjusted
+3.105 A for HF/6-31G* and 2.896 A for MMFF94,           HF/6-31G* values, and all but one of the MM2X
+
+                                                        X ... Z distances was smaller. Except for the cyclic
+
+                                                        water dimer ( -5.45 kcal/mol error) and the
+                                                        stacked t-NMA dimer ( - 7.58 kcal/mol error), the
+                                                        differences between the MM2X and HF/6-31G*
+                                                        dimer energies were never larger than about 2
+                                                        kcal/mol. However, the MM2X interaction ener-
+                                                        gies did not, in general, show the enhancement
+                                                        relative to the HF/6-31G* values we have targeted
+                                                        in developing MMFF94. In contrast to the method-
+                                                        ology employed in deriving MMFF94, the MMFF91
+                                                        force field used electrostatic parameters (bond
+                                                        charge increments) derived simply by fitting to the
+                                                        (unscaled) HF/6-31G* dipole moments in the
+                                                        manner described earlier, and for nonhydrogen
+
+JOURNAL OF COMPUTATIONAL CHEMISTRY                      545
+HALGREN                                               results, however, use the TIP4P model. The tabu-
+                                                      lated comparisons show that the two sets give
+atoms used the vdW parameters previously pub-         similar binding energies and heteroatom distances
+lished." This force field showed much larger er-      in most cases. For imidazole-water dimers (36,
+rors than either MMFF94 or MM2X. Thus, only 13        37), MMFF94 yields significantly more negative
+of the 66 dimer energies were more negative than      binding energies both when imidazole acts as a
+their (unadjusted) HF/6-31G* counterparts, and        donor and when it acts as an acceptor. In this case,
+only about three fourths of the X...Z distances       however, our fully optimized HF/6-31G* calcula-
+were shorter. Moreover, some large errors were        tions yielded theoreticalbinding energies of -6.365
+found; in four cases, the MMFF91 interaction ener-    and - 7.063 kcal/mol, respectively, whereas the
+gies were more positive than the ab initio values     partial HF/6-31G* optimizations used in deriving
+by 4-6 kcal/mol. The contrast with MMFF94             OPLS gave significantly smaller binding energies
+shows that an explicit parameterization was re-       of -5.73 and -6.24 kcal/mol?' Also, MMFF94
+quired to obtain the present generally good results.  intentionally deepens the HF/6-31G* binding en-
+                                                      ergies, whereas OPLS in this case reproduces the
+   COMPARISON TO OPLS                                 unadjusted (and unoptimized) energies used in its
+                                                      derivation.
+   Table IX compares MMFF94 and OPLS results
+for 22 of the dimers included in Table VI. For the       For dimers involving divalent sulfur (46, 47, 51,
+linear H,O dimer (11, TIP3P results are listed, as    and 52), OPLS yields more negative binding ener-
+this frequently used model is similar in construc-    gies and shorter heteroatom distances. These dif-
+tion to "MMFF" water. Most of the other listed
+
+TABLE IX.
+Comparisonof MMFF94 and OPLS Hydrogen-BondEnergiesand Geometries.
+
+                                   Energy (kcal/ moll              X ... Z distance (A)
+
+Dimer (structurenumberla           MMFF~              OPLS         MMFF    OPLS
+
+HOH ... OH, (1)                     - 6.61             - 6.50'     2.75    2.74
+                                    - 4.91             - 4.77d     2.78    2.79
+HOH ... HOH, cyclic C, (2)          - 6.32             - 6.77d     2.73    2.72
+HOH ... OHCH, (3)                   -6.14              - 6.03d     2.75    2.77
+                                    - 6.03             - 6.80d     2.73    2.73
+CH,OH ... OH, (4)                   - 5.98             - 5.77d     2.77    2.75
+                                    - 6.93             - 6.7e      2.84    2.87
+CH,OH...OHCH, (5)                   -8.19              - 7.4e      2.71    2.72
+                                   - 12.26            - 14.07'     2.81    2.81
+HOH ...O(CH,), (6)                  - 7.69             - 7.96'     2.76    2.78
+                                    - 9.08             - 8.97'     2.76    2.79
+t-NMA... OH, (22)                   - 5.62             - 5.6'      3.61    3.6
+HOH ... t-NMA (23)                  - 7.92             -5.88'      1 .84k  1 .86k
+                                    - 7.94             - 6.24'     1 .81k  1 .88k
+Formarnide,cyclic (24)              - 2.91             - 4.59h     3.38    3.10
+                                    - 3.48             -4.56h      3.35    3.08
+Formamidedimer, parallel (25)       - 1.25             - 2.48h     4.02    3.61
+                                    - 2.00             - 3.61h     3.49    3.22
+t-NMA dimer, antiparallel (26)     -21.17             - 17.8'      2.62    2.72
+                                   - 19.02            - 16.1'      3.21'   3.33'
+t-NMA, antiparallel stacked (27)   - 17.60            - 16.01      2.62    2.72
+                                   - 22.62            - 18.9'      3.06m   3.06m
+lmidazole...OH, (36)
+HOH ... imidazole (37)
+
+HSH...OH, (46)
+HOH ... S(CH,), (47)
+HSH ... SH, (51)
+
+HOH ... SH, (52)
+Methylammonium... OH, (60)
+Guanidinium ...OHH (61)
+lmidazolium ... OH, (62)
+OHH ... (-)O,CCH,, bidentate (66)
+
+a See Figure 1. From Table VI. Results for TIP3P water from ref. 43. All other listed OPLS dimers involving water appear to use
+the TIP4P model. dFrom ref. 37. e W . L. Jorgensen and C . J. Swenson, J. Am. Chem. SOC.,107, 1489-1496 (1985). 'W. L.
+
+Jorgensen and C. J. Swenson, J. Am. Chem. SOC.,107, 569-587 11985). From ref. 32. W. L. Jorgensen, 4 Phys. Chem., 90,
+
+6379-6388 (1986). 'From ref. 77. 'From ref. 45. 'H .'. Z distance (A). ' C ...0 distance (A). 0 ...C distance (A).
+
+546                                                                VOL. 17, NOS. 5 & 6
+                                                                             MERCK MOLECULAR FORCE FIELD. II
+
+ ferences correlate with the greater polarity of S-H                Concluding Discussion,
+bonds for OPLS noted earlier. The OPLS het-
+ eroatom distances are also considerably shorter                    The Merck Molecular Force Field (MMFF94)
+ than the optimized MP2/DZP distances (Table
+VIII), suggesting to us that the OPLS values                        uses a novel "Buf-14-7" form for vdW interactions
+may be too short. On the other hand, the MP2/6-
+                                                                    and employs a similarly buffered coulomb term
+31 + G**(Table VII) and especially the MP2/DZP
+                                                                    for electrostatic interactions. The latter uses partial
+binding energies for these dimers are more nega-
+tive and usually agree better with OPLS than with                   atomic charges constructed in a straightforward
+either MMFF94 or HF/6-31G*. This better agree-
+ment, however, may trace to a correlation-                          manner from bond-polarity-related "bond charge
+enhanced basis-set-superpositionerror and may be
+artifactual. We note that the BSSE-corrected HF/6-                  increments." This approach not only confers gener-
+31G* interaction energies are significantly less neg-
+ative and agree less well with OPLS than with                       ality but also enables MMFF94 to describe a broad
+MMFF94. Thus, while the OPLS parameters have
+been found to describe the neat liquids well, there                 range of chemical structures and interactions well.
+is room for uncertainty as to whether the OPLS or
+the MMFF representation is the more appropriate                     The nonbonded parameters were determined by
+for simulations in aqueous solution.
+                                                                    explicit parameterization against high-quality
+    Finally, we note that MMFF94 yields more
+strongly negative binding energies than does OPLS                   computational data on dimerization energies for
+for the dimers of water with the methylammo-
+n i ~ m ,g~~ a~n i d i n i u m , ~i m~ i d a ~ o l i u r n , ~an~d  methane and hydrogen, and, using simpler HF/6-
+acetate77ions (60-62 and 66). For these systems,
+the OPLS dimerization energies are uniformly less                   31G* calculations, by fitting to scaled diple mo-
+negative than the HF/6-31G* values listed in Table
+VI. The MMFF94 energies, in contrast, are uni-                      ments and to scaled HF/6-31G* intermolecular
+formly more negative, by about 5% on average.
+Intentionally, these MMFF94 enhancements are                        interaction energies and geometries for hydrogen-
+smaller than those sought for neutral dimers. We
+presumed that the additional polarization induced                   bonded dimers. The derived parameters reproduce
+by surrounding water molecules should be less
+important for the ion-water dimers because sub-                     values and trends in the computed interaction
+stantial polarization is already induced in the gas-
+phase dimers by the strong electric fields involved.                energies and geometries quite well. MMFF94's
+Jorgensen and coworkers went further in develop-
+ing OPLS: they set their ion-water dimerization                     uniform parameterization against HF/6-31G* data
+energies to values less negative than those given
+by their HF/6-31G* calculations, arguing that the                   is meant to ensure that a proper balance is achieved
+ab initio values overestimate the gas-phase dimer-
+ization energies.77 It is not clear, however, that                  between solvent-solvent, solvent-solute, and
+gas-phase energies are the right quantities to emu-
+late; certainly, Bartlett's gas-phase dimerization                  solute-solute interactions in aqueous simula-
+energy of approximately -4.7 kcal/mol for the
+water-water dimer34 would not be. We note,                          tions. As MacKerell, Wi6rkiewicz-Kuczera, and
+however, that OPLS is reported to give reasonable
+heats of hydration for the methylammonium and                       Karplus             this balance is essential if
+acetate ions, among others.n It is thus possible
+that MMFF94 will overestimate these quantities.                     reliable results are to be obtained in condensed-
+Explicit simulations will be needed to determine
+whether a reparameterization of MMFF94 for                          phase simulations.
+charged systems will be needed.
+                                                                    Our approach to parameterizing MMFF bears
+
+                                                                    some similarities to that used by Jorgensen and
+
+                                                                    coworkers in developing OPLS?2,37,4T5hese work-
+
+                                                                    ers also use HF/6-31G* data, particularly when
+
+                                                                    experimental condensed-phase data are lacking.
+
+                                                                    Indeed, a number of our hydrogen-bonded dimers
+
+                                                                    are derived from systems they described. Our ap-
+
+                                                                    proach even more strongly resembles that of
+
+                                                                    MacKerell, Wi6rkiewicz-Kuczera, and Karplus,%
+
+                                                                    who have used similarly scaled HF/6-31G* data
+
+                                                                    in developing a new parameterization for
+
+                                                                    CHARMM. Encouragingly, MMFF94 and the fre-
+
+                                                                    quently used TIP3P and SPC water models de-
+
+                                                                    scribe the isolated water dimer very similarly.
+
+                                                                    Moreover, MMFF94 and OPLS usually yield simi-
+
+                                                                    lar charge distributions and usually give similar
+
+                                                                    results for hydrogen-bonded dimers. Given the
+
+                                                                    success OPLS has enjoyed in modeling applica-
+
+                                                                    tions, we believe that this close correspondence
+
+                                                                    augers well for MMFF94.
+
+                                                                    Our approach, on the other hand, differs sub-
+
+                                                                    stantially from that taken by Hagler and cowork-
+
+                                                                    ers in deriving CFF93, the Biosym Consortium
+
+JOURNAL OF COMPUTATIONAL CHEMISTRY                                                           547
+HALGREN                                                   are substantially smaller in magnitude than the
+
+force field.78Like MMFF94, the Consortium force           charges of -0.57 and +0.50 we found to be needed
+field also constructs partial atomic charges from
+bond charge increments. In many cases, however,           for MMFF94 to fit the scaled HF/6-31G* dimer
+the Biosym approach evidently obtains many elec-          data. Furthermore, the CFF93 charge on the acidic
+trostatic and vdW parameters from fits to crystal-        hydroxyl hydrogen is smaller than the charge of
+lographic data. This approach is most readily ap-         +0.40 or greater used in MMFF94 and other
+plicable for hydrocarbons, carboxylic acids, and          three-point model^^^,^^ for the less readily ionized
+amides, functional groups for which many crystal          hydroxyl hydrogen of water.
+structure exist for which heats of sublimation have
+been measured? Even in these cases, however, a               Our approach also differs fundamentally from
+possible concern is that the fitting of energy mini-      that used for MM3. A key difference arises from
+mized force-field structures to thermally averaged        the fact that MM3 normally employs a dielectric
+crystal structures disregards temperature effects         constant of 1.5 and uses bond dipoles chosen to
+that may not be negligible. Thus, MacKerell,              reproduce gas phase (i.e., not polarization-
+Wi6rkiewicz-Kuczera, and Karplus in a theoretical         enhanced) dipole moments. To offset the first fac-
+                                                          tor, MM3 fits the overall interaction potential by
+- study of nucleic acid base pairs have found that        including relatively large Exp-6 terms that con-
+                                                          tribute up to 6 kcal/mol of stabilization to hydro-
+bydrogen bond lengths typically increase by 0.1           gen-bonding interactions.@ The resultant hydro-
+A when an energy-minimized (0 K) crystal is               gen-bonding energies, by design, then correspond
+warmed to room temperature in a molecular-                to experimental gas-phase dimerization energies
+dynamics simulation.36bIn qualitative agreement,          rather than to the larger values used by force fields
+Coppens and coworkers report that neutron-                that seek to account for aqueous-phase polariza-
+diffraction studies find that hydrogen bond lengths       tion in an average way. MM3(94), for example,
+in crystals ,Of a-oxalic acid dihydrate increase by       yields an interaction energy of - 4.77 kcal/mol for
+0.04-0.06 A on warming from 100 K to room                 the linear water dimer,s5 whereas SPC, TIP3P, and
+t e m p e r a t ~ r e ;X~-~ray determinations at 100 K79  MMFF94 all yield interaction energies of about
+                                                          - 6.5 kcal/mol; the gas-phase dimerization energy
+- and 299 K80 show that the volume of the unit cell       has been estimated to be about -5.4 k~al/mol.",'~
+                                                          These differences suggest to us that MM3 may not
+concomitantly increases by 4%. Further study              be properly configured to handle molecular-
+may be needed to determine how accurately CFF93           dynamics simulations in explicit water.
+predicts hydrogen-bond distances and crystal vol-
+umes in simulations carried out at room tempera-             Finally, our approach also differs from that taken
+ture and at 1 atmosphere pressure.81                      by Kollman and coworkers, who obtain electro-
+                                                          static potential fit (ESP) charges, most recently
+   Another concern with the Biosym Consortium             those derived using the newly developed RESP
+approach is that, for most functional groups, few if      a p p r ~ a c h ?f~or use in AMBER calculations.88 In
+any heats of sublimation are available for relevant       assessing the suitability of ESP charges, it is im-
+crystal structures. It is not yet clear what approach     portant to keep in mind that MMFF94 and other
+will be taken in such cases, as it would not seem         contemporary force fields greatly simplify the way
+prudent to derive nonbonded energy parameters             in which nonbonded vdW and electrostatic inter-
+from fits to crystal geometries alone. One possible       actions are represented. To compensate for the
+approach might be to obtain nonbonded parame-             approximation or outright omission of many of the
+ters from quantum calculations on dimersR2An-             nonbonded terms that would appear in the "cor-
+other approach might be to use the procedure              rect" energy expression, parameters for those terms
+recently described for polycarb~nates:~in which           that are retained may need to be determined from
+fits to crystal geometries (no heats of sublimation       explicit fits to appropriate data on nonbonded in-
+were available) were employed to determine a              teractions. Because ESP charges are not chosen in
+uniform scaling factor to be applied to bond charge       this way, no guarantee can be given that they (or
+increments extracted from ESP charges. While this         any other set of externally defined charges-even
+approach appears promising, the manner in which           the "true" charges, could these somehow be de-
+a proper balance between solvent-solvent, sol-            fined) will satisfactorily reproduce intermolecular
+vent-solute, and solute-solute interactions will be       interaction energies. Thus, as discussed previ-
+effected for CFF93 remains to be seen. For the            ously, Carlson et al. found that CHELPG ESP
+polycarbonate force field, for example, the scaled        charges for acetamide give much too negative a
+bond charge increments yield charges of -0.448
+for carbonyl oxygen and +0.355 for hydroxyl hy-
+drogen in a carboxylic acid moiety. These charges
+
+548                                                       VOL. 17, NOS. 5 & 6
+                                                                   MERCK MOLECULAR FORCE FIELD. II
+
+free energy of hydration.% While another set of             of CHARMm9* or the pending implementation of
+ESP charges might perform better in this case, it
+will be difficult to establish that a given ESP             MMFF94 in the academic program, CHARMM9;
+method produces charges that predict interaction
+energies consistently well enough to achieve a              others may use the forthcomingimplementation of
+proper balance between solvent-solvent,
+solvent-solute, and solute-solute interactions.             MMFF94 in the BatchMin module of the Macro-
+
+   To focus further on the simplifications made in          Model program suite.95 One such study is ex-
+modeling nonbonded interactions, we note that
+nearly all force fields currently used in general           pected to examine the ability of MMFF94, or a
+molecular modeling not only neglect polarizabil-
+ityg9 but also ignore contributions from higher             reparameterized or reformulated variant, to de-
+atomic m u l t i p o l e ~ . ~In~ ,a~dd~ition, most employ
+fixed, atom-centered charges that are independent           scribe the properties of liquid  Others are
+of conformation and of the geometry of inter-
+atomic interactions (e.g., ignore charge transfer, an       expected to examine free energies of s ~ l v a t i o n ~ ~ ~
+effect that quantum mechanical partitioning
+schemes suggest may play a significant, though              and free energies of binding in host-guest sys-
+not predominant, role in hydrogen-bonding inter-
+a c t i o n)~. ~M~oreover, all widely used force fields     tems.
+employ an overly simplified "spherical-atom"
+model for vdW interactions, though the nuclear                Supplementary Material
+offset used for C-H bonds in MM25 and MM36 is
+helpful. As envisioned in part I,' we expect future            Computer-readable ASCII files of vdW, bond
+force fields to remedy these and other deficiencies         charge increment, and other MMFF94 parameter
+by employing a superior physical representation
+that will allow the following objective to be met: to                and Appendix A (nonbonded parameters
+define a force field that describes gas-phase molecular     used for enzyme-site "context molecules" in
+properties accurately and that behaves properly when        OPTIMOL/MMFF calculation^)^^ are included in
+embedded in the condensed phase. However, while             Supplementary Material.
+much remains to be done to achieve this objective,
+substantial progress has already been made in                 Acknowledgments
+understanding and reducing to practice certain
+key aspects of the requisite p h y s i ~ s ? " , ~U~n,-~ ~     I thank Prof. Martin Karplus for suggesting the
+doubtedly, such more elaborate force fields will            use of scaled HF/6-31G* interaction energies and
+become increasingly difficult to parameterize. We
+believe that only computational data will suffice,                           Bruce Bush and Chris Bayly for help-
+and expect MMFF94 to be one of a succession of              ful discussions on ESP fitting, and Mike Miller for
+force fields derived almost solely from such data.          interfacing PDM88 to Gaussian 88.
+
+   But while more elaborate physical models need             References
+to be explored, the current MMFF94 force field can
+at least be said to incorporate a broad and system-         1. Part I: T. A. Halgren, 1. Comput. Chem. (this issue).
+atic parameterization of nonbonded interactions.            2. Part 111: T. A. Halgren, J. Comput. Chem. (this issue).
+This parameteration encompasses not only the                3. Part IV: T. A. Halgren and R. B. Nachbar, 1. Comput. Chem.
+range of systems examined in this article but,
+through the extension of the core MMFF94 param-                (this issue).
+eterization described in part V, also covers a vari-
+ety of inorganic ions of interest in biomolecular           4. Part V T. A. Halgren, I . Comput. Chem. (this issue).
+modeling! Definitive evidence of the utility of the         5. (a) N. L. Allinger, 1. Am. Chem. SOC., 89, 8127 (1977); (b)
+present MMFF parameterization, to be sure, will
+have to await the results of liquid-phase simula-              U. Burkert and N. L. Allinger, Molecular Mechanics, Ameri-
+tions we are undertaking in collaboration with                 can Chemical Society, Washington, K, 1982; (c) N. L.
+others. Some such simulations will use the recent              Allinger and Y. Yuh, QCPE, 12,395 (1980).
+implementation of MMFF94 in the Merck version               6. N. L. Allinger, Y. H. Yuh, and J.-H. Lii, J. Am Chem. SOC.,
+                                                               111,8551-8566 (1989).
+                                                            7. S. J. Weiner, P. A. Kollman, D. T. Nguyen, and D. A. Case,
+
+                                                               1. Comput. Chem., 7, 230-252 (1986); S. J. Weiner, P. A.
+
+                                                               Kollman, D. T. Nguyen, D. A. Case, U. C. Singh, C. Ghio,
+                                                               G. Alagona, S. Profeta Jr., and P. Weiner, J. Am. Chem. Soc.,
+                                                               106,765-784 (1984).
+
+                                                            8. (a) S. Lifson, A. T. Hagler, and P. Dauber, 1. Am. Chem.
+
+                                                               Soc., 101, 5111-5121 (1979), and references therein; (b)
+                                                               P. Dauber-Osguthorpe, V. A. Roberts, D. J. Osguthorpe,
+                                                               J. Wolff, M. Genest, and A. T. Hagler, Proteins, 4, 31-47
+                                                               (1988). This is the force field used in the program DIS-
+                                                               COVER distributed by Biosym Technologies, Inc. (San
+                                                               Diego, CAI.
+
+JOURNAL OF COMPUTATIONAL CHEMISTRY                                                           549
+HALGREN                                                                   the same as is used for C-H bonds: cf. J.-H. Lii and N. L.
+                                                                          Allinger, J. A m . Chem. Soc., 111, 8576-8582 (1989). The
+ 9. B. R. Brooks, R. E. Bruccoleri, B. D. Olafson, D. J. States,           MM3 calculations were performed using a modified ver-
+                                                                           sion of OPTIMOL/MM2X (ref. 18).
+    S. Swaminathan, and M. Karplus, 1. Comput. Chem., 4,
+                                                                      28. Like the MM3 calculations, the CHARMm calculations were
+     187-217 (1983).                                                       performed using OPTIMOL. While these calculations were
+                                                                           performed with the vdW parameters distributed with
+10. T. A. Halgren, J. A m . Chem. Soc., 114, 7827-7843 (1992).             QUANTA Version 3.2, we note that the QUANTA 3.3,
+                                                                           QUANTA 3.4, and QUANTA 4.0 values for these parame-
+11. M. Waldman and A. T. Hagler, J. Conzput. Chem., 14,                    ters are unchanged.
+     1077-1084 (1993).
+                                                                      29. W. J. Hehre, L. Random, P. v. R Schleyer, and J. A. Pople,
+12. See, for example: Computer Simulation of Biomolecular Sys-            A b lnitio Molecular Orbital Theory, Wiley, New York, 1986,
+     tems, W. F. van Gunsteren and P. K. Weiner, Eds. ESCOM,
+     Leiden, 1989.                                                       Chapter 4. The 6-31G* and 6-31 + G** basis sets are also
+                                                                         known as 6-31G(d) and 6-31 + G(p,d), respectively.
+13. J. R. Hart and A. K. RappC, J. Chem. Phys., 97, 1109-1115
+     (1992).                                                          30. For the most part, these systems correspond to those listed
+                                                                           in Table I of ref. 1.
+14. We should point out that Hart and RappC applied the
+     Morse potential to a wider range of reference vdW poten-         31. D. E. Williams, J. Comput. Chem., 9, 745-763 (19881, as
+     tials than were used in testing the Buf-14-7 form. We do not          implemented by M. Miller (Merck Research Laboratories) in
+     know whether the Buf-14-7 form would also require addi-               Gaussian 88 (ref. 24).
+     tional shape parameters (e.g., by taking y and/or 6 in ref.
+     10 as variables) if applied to the same range of reference       32 J. Pranata, S. G. Wierschke, and W. L. Jorgensen, J. A m .
+     potentials.                                                           Chem. Soc., 113, 2810-2819 (1991), and references therein.
+
+15. R. Cambi, D. Cappelletti, G. Liutti, and F. Pirani, J. Chem.      33 M. J. Frisch, J. E. Del Bene, J. S. Binkley, and H. F. Schaefer
+     Phys., 95, 1852-1861 (1991).                                         111, 1. Chem. Phys., 84, 2279-2289 (1986).
+
+16. (a) N. Mataga and K. Nishimoto, Z . Physik. Chern., 13, 140       34 K. Szalewicz, S. J. Cole, W. Kolos, and R. J. Bartlett, 1.Chem.
+     (1957); (b) K. Ohno, Theor. Chem. Acta, 2, 219-227 (1964); (c)
+                                                                           Phys., 89, 3662-3673 (1988).
+    J. Klopman, 1. A m . Chern. Soc., 86, 4550 (1964).
+17 (a) N. Gresh, P. Claverie, and A. Pullman, Int. 1. Quantum         35 H. A. Carlson, T. B. Nguyen, M. Orozco, and W. L. Jor-
+                                                                           gensen, J. Comput. Chem., 14, 1240-1249 (1993).
+     Chem., 22, 199-215 (1982); (b) N. Gresh, P. Claverie, and
+     A. Pullman, Int. J. Quantum Ckem. Symp., 13, 243 (1979). (c)     36 (a) A. D. MacKerell Jr. and M. Karplus, 1. Phys. Chem., 95,
+    J. Langlet, P. Claverie, and F. Caron, In Intermolecular Forces,
+     B. Pullman, Ed., Reidel, Dordrecht, 1981, pp. 397-429.                10559-10560 (1991). (b) A. D. MacKerrel Jr., J. Wi6rkiewicz-
+
+18 M. K. Holloway, J. M. Wai, T. A. Halgren, P. M. D. Fitzger-            Kuczera, and M. Karplus, 1. A m . Chem. Soc. (in press).
+     ald, J. P. Vacca, B. D. Dorsey, R. B. Levin, W. J. Thompson,     37 W. L. Jorgensen, 1. Phys. Chem., 90, 1276-1284 (1986).
+     L. J. Chen, S. J. deSolms, N. Gaffin, A. K. Ghosh, E. A.
+    Giuliani, S. L. Graham, J. P. Guare, R. W. Hungate, T. A.         38 PROBE is a computer program used to derive molecular-
+     Lyle, W. M. Sanders, T. J. Tucker, M. Wiggins, C. M.                  mechanics parameters in least-squares fits to data obtained
+     Wiscount, 0.W. Woltersdorf, S. D. Young, P. L. Darke, and             from ab initio calculations. PROBE was created for the
+                                                                           Biosym Consortium on Potential Energy Functions by
+    J. A. Zugay, 1. Med. Chem., 38, 305-317 (1995).                        Biosym Technologies, Inc. (San Diego, CAI (cf. ref. 79).
+
+19. M. M. Szczesniak, G. Chalasinski, S. M. Cybulski, and             39. K. B. Wiberg, R. F. W. Bader, and C. D. H. Lau, J. A m .
+     S. Scheiner, J. Chem. Phys., 93, 4243-4253 (1990).                    Chem. Soc., 109, 1001-1012 (1987).
+
+20. A. J. Sadlej, Coll Czech. Chem. Commun., 53, 1995 (1988).         40. Cf. G. Karlstrom, P. Linse, A. Wallqvist, and B. Jonsson, J.
+                                                                           Am. Chem. Soc., 105, 3777-3782 (1983). A similar value of
+21. F. Boys and F. Bernardi, Mol. Phys., 19, 553 (1970).                   ca. 0.143 on hydrogen in benzene can be inferred from the
+                                                                           structure of benzene and from the data and analysis in
+22. K. B. Wiberg and'M. A. Murcko, J. Comput. Chem., 8,                    M. R. Battaglia, A. D. Buckingham, and J. H. Williams,
+     1124-1130 (1987).                                                     Chem. Phys. Left., 78, 421-423 (1981).
+
+23. R. Krishnan, M. J. Frisch, and J. A. Pople, J. Chem. Phys. 72,    41. W. L. Jorgensen, E. R. Laird, T. B. Nguyen, and J. Tirado-
+
+    4244-4245 (1980); R. Krishnan and J. A. Pople, Int. 1.                Rives, 1. Comput. Chem., 14, 206-215 (1993).
+
+     Quantum Chem., 14, 91 (1978).                                    42. H. J. C. Berendsen, J. P. M. Postma, W. F. van Gunsteren,
+                                                                           and J. Hermans, In Intermolecular Forces, B. Pullman, Ed.
+24. M. J. Frisch, M. Head-Gordon, H. B. Schlegel,                          Reidel, Dordrecht, 1981, pp. 331-342.
+     K. Raghavachari, J. S. Binkley, C. Gonzalez, D. J. Defrees, D.
+     J. Fox, R. A. Whiteside, R. Seeger, C. F. Melius, J. Baker, R.   43. W. L. Jorgensen, J. Chandrasekhar, and J. D. Madura, J.
+     L. Martin, L. R. Kahn, J. J. P. Stewart, E. M. Fluder, S.             Chem. Phys., 79, 926-935 (1983).
+     Topiol, and J. A. Pople, Gaussian 88, Gaussian, Inc., Pitts-
+     burgh, PA, 1988, as modified at Merck for improved 1 / 0         44. That is, a force field like MMFF which does not displace the
+     performance by E. M. Fluder.                                          vdW center along the bond away from the hydrogen nu-
+                                                                           cleus would have to use a compensatingly smaller vdW
+25. We replicated the hydrogen dimer calculations in this work             radius to obtain a similar interaction between vdW centers
+     because we were not always certain of the meaning of the              in roughly head-on contacts.
+     separation parameter cited by Wiberg and Murcko (ref. 22).
+                                                                      45. W. L. Jorgensen and J. Tirado-Rives, 1. A m . Chem. Soc., 110,
+26. J. L. M. Dillen, J. Comput. Chem., 11, 1125-1138 (1990).
+                                                                           1657-1666 (1988).
+27. For H,, we have assumed a foreshortening of 0.057 A in the
+                                                                      46. S. V. Oneil, D. J. Nesbit, P. Rosmus, H.-J. Werner, and D. C.
+     MM3 calculations such that each vdW center lies this dis-
+     tance into the bond from the parent hydrogen nucleus. This           Clary, 1. Chem. Phys., 91, 711-721 (1989).
+     foreshort$ning amounts to 7.7% of the H-H bond length
+     of 0.741 A employed. Strictly speaking, MM3 calculations
+     are not defined for H,, but this fractional foreshortening is
+
+550                                                                   VOL. 17, NOS. 5 & 6
+47. G. Chalasinski, S. M. Cybulski, M. M. Szczesniak, and                         MERCK MOLECULAR FORCE FIELD. II
+    S. Scheiner, J. Chem. Phys., 91, 7809-7817 (1989); G. Cha-
+    lasinski, M. M. Szczesniak, and S. Scheiner, J. Chem. Phys.,     65. The QEq charges were obtained for MP2/&31G*-optimized
+     94, 2807-2816 (1991).                                                geometries &ing the QEq implementation in -CERIUS
+                                                                          (Molecular Simulations, Inc., Burlington, MA) for MP2/6-
+48. These calculations used Gaussian 88 (ref. 24) and employed            31G* optimized geometries.
+     the MP2 model for electron correlation in conjunction with
+    6-31G basis sets supplemented by single diffuse Gaussian p       66. This objection applies particularly strongly to an iterative
+     functions on H and He (exponents 0.20, 0.30) and d func-             approach like that employed by Mortier (ref. 61). Rapp6
+     tions on F (exponent 0.35).                                          and Goddard (ref. 63) suggest in their manuscript title that
+                                                                          their approach is applicable for molecular-dynamics simu-
+49. The nonbonded and other MMFF94 parameter files are                    lations, but present no algorithm for computing charge
+     included in Appendix B in the Supplementary Material for             derivatives analytically. Moreover, their method as de-
+    paper I (ref. 1).                                                     scribed employs a matrix inversion which has a higher
+                                                                          power dependence on system size than does the calculation
+50. The MM2X parameters are provided as supplementary ma-                 of the molecular-mechanics energy function itself.
+     terial in ref. 18.
+                                                                     67. W. L. Jorgensen and J. Gao, J. A. Chem. Soc., 110,4212-4216
+51. The supplementary material for this article (Appendix A),
+    can be accessed on the Internet (see footnote * on the first         (1988).
+     page of this article).
+                                                                     68. G. Del Re, J. Chem. SOC.,4031 (1958); G. Del Re, B. Pullman,
+52. U. C. Singh and P. A. Kollman, J. Comput. Chem., 5,129-145           and T. Yonezawa, Biochim. Biophys. Actu, 75, 153 (1963).
+     (1984).
+                                                                     69. (a) R. J. Abraham, G. H. Grant, I. S. Haworth, and P. E.
+53. (a) C. I. Bayly, P. Cieplak, W. D. Cornell, and P. A. Kollman,       Smith, J. Computer-Aided Mol. Design, 5, 21-39 (1991); (b)
+    J. Phys. Chem., 97, 10269-10280 (1993); (b) W. D. Cornell,           R. J. Abraham and P. E. Smith, J. Computer-Aided Mol.
+    P. Cieplak, C. I. Bayly, and P. A. Kollman, J. Am. Chem.              Design, 3, 175-187 (1989).
+     SOC.,115, 9620-9631 (1993).
+                                                                     70. This judgment is supported by the preliminary results of
+54. C. Brenneman and K. B. Wiberg, J. Comput. Chem., 11,                  attempting to apply a charge equilibration scheme to het-
+     361-373 (1990).For the CHELP method on which CHELPG                 eroaromatic compounds: M. D. Miller and T. A. Halgren
+     is based, see also: L. E. Chirlian and M. M. Franci, J.             (unpublished research).
+     Comput. Chem., 8, 894 (1987).
+                                                                     71. For dipole directions, the values cited are weighted rms
+55. B. H. Besler, K. M. Merz, and P. A. Kollman, J. Comput.
+    Chem., 11, 431-439 (1990).                                           deviations computed as: rms = {CiwAi~/Ctwgll'*, where
+
+56. M. J, Frisch, G. W. Trucks, M. Head-Gordon, P. M. W. Gill,          A i = cos-'( p?lc . pyf/(l p?lcl Ip.fefl+ 1 X lo-")) and w,
+     M. W. Wong, J. B. Foresman, B. G. Johnson, H. B. Schlegel,
+    M. A. Robb, E. S. Replogle, R. Gomperts, J. L. Andres,              = I p7"I 1 p:ef1. By weighting the squared deviations in di-
+    K. Raghavachari, J. S. Binkley, C. Gonzalez, R. L. Martin,
+    D. J. Fox, D. J. Defrees, J. Baker, J. J. P. Stewart, and J. A.       rection by the product of the force-field calculated and
+     Pople, Gaussian 92 (Revision C), Gaussian, Inc., Pittsburgh,         (scaled) reference HF/6-31G* dipole moments and by com-
+     PA, 1992.                                                            puting the angle between the dipole moments in a manner
+                                                                          which yields a finite value even when one or both dipole
+57. These results are for dimers between "MMFF water" and                 moments vanish, this formula ensures that the weighted
+     acetamide constructed in the same manner as those re-                rms deviation mainly reflects differences in direction in
+     ported in ref. 35. Specifically, we, too, had to restrict the        cases in which the dipole moment is relatively large in
+     water molecule in the anti conformer to lie in the plane of          magnitude. In particular, it keeps large differences in direc-
+     the carbonyl group to prevent collapse to the syn form, in           tion from dominating the comparison when either of the
+     which the oxygen of the water molecule interacts with a              dipole moments is small in magnitude.
+     hydrogen on the amide nitrogen to form a second hydrogen
+     bond (cf. Fig. 4 of ref. 35).                                   72. Using unscaled HF/6-31G* dipole moments, MM2X gives
+                                                                          an rms error of 0.58 D in the dipole magnitudes. The rms
+58. T. R. Stouch and D. E. Williams, J . Comput. Chem., 13,               deviation for dipole directions is of course unaffected.
+     622-632 (1992).
+                                                                     73. M. J. Frisch, J. A. Pople, and J. E. Del Bene, J. Phys. Chem.,
+59. D. E. Williams, Bmpolymers, 29, 1367-1386 (1990).                     89,3664-3669 (1985).
+
+60. J. Gasteiger and M. Marsili, Tetrahedron, 36, 3219-3228          74. G. Chalasinski and M. Gutowski, Chem. Rev., 88, 943-962
+     (1980).                                                              (1988).
+
+61. W. J. Mortier, K. Van Genechten, and J. Gasteiger, J. Am.        75. Double-zeta plus polarization (DZP) basis sets: T. H. Dun-
+     Chem. Soc., 107, 829-835 (1985); W. Mortier, S. K. Ghosh,           ning Jr., J. Chem. Phys., 53,2823-2833 (1970); T. H. Dunning
+    and S. Shankar, J. Am. Chem. Soc., 108, 4315-4320 (1986).            Jr. and P. J. Hay, In Methods of Electronic Structure Theory,
+                                                                          H. F. Schaefer 111, Ed., Plenum Press, New York, 1977, Vol.
+62. (a) J. Mullay, J . Comput. Chem., 12, 369-375 (1991); (b)            2, pp. 1-27. The polarization exponents were those defined
+    J. Mullay, J.Comput. Chem., 9, 399-405 (1988).                        in ref. 3, i.e., 0.80 for hydrogen, 0.60, 0.85, 1.20, and 1.65 for
+                                                                         C, N, 0, and F, and 0.50, 0.65 and 0.80 for P, S, and C1.
+63. A. K. RappC and W. A. Goddard 111, 1. Phys. Chem., 95,
+                                                                     76. These calculations used the Lennard-Jones 9-6 potential for
+     3358-3363 (1991).                                                    intermolecular vdW interactions, and used partial charges
+                                                                          computed for use in intermolecular interactions (cf. ref. 18).
+64. The Gasteiger charges, which d o not depend on the geome-
+     try, were obtained using the implementation of this method      77. W. L. Jorgensen and J. Gao, J. Phys. Chem., 90, 2174-2182
+     in SYBYL, Version 5.5 (Tripos Associates, Inc., St. Louis,           (1986).
+     MO).
+                                                                     78. J. R. Maple, M.-J. Hwang, T. P. Stockfish, U. Dinur, M.
+                                                                         Waldman, C. S. Ewig, and A. T. Hagler, J. Comput. Chem.,
+                                                                         15, 161-182 1994; M.-J. Hwang, T. P. Stockfish, and A. T.
+                                                                         Hagler, J. A m . Chem. Soc., 116,2515-2525 (1994).
+
+JOURNAL OF COMPUTATIONAL CHEMISTRY                                   551
+HALGREN                                                                91. See, for example: (a) U. Dinur, J. Comput. Chem., 12,Yl-105
+                                                                           (1991); (b) U. Dinur, J. Comput. Chem., 12, 469-486 (1991);
+79. E. D. Stevens and P. Coppens, Actn Cryst., B36, 1864-1876              (c) U. Dinur, J. Phys. Chem., 94, 5669-5671 (1990).
+     (1980).
+                                                                       92. H. Umeyama and K. Morokuma, J. A m . Chem. Soc., 99,
+80. R. G. Delaplane and J. A. Ibers, Actn Cryst., B25, 2423-2437
+     (1969).                                                             - 1316-1332 (1977), and references therein. This article indi-
+
+81. For a pertinent comparison of OPLS and earlier Lifson et al.            cates that charge transfer contributes 2 kcal/mol to the
+     (ref. 8a) force-field results for liquid-phase simulations, see:
+    W. L. Jorgensen and C. J. Swenson, J. A m . Chem. Soc., 107,         - interaction energy for the water dimer, a quantity smaller
+     569-578 (1985). Consistent with the present arguments, the
+     Hagler-Lifson force field, which was derived using a simi-             than the electrostatic stabilization of 8 kca1;mol but by
+     lar energy-minimization methodology, gave longer energy-               no means negligible. The authors also note that charge
+     minimized hydrogen bond lengths for gas-phase dimers                   transfer appears to play a larger role in weaker hydrogen-
+     than Jorgensen and Swenson found would allow OPLS to                   bonding complexes, and we think it possible that this may
+     correctly reproduce liquid-phase properties of simple                  particularly be true for hydrogen bonds to such higher row
+     amides.                                                                atoms as sulfur.
+
+82. U. Dinur and A. T. Hagler, J. A m . Chem. SOC.,111,5149-5151       93. See, for example: (a) G. Corongiu, M. Migliore, and
+     (1989).                                                                E. Clementi, J. Chem. Phys., 90, 4629 (1989); (b) L. X. Dang,
+                                                                           J. E. Rice, J. Caldwell, and P. A. Kollman, J. Am. Chem. Sac.,
+83. H. S. Sun, S. J. Mumbry, J. R. Maple, and A. T. Hagler, J.              113, 2481-2486 (1991), and references therein; (c) M. Sprik,
+    A m . Chem. Soc., 116, 2978-2987 (1994).
+                                                                          I. Phys. Chem., 95, 2283-2291 (1991), and references therein;
+84. See, for example, the "vdW and hydrogen bonding" pa-
+    rameters listed in Table l of J.-H. Lii and N. L. Allinger, ].          (d) S.-B. Zhu, S. Yao, J.-B. Zhu, S. Singh, and G. W. Robin-
+     Comput. Chem., 12, 186-199 (1991).
+                                                                          son, 1. Phys. Chem., 95, 6211-6217 (1991); ( e )s.W. Rick, S. J.
+85. J.-H. Lii and N. L. Allinger, I. Comput. Chem., 12, 186-199
+                                                                           Stuart, and B. J. Berne, 1. Chem. Phys., 101, 6141-6156
+     (1991).
+                                                                            (1994); (f) D. N. Bernardo, Y . Ding, K. Krough-Jespersen,
+86. L. A. Curtiss, D. J. Frurip, and M. Blander, J. Chem. Phys.,            and R. M. Levy, J. Phys. Chem., 98, 4180-4187 (1994).
+     71, 2703 (1979).
+                                                                       94. R. Czerminski, J. L. Banks, and T. A. Halgren (unpublished
+87. J. Reimers, R. Watts, and M. Klein, Chem. Phys., 64, 95                 research). Currently, a version of CHARMm that supports
+     (1982).                                                                the earlier and less widely parameterized MMFF93 force
+                                                                            field (refs. 2-4) is available from Molecular Simulations,
+88. W. D. Cornell, P. Cieplak, C. I. Bayly, I. R. Gould, K. M.              Inc. (San Diego, CA). However, while the local Merck code
+     Merz Jr., D. M. Ferguson, D. C. Spellmeyer, T. Fox, J. W.              employs MMFF94, arrangements for including MMFF94 in
+                                                                            the distributed MS1 version have not yet been concluded.
+   Caldwell, and P. A. Kollman, I. A m . Chenz. SOC.,117,
+                                                                       95. P. S. Shenkin and T. A. Halgren (work in progress). The
+     5179-5197 (1995).                                                      MacroModel program suite and its BatchMin module, de-
+                                                                            veloped in the laboratories of Prof. Clark Still, are available
+89. MM2 and MM3 allow contributions from induced dipoles                    from Columbia University (New York, NY).
+     to be included in the calculation (N. L. Allinger, personal
+     communication). This feature does not, however, appear to         96. (a) J. I.. Banks, R. Czerminski, and T. A. Halgren (work in
+     be used in routine work.                                               progress); (b) 8. L. Bush, J. L. Banks, and T. A. Halgren
+                                                                            (work in progress).
+YO. (a) U. Dinur and A. T. Hagler, J. Comput. Chem., 16, 154-170
+    (1994); (b) U. Dinur and A. T. Hagler, J. Cheni. Phys., 91,
+
+   2949-2958 (1989); (c) U. Dinur and A. T. Hagler, I. Chetn.
+
+     Phys., 91, 2959-2970 (1989).
+
+552                                                                    VOL. 17, NOS. 5&6
+

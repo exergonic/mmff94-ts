@@ -105,13 +105,18 @@ types exactly, so the comparison isolates the oop term.
    (+8.053) show what the stub leaves out; no fixture total with
    nonzero BCI charges can match until Phase 4.
 
-6. **Typing scoreboard.** 65/550 suite molecules type-exact vs
-   OpenBabel (11.8%; 165 ≥90% atoms; see `atom-types-suite.test.ts`).
-   The torsion assertions on non-ethane fixtures stay skipped until typing
+6. **Typing scoreboard.** 91/550 suite molecules type-exact vs
+   OpenBabel (16.5%; 228 ≥90% atoms; see `atom-types-suite.test.ts`).
+   The aromatic-ring perception (Kekulé pattern + lone-pair
+   heteroatoms in 5-rings) landed 2026-08: pyridine/pyrrole/imine
+   heteroaromatics type as 37/38/39/63/64/65/66/44/59, taking the
+   scoreboard from 65 to 91 with zero regressions, and every new
+   typing-exact molecule's energy terms match BatchMin. The torsion
+   assertions on non-ethane fixtures stay skipped until typing
    isolates the term. Biggest remaining classes (from the worst-10):
-   thioamide/thiazole S and ring C/N (44, 63–66, 78–81), sulfonyl/
-   sulfate S (18), phosphate P (25) with H–S (71), amide/cyanamide N
-   (10, 28, 42/43).
+   sulfonyl/sulfate S (18), phosphate P (25) with H–S (71),
+   amide/cyanamide N (10, 28, 42/43), thioamide S (16/17),
+   imidazolium N (80/81 — needs formal-charge input).
 
 ## Suite — per-component report (typing-exact molecules)
 

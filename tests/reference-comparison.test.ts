@@ -29,13 +29,9 @@ const REF_DIR = join(__dirname, 'references');
 
 // Fixtures whose reference types are not assigned yet (see
 // atom-types.test.ts): energy comparisons are meaningless until the
-// typing lands — the reference log's types (amide N=10/H=28, aromatic
-// N=38, pyrrole N=39, ring C 37/63/64) are the roadmap targets.
+// typing lands — the reference log's types are the roadmap targets.
 const TYPING_GAP_SKIPS: Record<string, string> = {
   formamide: 'amide N (10) / H (28) typing — roadmap step 2',
-  pyridine: 'aromatic N (38) / ring C (37) typing — roadmap step 1',
-  pyrrole: 'pyrrole N (39) / ring C (63/64) typing — roadmap step 1',
-  nicotine: 'pyridine ring typing (38/37) — roadmap step 1',
 };
 
 function parse_reference_log(filePath: string): Record<string, number> {

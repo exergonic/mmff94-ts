@@ -18,14 +18,15 @@ const EXPECTED_TYPES: Record<string, number[]> = {
   'ammonia.sdf':    [8, 23, 23, 23],   // NH3: amine N, H-N
   'trimethylamine.sdf': [1, 8, 1, 1, 5, 5, 5, 5, 5, 5, 5, 5, 5],  // N(CH3)3
   'piperidine.sdf': [8, 1, 1, 1, 1, 1, 23, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5],  // N-H + 5 ring C
+  'pyridine.sdf':   [38, 37, 37, 37, 37, 37, 5, 5, 5, 5, 5],  // pyridine N, arom C
+  'pyrrole.sdf':    [39, 63, 64, 64, 63, 23, 5, 5, 5, 5],  // pyrrole N, α/β C
+  'nicotine.sdf':   [38, 37, 37, 37, 37, 37, 1, 8, 1, 1, 1, 1,
+                      5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5],  // pyridine ring + pyrrolidine N
 };
 
 // Nitrogen typing still on the roadmap — these fixtures' references use
 // types we do not assign yet (the reference logs carry them):
 //   formamide  → N 10 (amide), H 28 (H-N amide)     [roadmap step 2 — also gates AGLYSL01]
-//   pyridine   → N 38 (aromatic N), ring C 37        [roadmap step 1]
-//   pyrrole    → N 39 (pyrrole N), ring C 63/64      [roadmap step 1]
-//   nicotine   → pyridine ring 38/37 (pyrrolidine N=8 already correct) [roadmap step 1]
 
 const SDF_DIR = join(__dirname, '..', 'tests', 'fixtures', 'sdf');
 
@@ -48,10 +49,6 @@ describe('Nitrogen fixtures on the typing roadmap', () => {
   // fixtures into EXPECTED_TYPES above.
   const roadmap: Record<string, number[]> = {
     'formamide.sdf': [3, 7, 10, 5, 28, 28],   // from the obenergy log
-    'pyridine.sdf':  [38, 37, 37, 37, 37, 37, 5, 5, 5, 5, 5],
-    'pyrrole.sdf':   [39, 63, 64, 64, 63, 23, 5, 5, 5, 5],
-    'nicotine.sdf':  [38, 37, 37, 37, 37, 37, 1, 8, 1, 1, 1, 1,
-                       5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5],
   };
   for (const [filename, expected] of Object.entries(roadmap)) {
     it.skip(`assigns correct MMFF94 types for ${filename} (typing gap — see roadmap)`, () => {

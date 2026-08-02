@@ -162,7 +162,11 @@ carbonyl, acetylenic, cyclopropyl, cyclobutyl, aromatic), hydrogen (bonded to C,
 O, N, S), oxygen (divalent, carbonyl), nitrogen (amine, imine, amide, aromatic),
 sulfur (thiol/sulfide, thiocarbonyl, sulfoxide, sulfone), halogens, silicon, and
 phosphorus. Ring detection uses iterative leaf-stripping; aromaticity is detected
-via the Kekulé alternating-bond pattern.
+via the Kekulé pattern — every ring atom carries exactly one ring double bond,
+except a 5-ring may have exactly one N/O/S with none (the lone-pair donor:
+pyrrole's N, furan's O, thiophene's S); V2000 aromatic bonds (order 4) settle
+the ring directly. Fused rings, chorded cage rings, and saturated rings
+(triazines, γ-pyrones) are rejected by the pattern.
 
 Also in this file: `compute_bci_charges()`, which computes partial charges using
 the Bond Charge Increment model. Each bond contributes a fixed increment to both of
