@@ -1,15 +1,19 @@
 /**
- * mmff94-ts quickstart — the full pipeline from SDF to per-term MMFF94 energy.
+ * mmff94-ts quickstart — the full pipeline from SDF to per-term MMFF94 energy,
+ * gradient, and L-BFGS geometry optimization.
  *
  * Run with: npx tsx examples/quickstart.ts
  * (Requires tsx: npm install -g tsx or npx tsx)
- *
- * Geometry optimization is not shown yet: the optimizers (optimize_lbfgs,
- * optimize_steepest_descent) land in Phase 6, and the pipeline will extend
- * to minimization once they do.
  */
 
-import { parse_sdf, assign_atom_types, compute_bci_charges, calc_energy } from '../src/index';
+import {
+  parse_sdf,
+  assign_atom_types,
+  compute_bci_charges,
+  calc_energy,
+  calc_gradient,
+  optimize_lbfgs,
+} from '../src/index';
 
 // A minimal ethane molecule in V2000 MOL format: 2 carbons, 6 hydrogens,
 // one C–C bond. The geometry is the STAGGERED (gauche 60°) global minimum,
@@ -63,6 +67,25 @@ function main() {
   console.log(`  Out-of-plane:     ${energy.out_of_plane.toFixed(4)}`);
   console.log(`  ─────────────────────────`);
   console.log(`  TOTAL:            ${energy.total.toFixed(4)}`);
+
+  // Step 5: analytical gradient — dE/dx_i per atom (kcal/mol/Å)
+  const gradient = calc_gradient(typed);
+  const max_g = Math.max(...gradient.flat().map(Math.abs));
+  console.log(`\nGradient: max|dE/dx| = ${max_g.toFixed(4)} kcal/mol/Å`);
+
+  // Step 6: L-BFGS geometry optimization. The SDF geometry is already
+  // MMFF94-optimized, so nudge one hydrogen first — the optimizer must
+  // walk it back to the staggered minimum.
+  typed.atoms[2].x += 0.3;
+  const e_before = calc_energy(typed).total;
+  const result = optimize_lbfgs(
+    typed,
+    m => ({ energy: calc_energy(m), gradient: calc_gradient(m) }),
+    { gradient_tolerance: 0.05 },
+  );
+  console.log(`\nOptimization (L-BFGS, ${result.iterations} iterations):`);
+  console.log(`  Energy: ${e_before.toFixed(4)} → ${result.energy.total.toFixed(4)} kcal/mol`);
+  console.log(`  Converged: ${result.converged} (max|dE/dx| = ${result.final_max_gradient.toExponential(1)})`);
 }
 
 main();

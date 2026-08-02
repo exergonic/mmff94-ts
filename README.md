@@ -7,17 +7,21 @@
 > All seven energy terms (bond stretch, angle bend, stretch-bend,
 > torsion, buffered 14-7 van der Waals, electrostatic (BCI),
 > out-of-plane) are implemented and validated against OpenBabel
-> `obenergy` logs and Halgren's 753-molecule validation suite, and
-> the analytical gradients of every term are cross-checked against
-> finite differences (worst relative error 8×10⁻⁸). The remaining
-> piece — geometry optimization — is a stub. The public API is not
-> yet stable and may change before 0.1.0. See the [Status](#status)
-> table for the full picture.
+> `obenergy` logs and Halgren's 753-molecule validation suite, the
+> analytical gradients of every term are cross-checked against
+> finite differences (worst relative error 8×10⁻⁸), and L-BFGS
+> geometry optimization is working (14/16 fixtures converge to
+> max |gradient| < 0.05 kcal/mol/Å from both the SDF and perturbed
+> geometries; formamide is skipped for its documented typing gap and
+> nicotine converges at a relaxed tolerance — see
+> `tests/optimization.test.ts`). The steepest-descent fallback is
+> still a stub. The public API is not yet stable and may change
+> before 0.1.0. See the [Status](#status) table for the full picture.
 
 Energy evaluation for organic molecules, running in the browser or
 Node.js without WebAssembly, native binaries, or external services.
-Analytical gradients are complete; geometry optimization is in
-progress.
+Analytical gradients and L-BFGS optimization are complete; the
+steepest-descent fallback is in progress.
 
 ## Why
 
@@ -30,8 +34,8 @@ with the rest of your TypeScript toolchain.
 the buffered 14-7 van der Waals, stretch-bend cross term,
 Fourier-series torsion, bond-charge-increment electrostatics, and
 the rest of the seven terms — so you can run energy evaluations
-entirely on the client side. Geometry optimization is still in
-progress (see [Status](#status)).
+entirely on the client side. Geometry optimization via L-BFGS is
+working (see [Status](#status)).
 
 ## Status
 
@@ -46,7 +50,8 @@ progress (see [Status](#status)).
 | Out-of-plane bending | ✅ |
 | 1-4 scaling | ✅ (electrostatic ×0.75, inside the term) |
 | Analytical gradients | ✅ (all 7 terms, FD-verified < 10⁻⁵) |
-| Geometry optimization (L-BFGS / SD) | ⬜ |
+| Geometry optimization (L-BFGS) | ✅ (converges 14/16 fixtures to max\|g\| < 0.05; see caveats) |
+| Geometry optimization (SD fallback) | ⬜ |
 
 ## Validation
 
