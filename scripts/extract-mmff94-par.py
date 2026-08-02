@@ -107,6 +107,16 @@ def generate_stretch_bend():
             t1, t2, t3 = parts[1], parts[2], parts[3]
             kIJK, kKJI = parts[4], parts[5]
             f.write(f"  '{p}-{t1}-{t2}-{t3}': {{ k_sb_IJK: {value(kIJK)}, k_sb_KJI: {value(kKJI)} }},\n")
+
+        # OpenBabel's mmffstbn.par transcription is missing the class-2
+        # (2,2,2) entry that the original MMFF94 file contains (verified
+        # against Tinker's mmff94.prm: '2 2 2 2 0.219 0.250 2'). Without
+        # it, class-2 C(sp2)-C(sp2)-C(sp2) angles — both bonds
+        # BT-flagged — fall to the 0.30 dfsb default (JIYJAC's strbnd
+        # residual, +0.05 vs BatchMin).
+        f.write("  // OpenBabel's mmffstbn.par lacks this entry; the original has it.\n")
+        f.write("  // Class-2 (2,2,2): both bonds BT-flagged C(sp2)-C(sp2)-C(sp2).\n")
+        f.write("  '2-2-2-2': { k_sb_IJK: 0.219, k_sb_KJI: 0.250 },\n")
         f.write("};\n")
     print(f"  [write] stretch-bend.ts ({len(lines)} entries)")
 

@@ -290,4 +290,7 @@ export const STRETCH_BEND_PARAMS: Record<string, StretchBendParams> = {
   '0-36-81-78': { k_sb_IJK: 0.021, k_sb_KJI: 0.368 },
   '0-36-81-80': { k_sb_IJK: 0.018, k_sb_KJI: 0.422 },
   '0-78-81-80': { k_sb_IJK: 0.366, k_sb_KJI: 0.419 },
+  // OpenBabel's mmffstbn.par lacks this entry; the original has it.
+  // Class-2 (2,2,2): both bonds BT-flagged C(sp2)-C(sp2)-C(sp2).
+  '2-2-2-2': { k_sb_IJK: 0.219, k_sb_KJI: 0.250 },
 };

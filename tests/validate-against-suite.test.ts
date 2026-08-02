@@ -139,6 +139,21 @@ describe('Halgren MMFF94 suite validation', () => {
     expect(Math.abs(got.torsion - ref.torsion)).toBeLessThan(0.01);
   });
 
+  it('stretch-bend term matches BatchMin on the class-2 C-C-C case (JIYJAC)', () => {
+    // JIYJAC's 7-ring has C(sp2)-C(sp2)-C(sp2) angles with BOTH bonds
+    // BT-flagged (class 2). OpenBabel's mmffstbn.par transcription lost
+    // the class-2 (2,2,2) entry (present in the original MMFF94 file);
+    // without it the angle fell to the 0.30 dfsb default instead of
+    // 0.219/0.250 (Δ = +0.05, the last strbnd residual). The extraction
+    // script now restores the entry. Pinned here so a reintroduction
+    // fails loudly.
+    const raw = molecules.find(m => m.name === 'JIYJAC')!;
+    const typed = assign_atom_types(raw);
+    const ref = refEnergies.get('JIYJAC')!;
+    const got = calc_energy(typed);
+    expect(Math.abs(got.stretch_bend - ref.strbnd)).toBeLessThan(0.01);
+  });
+
   it('reports per-component energies for typing-exact molecules', () => {
     // The typing-exact molecules are the only place where a component
     // delta cannot be blamed on atom typing: every mismatch is a term
