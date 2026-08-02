@@ -194,16 +194,31 @@ export function torsion_class(ctx: ClassContext, i: number, j: number, k: number
   // 4-ring: the closing bond i-l makes i-j-k-l a 4-cycle.
   if (ctx.adj[i].includes(l)) return 4;
 
-  if (get_bond_order(ctx, j, k) === 1) {
+  if (get_bond_order(ctx, j, k) === 1 && !is_aromatic_bond(ctx, j, k)) {
     if (bt_ab || bt_cd) return 2;
   }
 
   // 5-ring: a common neighbor x of i and l closes the cycle i-j-k-l-x.
-  // Only non-aromatic rings qualify, and only with an sp3 carbon.
+  // Only non-aromatic rings qualify, and only with an sp3 carbon. The
+  // aromaticity test is on the RING, not the torsion atoms: a fused
+  // non-aromatic 5-ring can share aromatic-typed carbons with a benzo
+  // ring (FILNOD's thiazolidine ring), and BatchMin's GetTorsionType
+  // skips rings by ring->IsAromatic(), not by the atoms' own flags.
   const types = [i, j, k, l].map(a => mol.atom_types[a]);
-  if (types.includes(1) && types.every(t => !ATOM_TYPE_PROPERTIES[t]?.arom)) {
-    const x = ctx.adj[i].find(n => n !== j && n !== k && ctx.adj[l].includes(n));
-    if (x !== undefined) return 5;
+  if (types.includes(1)) {
+    for (const x of ctx.adj[i]) {
+      if (x === j || x === k || !ctx.adj[l].includes(x)) continue;
+      // The ring i-j-k-l-x is aromatic iff every one of its bonds is
+      // aromatic; try each closing atom x — a fused system can offer
+      // both an aromatic and a non-aromatic 5-ring through i and l.
+      const ring_aromatic =
+        is_aromatic_bond(ctx, i, j) &&
+        is_aromatic_bond(ctx, j, k) &&
+        is_aromatic_bond(ctx, k, l) &&
+        is_aromatic_bond(ctx, l, x) &&
+        is_aromatic_bond(ctx, x, i);
+      if (!ring_aromatic) return 5;
+    }
   }
 
   return 0;

@@ -125,6 +125,20 @@ describe('Halgren MMFF94 suite validation', () => {
     expect(Math.abs(got.torsion - ref.torsion)).toBeLessThan(0.01);
   });
 
+  it('torsion term matches BatchMin on the fused 5-ring case (FILNOD)', () => {
+    // FILNOD's saturated thiazolidine ring is fused to the benzo ring:
+    // its fusion carbons are aromatic-typed, but the 5-ring itself is
+    // not aromatic. BatchMin classes these torsions as 5-ring (TTijkl
+    // = 5) by ring aromaticity, not by the atoms' flags; judging by
+    // the flags misclassified them as class 0 (Δ = +0.223, the last
+    // torsion residual). Pinned here so a reintroduction fails loudly.
+    const raw = molecules.find(m => m.name === 'FILNOD')!;
+    const typed = assign_atom_types(raw);
+    const ref = refEnergies.get('FILNOD')!;
+    const got = calc_energy(typed);
+    expect(Math.abs(got.torsion - ref.torsion)).toBeLessThan(0.01);
+  });
+
   it('reports per-component energies for typing-exact molecules', () => {
     // The typing-exact molecules are the only place where a component
     // delta cannot be blamed on atom typing: every mismatch is a term

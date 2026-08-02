@@ -71,11 +71,11 @@ reference logs per atom (`tests/charges.test.ts`).
 | Out-of-plane | 15/15 | 0 on most fixtures; see BatchMin table below |
 
 Per-component energies vs BatchMin on the 91 typing-exact suite
-molecules: bond/angle/vdW/oop 91/91, strbnd 90/91, torsion 90/91
-(FUVDOP's residual was a real bug — degenerate i = l "torsions" in its
-triazine 3-ring, now skipped like BatchMin does; FILNOD +0.22 remains),
-electrostatic 89/91 (two metal-carboxylate salts awaiting formal-charge
-input).
+molecules: bond/angle/vdW/oop 91/91, strbnd 90/91, torsion 91/91 (the
+two torsion residuals were real bugs — degenerate i = l "torsions" in
+FUVDOP's 3-ring, and FILNOD's 5-ring torsions classed by atom flags
+instead of ring aromaticity — both fixed), electrostatic 89/91 (two
+metal-carboxylate salts awaiting formal-charge input).
 
 ### Out-of-plane vs BatchMin (8 suite molecules, kcal/mol)
 
