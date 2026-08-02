@@ -14,12 +14,10 @@
  * compensates for the fact that 1-4 charges are partially captured by
  * the torsion term's parameterization.
  *
- * STATUS: the scaling is NOT yet applied — all terms are summed
- * unscaled (see TODO below). When it lands, it will be applied HERE
- * rather than in the individual term functions, so that each term
- * function is simple and testable in isolation: the individual term
- * functions calculate the FULL (unscaled) energy for every pair, and
- * total.ts decides which pairs get scaled.
+ * The scaling is applied inside the electrostatic term — it is the
+ * only scaled term, and the term functions return totals (not pair
+ * lists), so total.ts cannot rescale individual pairs. Each term
+ * stays testable in isolation.
  */
 
 import type { TypedMolecule, EnergyComponents } from '../../types';
@@ -46,12 +44,11 @@ export function calc_energy(molecule: TypedMolecule): EnergyComponents {
   const electrostatic = calc_electrostatic_energy(molecule);
   const out_of_plane  = calc_oop_energy(molecule);
 
-  // TODO: apply 1-4 scaling to electrostatic only (×0.75). vdW is NOT
-  // scaled at 1-4 (Halgren 1996, p. 496 — see the header above).
-  // This requires identifying 1-4 atom pairs (atoms exactly 3 bonds apart)
-  // and multiplying the appropriate pairwise contributions by 0.75.
-  // (Stretch-bend is already omitted for linear centers — the lin flag
-  // from angle_parameters, applied in stretch-bend.ts.)
+  // 1-4 scaling is applied inside the electrostatic term (×0.75 for
+  // atoms exactly three bonds apart) — it is the only scaled term,
+  // and the scaling cannot live here because the term functions
+  // return totals, not pair lists. vdW is NOT scaled at 1-4
+  // (Halgren 1996, p. 496 — see the header above).
 
   const total = bond_stretch + angle_bend + stretch_bend +
                 torsion + van_der_waals + electrostatic + out_of_plane;

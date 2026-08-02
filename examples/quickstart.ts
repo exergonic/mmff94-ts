@@ -47,7 +47,8 @@ function main() {
   console.log(`Atom types: ${typed.atom_types.join(', ')}`);
 
   // Step 3: compute partial charges from bond charge increments
-  // (compute_bci_charges is still a stub — charges are zeros until Phase 4)
+  // (BCI partial charges from src/mmff94/charges.ts — required by the
+  // electrostatic term; the term also computes them on demand)
   compute_bci_charges(typed);
 
   // Step 4: calculate the full MMFF94 energy

@@ -171,7 +171,8 @@ the ring directly. Fused rings, chorded cage rings, and saturated rings
 Also in this file: `compute_bci_charges()`, which computes partial charges using
 the Bond Charge Increment model. Each bond contributes a fixed increment to both of
 its atoms; the partial charge on an atom is the sum of all its bond contributions.
-This is currently a stub.
+This lives in `src/mmff94/charges.ts` (it is the electrostatics model, not atom
+typing). The reference logs' per-atom charges are pinned in `charges.test.ts`.
 
 ---
 
@@ -426,20 +427,33 @@ vdW table). At r = R*, the expression simplifies to E = −ε — the well depth
 because both buffer fractions become exactly 1. This property is verified in
 the test suite.
 
-### 7.6 Electrostatic — `electrostatic.ts` (stub)
+### 7.6 Electrostatic — `electrostatic.ts`
 
 ```
-E_elec = 332.0716 · q_i · q_j / (ε · r)
+E_elec = 332.0716 · q_i · q_j / (D · (R_ij + S))
 ```
 
-Coulomb's law with partial charges from the BCI model. The dielectric constant ε
-depends on the environment: ε = 1 for in-vacuo, ε = r for distance-dependent
-dielectric (the MMFF94 default), ε = 4.0 for protein/interior calculations.
+Coulomb's law with partial charges from the BCI model (`charges.ts`). The
+factor 332.0716 converts from e²/Å to kcal/mol. Eq. (6) of part III adds
+**S = 0.05 Å, the electrostatic buffering constant**, to every distance —
+MMFF94 never evaluates the bare 1/r form.
+
+- The dielectric D = 1.0 in vacuo (the MMFF94 default; D = r is the
+  distance-dependent alternative).
+- Only pairs separated by **three or more bonds** are evaluated: 1-2 and
+  1-3 pairs are excluded (the same pair list as the van der Waals term —
+  this is why ammonia's electrostatic energy is zero).
+- 1-4 pairs (exactly three bonds apart) are scaled by **0.75** — the
+  scaling lives inside this term because the term functions return
+  totals, not pair lists.
 
 Requires `compute_bci_charges()` to have been called first to fill in the
-`partial_charges[]` array.
+`partial_charges[]` array (the term also computes them on demand).
 
-Current status: **stub** (returns 0).
+Validated against the reference logs (per-atom charges AND energies) and
+against BatchMin: 89/91 typing-exact suite molecules match the
+electrostatic component exactly — the two misses are metal-carboxylate
+salts whose formal charges are not yet read.
 
 ### 7.7 Out-of-plane bending — `out-of-plane.ts`
 
@@ -751,19 +765,19 @@ Every energy term is tested **in isolation** before it is tested in combination.
 | Data types | ✅ Complete | — |
 | SDF parser | ✅ Complete | 5 tests |
 | Vector math | ✅ Complete | 13 tests |
-| Atom typing | ✅ Implemented | 3 tests (suite scoreboard: 65/550 type-exact) |
-| BCI charges | ⚠️ Stub | 0 tests |
+| Atom typing | ✅ Implemented | 3 tests (suite scoreboard: 91/550 type-exact) |
+| BCI charges | ✅ Implemented (charges.ts) | 6 tests (reference-log pins) |
 | Bond stretch | ✅ Implemented | 2 tests |
 | Angle bend | ✅ Implemented | 2 tests |
 | Stretch-bend | ✅ Implemented | 3 tests |
 | Torsion | ✅ Implemented | 4 tests |
 | Van der Waals | ✅ Implemented | 5 tests |
-| Electrostatic | ❌ Stub (returns 0) | 0 tests |
+| Electrostatic | ✅ Implemented (buffered r+0.05, 1-4 ×0.75) | 5 tests + reference logs + suite 89/91 |
 | Out-of-plane | ✅ Implemented | 12 tests |
-| 1-4 scaling | ❌ Not implemented | 0 tests |
+| 1-4 scaling | ✅ Applied inside the electrostatic term | — |
 | Total energy | ✅ Sums all seven terms | 8 tests (reference + suite comparison) |
 | Gradients | ❌ Stub | 0 tests |
 | L-BFGS | ❌ Stub | 0 tests |
 | Steepest descent | ❌ Stub | 0 tests |
 | MMD parser (Halgren suite) | ✅ Complete | 4 tests |
-| **All tests** | **92 passing** | **13 files** |
+| **All tests** | **127 passing \| 2 skipped** | **15 files** |

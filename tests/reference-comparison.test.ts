@@ -90,6 +90,11 @@ describe('All benchmark molecules vs OpenBabel references', () => {
       // 0.0000 instead of -0.00158).
       expect(Math.abs(energy.stretch_bend - ref.strbnd)).toBeLessThan(0.02);
       expect(Math.abs(energy.van_der_waals - ref.vdw)).toBeLessThan(0.02);
+      // Electrostatics: BCI charges + the buffered Coulomb term (eq. 6,
+      // part III), 1-2/1-3 pairs excluded, 1-4 scaled by 0.75. The
+      // reference logs' partial charges are pinned in charges.test.ts.
+      expect(Math.abs(energy.electrostatic - ref.elec)).toBeLessThan(0.02);
+      expect(Math.abs(energy.total - ref.total)).toBeLessThan(0.02);
     });
 
     it(`${name}: torsion matches reference`, () => {
@@ -125,7 +130,7 @@ describe('All benchmark molecules vs OpenBabel references', () => {
       console.log(`    StrBnd:    ${energy.stretch_bend.toFixed(5)} vs ${ref.strbnd.toFixed(5)} ${check(energy.stretch_bend, ref.strbnd, 0.05)}`);
       console.log(`    Torsion:   ${energy.torsion.toFixed(5)} vs ${ref.torsion.toFixed(5)} ${check(energy.torsion, ref.torsion, 0.5)}`);
       console.log(`    VDW:       ${energy.van_der_waals.toFixed(5)} vs ${ref.vdw.toFixed(5)} ${check(energy.van_der_waals, ref.vdw, 0.01)}`);
-      console.log(`    Elec:      ${energy.electrostatic.toFixed(5)} vs ${ref.elec.toFixed(5)} (STUB)`);
+      console.log(`    Elec:      ${energy.electrostatic.toFixed(5)} vs ${ref.elec.toFixed(5)} ${check(energy.electrostatic, ref.elec, 0.01)}`);
       console.log(`    OOP:       ${energy.out_of_plane.toFixed(5)} vs ${ref.oop.toFixed(5)} ${check(energy.out_of_plane, ref.oop, 0.05)}`);
       console.log(`    Total:     ${energy.total.toFixed(5)} vs ${ref.total.toFixed(5)}`);
     });

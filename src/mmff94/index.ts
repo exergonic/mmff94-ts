@@ -10,8 +10,11 @@
 
 export {
   assign_atom_types,
-  compute_bci_charges,
 } from './atom-types';
+
+export {
+  compute_bci_charges,
+} from './charges';
 
 export {
   calc_energy,

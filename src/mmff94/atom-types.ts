@@ -630,21 +630,3 @@ function estimate_ring_size(
 
   return 0; // no ring found within depth limit
 }
-
-
-/**
- * Compute partial charges for every atom using the MMFF94 bond charge
- * increment (BCI) model.
- *
- * MMFF94 does NOT store per-atom partial charges in its parameter tables.
- * Instead, each BOND TYPE has a charge increment value. The partial charge
- * on an atom is the SUM of the BCI values of every bond it participates in.
- *
- * Formal charges override the BCI sum.
- *
- * STATUS: NOT YET IMPLEMENTED — fills partial_charges with zeros. The
- * BCI sum (and formal-charge override) is the remaining work.
- */
-export function compute_bci_charges(molecule: TypedMolecule): void {
-  molecule.partial_charges = molecule.atoms.map(() => 0.0);
-}

@@ -131,6 +131,7 @@ describe('Halgren MMFF94 suite validation', () => {
       ['torsion', 'torsion', 'torsion'],
       ['vdw', 'van_der_waals', 'vdw'],
       ['oop', 'out_of_plane', 'oop'],
+      ['elec', 'electrostatic', 'elec'],
     ] as const;
 
     const stats = termDefs.map(() => ({
@@ -140,8 +141,6 @@ describe('Halgren MMFF94 suite validation', () => {
       worst: [] as [string, number][],
     }));
     let nChecked = 0;
-    let elecMean = 0;
-    let elecMax = 0;
 
     for (const mol of molecules) {
       const refTypes = reference.molecules[mol.name!];
@@ -161,8 +160,6 @@ describe('Halgren MMFF94 suite validation', () => {
         if (Math.abs(d) <= 0.05) s.green++;
         s.worst.push([mol.name!, d]);
       });
-      elecMean += Math.abs(ref.elec);
-      elecMax = Math.max(elecMax, Math.abs(ref.elec));
     }
 
     const lines = [
@@ -179,10 +176,7 @@ describe('Halgren MMFF94 suite validation', () => {
         `  ${label.padEnd(9)} ${String(s.green).padStart(3)}/${nChecked}  ${mean.padStart(7)}   ${s.max.toFixed(2).padStart(7)}   ${worst}`,
       );
     });
-    lines.push(
-      `  ─────────────────────────────────────────`,
-      `  electrostatics (stub omits): mean |ref| ${(elecMean / Math.max(1, nChecked)).toFixed(2)}, max ${elecMax.toFixed(2)} kcal/mol`,
-    );
+    lines.push(`  ─────────────────────────────────────────`);
     console.log(lines.join('\n'));
 
     // The report must cover most of the exact set; the exact count grows

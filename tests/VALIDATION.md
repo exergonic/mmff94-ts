@@ -101,9 +101,20 @@ types exactly, so the comparison isolates the oop term.
    −3.00231 vs −4.71331, vdW 3.51572 vs 2.78652 — all traceable to
    typing (sulfonate S, ammonium N). The OOP row is exact (0/0).
 
-5. **Electrostatic stub.** obenergy's benzene (+3.078) and ethene
-   (+8.053) show what the stub leaves out; no fixture total with
-   nonzero BCI charges can match until Phase 4.
+5. **Electrostatic — RESOLVED (2026-08): the term is live.** The BCI
+   charges (charges.ts) and the buffered Coulomb term (eq. 6, part III:
+   E = 332.0716·q_i·q_j/(r + 0.05), the electrostatic buffering
+   constant S = 0.05 Å) match the reference logs per-atom AND
+   per-energy for every typed fixture — benzene +3.07810, ethene
+   +8.0530, pyridine +2.0939, pyrrole +3.0720, nicotine −2.2135 —
+   and the fixture totals now match exactly (they were the last gap).
+   The suite per-component report now covers electrostatics: 89/91
+   typing-exact molecules match BatchMin's electrostatic component;
+   the two misses (CAMALD03, BAOXLM01) are metal-carboxylate salts
+   whose formal charges our parser does not read yet (the fcadj
+   machinery of mmffpbci.par is the documented remaining piece).
+   Pairs 1-2/1-3 are excluded (ammonia's electrostatic is zero — the
+   BatchMin log confirms), 1-4 pairs ×0.75 inside the term.
 
 6. **Typing scoreboard.** 91/550 suite molecules type-exact vs
    OpenBabel (16.5%; 228 ≥90% atoms; see `atom-types-suite.test.ts`).
