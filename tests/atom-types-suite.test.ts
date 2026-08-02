@@ -37,6 +37,13 @@ const KNOWN_GOOD: string[] = [
   'SI02A', 'SI03A', 'SR01A', 'SR05A', 'SR07A', 'TAFXIH',
   'TAJWAC', 'VABROF', 'VASDOI', 'VEJWOW', 'VEYBIK', 'VUXREL',
   'AR14A',
+  // Amide-N typing (types 10/28) landed 2026-08-02: +32 exact codes.
+  'BIPDEJ02', 'CEWVIJ10', 'CITNOI10', 'CIZFIA', 'COSFAR', 'COYNAF',
+  'DAHBAP', 'DEDCIY', 'DEMBIG', 'DEXGIW', 'DEZXEL', 'DUBNET',
+  'DUVXIB', 'DUXTIZ', 'FAMYUN', 'FELYUQ', 'FENHAH', 'FESCAH',
+  'FIHXID', 'FIVRAD', 'FOJPAV', 'FUFDIT', 'GEHPUE', 'GOHVUU',
+  'JECVUI', 'JIKHUG', 'KODFUE', 'KOFMEX', 'SALVEG', 'SIZWUT',
+  'TAGVIG', 'ZZZVCQ01',
 ];
 
 interface MoleculeResult {

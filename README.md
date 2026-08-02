@@ -50,7 +50,7 @@ working (see [Status](#status)).
 | Out-of-plane bending | ✅ |
 | 1-4 scaling | ✅ (electrostatic ×0.75, inside the term) |
 | Analytical gradients | ✅ (all 7 terms, FD-verified < 10⁻⁵) |
-| Geometry optimization (L-BFGS) | ✅ (15/16 fixtures to max\|g\| < 0.05; formamide skipped — typing gap) |
+| Geometry optimization (L-BFGS) | ✅ (16/16 fixtures to max\|g\| < 0.05) |
 | Geometry optimization (SD fallback) | ⬜ |
 
 ## Validation
@@ -66,28 +66,28 @@ fixture (`tests/gradient.test.ts`, δ = 10⁻⁶ Å, relative error
 < 10⁻⁵ — worst observed 8×10⁻⁸).
 
 All seven terms match the obenergy references **exactly (to 5
-decimals) on all 15 asserted fixtures** (formamide is a documented
-typing-gap skip until amide N typing lands), and every fixture
-**total** matches exactly. The BCI partial charges also match the
-reference logs per atom (`tests/charges.test.ts`).
+decimals) on all 16 fixtures** — formamide included since the amide-N
+typing (types 10/28) landed — and every fixture **total** matches
+exactly. The BCI partial charges also match the reference logs per
+atom (`tests/charges.test.ts`).
 
 | Term | Exact on fixtures | Notes |
 |---|---|---|
-| Bond stretch | 15/15 | |
-| Angle bend | 15/15 | |
-| Stretch-bend | 15/15 | |
-| Torsion | 15/15 | |
-| Van der Waals | 15/15 | |
-| Electrostatic | 15/15 | per-atom charges pinned in charges.test.ts |
-| Out-of-plane | 15/15 | 0 on most fixtures; see BatchMin table below |
+| Bond stretch | 16/16 | |
+| Angle bend | 16/16 | |
+| Stretch-bend | 16/16 | |
+| Torsion | 16/16 | |
+| Van der Waals | 16/16 | |
+| Electrostatic | 16/16 | per-atom charges pinned in charges.test.ts |
+| Out-of-plane | 16/16 | 0 on most fixtures; see BatchMin table below |
 
-Per-component energies vs BatchMin on the 91 typing-exact suite
-molecules: bond/angle/vdW/oop 91/91, strbnd 91/91, torsion 91/91 (the
-three residuals were real bugs — degenerate i = l "torsions" in FUVDOP's
+Per-component energies vs BatchMin on the 123 typing-exact suite
+molecules: bond/angle/vdW/oop/strbnd/torsion all 123/123 (the three
+residuals were real bugs — degenerate i = l "torsions" in FUVDOP's
 3-ring, FILNOD's 5-ring torsions classed by atom flags instead of ring
 aromaticity, and an entry OpenBabel's strbnd transcription lost, JIYJAC —
-all fixed), electrostatic 89/91 (two metal-carboxylate salts awaiting
-formal-charge input).
+all fixed), electrostatic 120/123 (BAOXLM01, CAMALD03, TAGVIG — all
+formal-charge salts awaiting formal-charge input).
 
 ### Out-of-plane vs BatchMin (8 suite molecules, kcal/mol)
 

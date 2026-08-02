@@ -451,9 +451,10 @@ Requires `compute_bci_charges()` to have been called first to fill in the
 `partial_charges[]` array (the term also computes them on demand).
 
 Validated against the reference logs (per-atom charges AND energies) and
-against BatchMin: 89/91 typing-exact suite molecules match the
-electrostatic component exactly — the two misses are metal-carboxylate
-salts whose formal charges are not yet read.
+against BatchMin: 120/123 typing-exact suite molecules match the
+electrostatic component — the three misses (BAOXLM01, CAMALD03, TAGVIG)
+are formal-charge salts (ammonium/metal carboxylates) whose formal
+charges are not yet read.
 
 ### 7.7 Out-of-plane bending — `out-of-plane.ts`
 
@@ -478,7 +479,7 @@ Applied to every tri-coordinate center (planar or pyramidal) with exactly three
 bonded neighbors. The sign of k_oop encodes real chemistry: zero for amine N
 (pyramidalization comes from angle-bend reference values), negative for amide N
 (MMFF94 gives pyramidal amide nitrogen deliberately). Validated against
-BatchMin: exact on all 65 typing-exact suite molecules.
+BatchMin: exact on all 123 typing-exact suite molecules.
 
 ---
 
@@ -599,12 +600,11 @@ fails or for the first few iterations to improve the starting point.
 L-BFGS stops when the maximum |gradient| component falls below
 `gradient_tolerance` (default 0.05 kcal/mol/Å).
 
-**Current status**: L-BFGS is implemented and tested — 15/16 fixtures converge
-to max|g| < 0.05 kcal/mol/Å from both the SDF and the perturbed geometry
-(`tests/optimization.test.ts`, 19 tests; nicotine needs ~450 iterations from its
-vdW-canyon start, formamide is skipped — its typing-gap surface has an artificial
-minimum, see the test's comment). Steepest descent is still a stub and is not
-exported from the public barrel until it works.
+**Current status**: L-BFGS is implemented and tested — all 16 fixtures
+converge to max|g| < 0.05 kcal/mol/Å from both the SDF and the perturbed
+geometry (`tests/optimization.test.ts`, 19 tests; nicotine needs ~450
+iterations from its vdW-canyon start). Steepest descent is still a stub and is
+not exported from the public barrel until it works.
 
 ---
 
@@ -794,7 +794,7 @@ Every energy term is tested **in isolation** before it is tested in combination.
 | **Unit** | Single energy function returns the right value for a known geometry | Compute by hand or with a reference for a 2-3 atom test case (H₂ for bond stretch, H₂O for angle bend) |
 | **Regression** | Total and per-component energies match Halgren suite | OPTIMOL totals from `MMFF94.energies`, component breakdowns from `MMFF94_bmin.log`; assert `|computed − reference| < 0.01 kcal/mol` |
 | **Gradient** | Analytical dE/dx matches (E(x+δ) − E(x−δ)) / (2δ) | Finite-difference on every coordinate of every atom in every fixture: δ = 10⁻⁶ Å, relative error < 10⁻⁵ |
-| **Optimization** | After minimization, max gradient < threshold and energy is lower | L-BFGS on each fixture from the SDF geometry and from a perturbed geometry (DONE — 15/16 at max\|g\| < 0.05; formamide skipped for its typing-gap surface) |
+| **Optimization** | After minimization, max gradient < threshold and energy is lower | L-BFGS on each fixture from the SDF geometry and from a perturbed geometry (DONE — 16/16 at max\|g\| < 0.05) |
 
 ---
 
@@ -805,19 +805,19 @@ Every energy term is tested **in isolation** before it is tested in combination.
 | Data types | ✅ Complete | — |
 | SDF parser | ✅ Complete | 5 tests |
 | Vector math | ✅ Complete | 13 tests |
-| Atom typing | ✅ Implemented | 3 tests (suite scoreboard: 91/550 type-exact) |
+| Atom typing | ✅ Implemented | 3 tests (suite scoreboard: 123/550 type-exact) |
 | BCI charges | ✅ Implemented (charges.ts) | 6 tests (reference-log pins) |
 | Bond stretch | ✅ Implemented | 2 tests |
 | Angle bend | ✅ Implemented | 2 tests |
 | Stretch-bend | ✅ Implemented | 3 tests |
 | Torsion | ✅ Implemented | 4 tests |
 | Van der Waals | ✅ Implemented | 5 tests |
-| Electrostatic | ✅ Implemented (buffered r+0.05, 1-4 ×0.75) | 5 tests + reference logs + suite 89/91 |
+| Electrostatic | ✅ Implemented (buffered r+0.05, 1-4 ×0.75) | 5 tests + reference logs + suite 120/123 |
 | Out-of-plane | ✅ Implemented | 12 tests |
 | 1-4 scaling | ✅ Applied inside the electrostatic term | — |
 | Total energy | ✅ Sums all seven terms | 8 tests (reference + suite comparison) |
 | Gradients | ✅ Analytical (all 7 terms, shared helpers with the energy terms) | 9 tests (FD-verified, worst error 8×10⁻⁸) |
-| L-BFGS | ✅ Implemented (Nocedal & Wright Alg. 7.5 + strong-Wolfe) | 19 tests (15/16 fixtures at max\|g\| < 0.05) |
+| L-BFGS | ✅ Implemented (Nocedal & Wright Alg. 7.5 + strong-Wolfe) | 19 tests (16/16 fixtures at max\|g\| < 0.05) |
 | Steepest descent | ❌ Stub | 0 tests |
 | MMD parser (Halgren suite) | ✅ Complete | 4 tests |
 | **All tests** | **161 passing \| 2 skipped** | **18 files** |

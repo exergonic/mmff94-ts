@@ -75,6 +75,41 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
     if (has_dbl_O && has_terminal_O) carboxylate_carbons.add(i);
   }
 
+  // Amide N detection: N bonded to a carbonyl (or thiocarbonyl) carbon
+  // — C=O/C=S, non-aromatic. The N itself holds only single bonds
+  // (formamide's N: N–C(=O)H); its trigonal character is resonance, so
+  // the test must inspect the NEIGHBOR's double bond, not this atom's.
+  // Pre-scanned so both the N (type 10, NC=O) and its hydrogens (type
+  // 28, HNCO) type correctly regardless of atom order.
+  const amide_nitrogens = new Set<number>();
+  for (let i = 0; i < n; i++) {
+    const atom = molecule.atoms[i];
+    if (atom.element !== 'N') continue;
+    if (adj[i].some(nb => nb.order >= 2)) continue; // an N=double is imine/N-oxide, not amide
+    // Sulfonamide N (NSO₂, type 43 — a roadmap item) takes precedence
+    // over amide: an N on a sulfonyl S is never NC=O. Without this,
+    // DIKGAF's N (bonded to both SO₂ and an ester carbonyl C) was
+    // mis-typed 10, dragging a −1.6 kcal/mol oop term (the negative
+    // amide k_oop) onto a center that has none.
+    const bonded_to_sulfonyl = adj[i].some(nb => {
+      const nbr = molecule.atoms[nb.nbr];
+      if (nbr.element !== 'S' && nbr.element !== 'P') return false;
+      let terminal_oxygens = 0;
+      for (const b of adj[nb.nbr]) {
+        if (molecule.atoms[b.nbr].element === 'O' && adj[b.nbr].length === 1) terminal_oxygens++;
+      }
+      return terminal_oxygens >= 2;
+    });
+    if (bonded_to_sulfonyl) continue;
+    const bonded_to_carbonyl = adj[i].some(nb => {
+      if (molecule.atoms[nb.nbr].element !== 'C') return false;
+      return adj[nb.nbr].some(
+        b => !(b.order >= 4) && b.order === 2 && ['O', 'S'].includes(molecule.atoms[b.nbr].element),
+      );
+    });
+    if (bonded_to_carbonyl) amide_nitrogens.add(i);
+  }
+
   for (let i = 0; i < n; i++) {
     const atom = molecule.atoms[i];
     const neighbors = adj[i];
@@ -186,10 +221,10 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
             atom_types[i] = 5;
             break;
           case 'N':
-            // H bonded to sp³ N → type 23 (HNR)
-            // H bonded to sp² N (amide, imine) → type 28 (HNCO) or 27 (HN=C)
-            // For now, all H-N → type 23
-            atom_types[i] = 23;
+            // H on an amide N (type 10) → 28 (HNCO). Other N–H stays
+            // type 23 (HNR) for now; the imine-H (27, HN=C) and
+            // sulfonamide-H (72) are roadmap items.
+            atom_types[i] = amide_nitrogens.has(neighbors[0].nbr) ? 28 : 23;
             break;
           case 'O':
             // Water hydrogen → type 31 (H-OH); other O-H → type 21 (HOR)
@@ -241,6 +276,14 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
           break;
         }
 
+        // Amide N (type 10, NC=O): single-bonded to a carbonyl carbon —
+        // trigonal by resonance, not by an N=double bond (formamide).
+        // See the amide_nitrogens pre-scan above.
+        if (amide_nitrogens.has(i)) {
+          atom_types[i] = 10;
+          break;
+        }
+
         if (n_neighbors === 3 && !has_double && !has_aromatic) {
           // Amine N: 3 single bonds → type 8 (NR)
           atom_types[i] = 8;
@@ -249,7 +292,11 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
           // (nitrogen with a double bond and one other neighbor)
           atom_types[i] = 9;
         } else if (n_neighbors === 3 && has_double) {
-          // Check if the double goes to C or O
+          // N with three neighbors AND its own double bond: N=O is the
+          // N-oxide (type 67, placeholder). N=C/N=N (enamine, N-N=C
+          // with delocalized lone pair) also take type 10 in the
+          // reference — the true amide (N–C(=O), no N double bond) is
+          // handled above by the amide_nitrogens pre-scan.
           const dbl_to_O = double_nbrs.some(nb => {
             const target = molecule.atoms[nb.nbr];
             return target.element === 'O';
@@ -258,7 +305,6 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
             // N-oxide (N→O): placeholder — N2OX (type 67)
             atom_types[i] = 67;
           } else {
-            // Amide N (N-C=O) with delocalized lone pair → type 10 (NC=O)
             atom_types[i] = 10;
           }
         } else {

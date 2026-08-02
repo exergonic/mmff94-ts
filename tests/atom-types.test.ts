@@ -22,36 +22,14 @@ const EXPECTED_TYPES: Record<string, number[]> = {
   'pyrrole.sdf':    [39, 63, 64, 64, 63, 23, 5, 5, 5, 5],  // pyrrole N, α/β C
   'nicotine.sdf':   [38, 37, 37, 37, 37, 37, 1, 8, 1, 1, 1, 1,
                       5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5],  // pyridine ring + pyrrolidine N
+  'formamide.sdf':  [3, 7, 10, 5, 28, 28],  // amide N (10), H on amide N (28)
 };
-
-// Nitrogen typing still on the roadmap — these fixtures' references use
-// types we do not assign yet (the reference logs carry them):
-//   formamide  → N 10 (amide), H 28 (H-N amide)     [roadmap step 2 — also gates AGLYSL01]
 
 const SDF_DIR = join(__dirname, '..', 'tests', 'fixtures', 'sdf');
 
 describe('Atom typing against OpenBabel reference', () => {
   for (const [filename, expected] of Object.entries(EXPECTED_TYPES)) {
     it(`assigns correct MMFF94 types for ${filename}`, () => {
-      const sdf = readFileSync(join(SDF_DIR, filename), 'utf-8');
-      const mol = parse_sdf(sdf);
-      const typed = assign_atom_types(mol);
-      expect(typed.atom_types).toEqual(expected);
-    });
-  }
-});
-
-describe('Nitrogen fixtures on the typing roadmap', () => {
-  // These molecules' reference types (amide N=10/H=28, aromatic N=38,
-  // pyrrole N=39, ring C 37/63/64) are the roadmap targets, not yet
-  // assigned. Pinned here as expected-failures so the roadmap has
-  // concrete, visible checkpoints. When the typing lands, move the
-  // fixtures into EXPECTED_TYPES above.
-  const roadmap: Record<string, number[]> = {
-    'formamide.sdf': [3, 7, 10, 5, 28, 28],   // from the obenergy log
-  };
-  for (const [filename, expected] of Object.entries(roadmap)) {
-    it.skip(`assigns correct MMFF94 types for ${filename} (typing gap — see roadmap)`, () => {
       const sdf = readFileSync(join(SDF_DIR, filename), 'utf-8');
       const mol = parse_sdf(sdf);
       const typed = assign_atom_types(mol);
