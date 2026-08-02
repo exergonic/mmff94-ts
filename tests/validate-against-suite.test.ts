@@ -5,8 +5,11 @@
  * assigns atom types via our own assign_atom_types(), computes energies,
  * and reports per-component comparison against BatchMin 5.5 references.
  *
- * Currently informational: many terms are stubs and atom typing coverage
- * is limited. As terms and types are implemented, tighten tolerances.
+ * All seven terms are implemented; the per-component assertions run on
+ * the subset of molecules whose atom typing reproduces the reference
+ * types exactly (91/550 in the suite scoreboard — see
+ * atom-types-suite.test.ts), so the comparison isolates the terms
+ * themselves rather than the typing gaps.
  */
 
 import { describe, it, expect } from 'vitest';
@@ -80,7 +83,7 @@ describe('Halgren MMFF94 suite validation', () => {
       `  Stretch-bend    ${ref.strbnd.toFixed(5).padStart(10)}  ${got.stretch_bend.toFixed(5).padStart(10)}  ${stat(got.stretch_bend, ref.strbnd)}`,
       `  Torsion         ${ref.torsion.toFixed(5).padStart(10)}  ${got.torsion.toFixed(5).padStart(10)}  ${stat(got.torsion, ref.torsion)}`,
       `  VDW             ${ref.vdw.toFixed(5).padStart(10)}  ${got.van_der_waals.toFixed(5).padStart(10)}  ${stat(got.van_der_waals, ref.vdw)}`,
-      `  Electrostatic   ${ref.elec.toFixed(5).padStart(10)}  ${got.electrostatic.toFixed(5).padStart(10)}  STUB`,
+      `  Electrostatic   ${ref.elec.toFixed(5).padStart(10)}  ${got.electrostatic.toFixed(5).padStart(10)}  ${stat(got.electrostatic, ref.elec)}`,
       `  OOP             ${ref.oop.toFixed(5).padStart(10)}  ${got.out_of_plane.toFixed(5).padStart(10)}  ${stat(got.out_of_plane, ref.oop)}`,
       `  ───────────────────────────────────────────────────`,
       `  TOTAL           ${ref.total.toFixed(5).padStart(10)}  ${got.total.toFixed(5).padStart(10)}`,

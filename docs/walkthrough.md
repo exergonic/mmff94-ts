@@ -1,6 +1,6 @@
 # mmff94-ts — End-to-End Walkthrough
 
-**What happens when you call `calc_energy(typed_mol)` or `optimize(typed_mol)`?**
+**What happens when you call `calc_energy(typed_mol)` or `optimize_lbfgs(typed_mol)`?**
 
 This document traces the full pipeline: from a raw SDF string to a per-atom energy
 decomposition or a minimized geometry. It is the companion to the AGENTS.md project
@@ -168,11 +168,11 @@ pyrrole's N, furan's O, thiophene's S); V2000 aromatic bonds (order 4) settle
 the ring directly. Fused rings, chorded cage rings, and saturated rings
 (triazines, γ-pyrones) are rejected by the pattern.
 
-Also in this file: `compute_bci_charges()`, which computes partial charges using
-the Bond Charge Increment model. Each bond contributes a fixed increment to both of
-its atoms; the partial charge on an atom is the sum of all its bond contributions.
-This lives in `src/mmff94/charges.ts` (it is the electrostatics model, not atom
-typing). The reference logs' per-atom charges are pinned in `charges.test.ts`.
+`compute_bci_charges()` lives in its own module, `src/mmff94/charges.ts` — it is
+the electrostatics model, not atom typing. The Bond Charge Increment model: each
+bond contributes a fixed increment to both of its atoms; the partial charge on an
+atom is the sum of all its bond contributions. The reference logs' per-atom
+charges are pinned in `charges.test.ts`.
 
 ---
 
@@ -494,9 +494,10 @@ export function calc_energy(molecule: TypedMolecule): EnergyComponents {
   const electrostatic = calc_electrostatic_energy(molecule);
   const out_of_plane  = calc_oop_energy(molecule);
 
-  // TODO: apply 1-4 scaling to electrostatic only (×0.75). vdW is NOT
-  // scaled at 1-4 (Halgren 1996, p. 496).
-  // (not yet implemented)
+  // 1-4 scaling: electrostatic ×0.75, applied INSIDE the electrostatic
+  // term (it is the only scaled term). vdW is NOT scaled at 1-4
+  // (Halgren 1996, p. 496). The terms return totals, not pair lists,
+  // so total.ts cannot rescale individual pairs.
 
   const total = bond_stretch + angle_bend + stretch_bend +
                 torsion + van_der_waals + electrostatic + out_of_plane;
@@ -517,15 +518,17 @@ interactions would be double-counted. The MMFF94 specification mandates:
 | Van der Waals | **none** | Halgren 1996 p. 496: "1,4-vdW interactions are not differentially scaled in MMFF94" — the ×0.5 of MM2/GAFF is a different convention |
 | Electrostatic | 0.75 | BCI charges are parameterized with this scaling built in |
 
-The scaling is applied in `total.ts` rather than in the individual term functions
-so that each term is simple and testable in isolation. The individual functions
-compute the FULL (unscaled) energy; the orchestrator decides which pairs to scale.
+The scaling is applied inside the electrostatic term — it is the only scaled
+term, and the term functions return totals (not pair lists), so `total.ts`
+cannot rescale individual pairs. Each term stays testable in isolation; the
+electrostatic term's own tests pin the ×0.75 against the reference logs.
 
-**Current status**: 1-4 scaling is not yet implemented. The total is a plain sum.
+**Current status**: implemented. The total is a plain sum of the seven terms;
+the ×0.75 lives inside the electrostatic term (see §7.6).
 
 ---
 
-## 9. Gradients — `src/mmff94/gradient/` (stub)
+## 9. Gradients — `src/mmff94/gradient/`
 
 The gradient is the derivative of the total energy with respect to every atomic
 coordinate:
@@ -539,35 +542,69 @@ mirror the energy/ layout: one file per term, each exporting a function that
 returns the gradient contribution for that term.
 
 The analytical gradients are derived from the same functional forms as the energy
-terms and are cross-checked against finite-difference calculations (δ = 10⁻⁶ Å,
-relative error < 10⁻⁵).
+terms. Two rules keep them honest:
 
-The gradient is the negative of the force on each atom: F_i = −∇_i E.
+1. **Same computational path** — every derivative goes through the chain rule on
+   the exact expression the energy term evaluates (the shared helpers in
+   `gradient/derivatives.ts` mirror `utils/vector.ts`'s normalization order and
+   handedness). A mathematically equal but differently-ordered derivative would
+   still agree with finite differences, but floating-point rounding would show up
+   as test noise.
+2. **Shared resolution** — parameter lookup and pair enumeration are exported
+   helpers (`stretch_bend_angle_terms`, `torsion_terms`, `vdw_pair_parameters`,
+   `oop_force_constant`, `is_1_4_pair`) used by BOTH the energy term and its
+   gradient, so the two cannot disagree about which parameters or which pairs
+   apply. The 1-4 electrostatic ×0.75 is applied by the same `is_1_4_pair` in
+   both.
 
-**Current status**: stub (returns zero vector for every atom).
+**Current status**: complete. All seven term gradients plus the total are
+cross-checked against central finite differences in `tests/gradient.test.ts`
+(δ = 10⁻⁶ Å, relative error < 10⁻⁵; worst observed error 8×10⁻⁸). The gradient is
+the negative of the force on each atom: F_i = −∇_i E.
 
 ---
 
-## 10. Optimization — `src/optimize/` (stubs)
+## 10. Optimization — `src/optimize/`
 
 Geometry optimization finds the nearest local minimum of the energy surface by
 iteratively adjusting atomic coordinates. Two algorithms are planned:
 
-### 10.1 L-BFGS (primary)
+### 10.1 L-BFGS (primary — implemented)
 
 Limited-memory Broyden–Fletcher–Goldfarb–Shanno — a quasi-Newton method that
-builds an approximate Hessian from the history of gradient evaluations. Uses
-cubic line search (standard algorithm from Nocedal & Wright).
+builds an approximate inverse Hessian from a limited history (m = 10 by default)
+of position and gradient changes, needing only the energy and its gradient at
+each step — exactly what `calc_energy`/`calc_gradient` provide. The implementation
+follows Nocedal & Wright (2nd ed.): Algorithm 7.5 (two-loop recursion with the
+initial-Hessian scaling γ = sᵀy/yᵀy), Algorithm 3.5 (strong-Wolfe line search,
+c1 = 1e-4, c2 = 0.9) and Algorithm 3.6 (the zoom with cubic interpolation).
 
-### 10.2 Steepest descent (fallback)
+Two robustness details matter on MMFF94's stiff surfaces (see the source
+comments for the full why):
+
+- The first line-search trial is α₀ = 1/γ (capped at a 2 Å physical step):
+  without the γ compensation, a tiny γ (~10⁻³–10⁻⁵ on stiff surfaces) lets the
+  α = 1 trial satisfy the Wolfe conditions trivially and the optimizer accepts
+  γ-sized steps — convergent in theory, glacial in practice.
+- History pairs with steps below the noise floor (≤ 10⁻⁴ Å) are discarded, and a
+  non-descent two-loop direction falls back to steepest descent with a history
+  reset: wall-limited steps on vdW canyons would otherwise poison the direction
+  with ill-scaled curvature information.
+
+### 10.2 Steepest descent (fallback — still a stub)
 
 Simple gradient descent with Armijo line search. Used when the L-BFGS line search
 fails or for the first few iterations to improve the starting point.
 
-Both optimizers stop when the maximum force component falls below a threshold
-(typically 0.05 kcal/mol/Å).
+L-BFGS stops when the maximum |gradient| component falls below
+`gradient_tolerance` (default 0.05 kcal/mol/Å).
 
-**Current status**: both are stubs.
+**Current status**: L-BFGS is implemented and tested — 15/16 fixtures converge
+to max|g| < 0.05 kcal/mol/Å from both the SDF and the perturbed geometry
+(`tests/optimization.test.ts`, 19 tests; nicotine needs ~450 iterations from its
+vdW-canyon start, formamide is skipped — its typing-gap surface has an artificial
+minimum, see the test's comment). Steepest descent is still a stub and is not
+exported from the public barrel until it works.
 
 ---
 
@@ -678,10 +715,10 @@ For optimization:
 └───────┬────────┘
         │
         ▼
-┌────────────────┐     loop     ┌────────────────┐
-│optimize()      │  ──────────→ │ update coords  │
-│ L-BFGS or SD   │  ←───────── │ check gradient │
-└───────┬────────┘     until    └────────────────┘
+┌─────────────────┐     loop     ┌────────────────┐
+│optimize_lbfgs() │  ──────────→ │ update coords  │
+│ (L-BFGS)        │  ←───────── │ check gradient │
+└───────┬─────────┘     until    └────────────────┘
         │             converged
         ▼
 ┌─────────────────────┐
@@ -713,12 +750,14 @@ src/index.ts  (public barrel)
   │     │     ├── stretch-bend.ts    ← types, vector, parameters
   │     │     ├── torsion.ts         ← types, vector, parameters
   │     │     ├── van-der-waals.ts   ← types, parameters
-  │     │     ├── electrostatic.ts   ← types, parameters (stub)
+  │     │     ├── electrostatic.ts   ← types, parameters
   │     │     ├── out-of-plane.ts    ← types, parameters
   │     │     └── total.ts           ← all of the above
   │     │
   │     ├── gradient/
-  │     │     └── total.ts       ← types (stub)
+  │     │     ├── total.ts           ← types + the seven term gradients
+  │     │     ├── derivatives.ts     ← shared geometry-derivative helpers
+  │     │     └── <term>.ts (×7)     ← types, parameters, derivatives
   │     │
   │     └── parameters/
   │           ├── index.ts       ← re-exports
@@ -739,8 +778,9 @@ src/index.ts  (public barrel)
   ├── src/utils/vector.ts        ← no deps
   │
   └── src/optimize/
-        ├── l-bfgs.ts            ← types, vector, gradient (stub)
-        └── steepest-descent.ts  ← types, vector, gradient (stub)
+        ├── l-bfgs.ts            ← types only (energy + gradient arrive
+        │                          via the callback argument)
+        └── steepest-descent.ts  ← types (stub — not exported)
 ```
 
 ---
@@ -754,7 +794,7 @@ Every energy term is tested **in isolation** before it is tested in combination.
 | **Unit** | Single energy function returns the right value for a known geometry | Compute by hand or with a reference for a 2-3 atom test case (H₂ for bond stretch, H₂O for angle bend) |
 | **Regression** | Total and per-component energies match Halgren suite | OPTIMOL totals from `MMFF94.energies`, component breakdowns from `MMFF94_bmin.log`; assert `|computed − reference| < 0.01 kcal/mol` |
 | **Gradient** | Analytical dE/dx matches (E(x+δ) − E(x−δ)) / (2δ) | Finite-difference on every coordinate of every atom in every fixture: δ = 10⁻⁶ Å, relative error < 10⁻⁵ |
-| **Optimization** | After minimization, max gradient < threshold and energy is lower | Run L-BFGS on each fixture from the SDF geometry and from a perturbed geometry |
+| **Optimization** | After minimization, max gradient < threshold and energy is lower | L-BFGS on each fixture from the SDF geometry and from a perturbed geometry (DONE — 15/16 at max\|g\| < 0.05; formamide skipped for its typing-gap surface) |
 
 ---
 
@@ -776,8 +816,8 @@ Every energy term is tested **in isolation** before it is tested in combination.
 | Out-of-plane | ✅ Implemented | 12 tests |
 | 1-4 scaling | ✅ Applied inside the electrostatic term | — |
 | Total energy | ✅ Sums all seven terms | 8 tests (reference + suite comparison) |
-| Gradients | ❌ Stub | 0 tests |
-| L-BFGS | ❌ Stub | 0 tests |
+| Gradients | ✅ Analytical (all 7 terms, shared helpers with the energy terms) | 9 tests (FD-verified, worst error 8×10⁻⁸) |
+| L-BFGS | ✅ Implemented (Nocedal & Wright Alg. 7.5 + strong-Wolfe) | 19 tests (15/16 fixtures at max\|g\| < 0.05) |
 | Steepest descent | ❌ Stub | 0 tests |
 | MMD parser (Halgren suite) | ✅ Complete | 4 tests |
-| **All tests** | **127 passing \| 2 skipped** | **15 files** |
+| **All tests** | **161 passing \| 2 skipped** | **18 files** |

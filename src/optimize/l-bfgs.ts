@@ -26,8 +26,10 @@
  *         with non-positive curvature yᵀs is skipped — it carries
  *         no usable information about the inverse Hessian).
  *   3. Stop when max |g_i| < gradient_tolerance (default 0.05
- *      kcal/mol/Å, the "well-minimized structure" threshold), when
- *      the step becomes negligible, or when the iteration cap hits.
+ *      kcal/mol/Å, the "well-minimized structure" threshold) or when
+ *      the iteration cap hits. If the line search finds no acceptable
+ *      step (e.g. a degenerate flat direction), the run ends
+ *      unconverged rather than oscillating.
  *
  * The optimizer minimizes the total energy E; the returned gradient
  * is dE/dx, so the descent direction is −H·∇E.
@@ -53,7 +55,7 @@ export type EnergyGradientFn = (
 // Strong Wolfe line-search constants (Nocedal & Wright, eq. 3.13/3.14)
 const C1 = 1e-4;  // Armijo: sufficient decrease
 const C2 = 0.9;   // curvature: |φ'(α)| ≤ c2·|φ'(0)|
-const MAX_LINE_SEARCH = 40; // zoom iterations per line search
+const MAX_LINE_SEARCH = 40; // trial/zoom budget for one line search
 const MAX_ALPHA = 20;       // step cap (units follow the coordinates, Å)
 const MAX_TRIAL_STEP = 2.0; // Å — the first line-search trial never moves an atom farther
 
@@ -329,8 +331,8 @@ export function optimize_lbfgs(
   /**
    * The zoom (Algorithm 3.6): shrink a bracket [lo, hi] known to
    * contain a point satisfying the strong Wolfe conditions, choosing
-   * trial points by cubic interpolation (eq. 3.59) — bisection when
-   * the interpolation leaves the safeguarded central 80% interval.
+   * trial points by cubic interpolation (eq. 3.59), with bisection as
+   * the fallback when the interpolation leaves the bracket.
    */
   function zoom(
     lo: number,

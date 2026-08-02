@@ -86,8 +86,8 @@ describe('Electrostatic energy', () => {
   });
 
   it('completes the total energy — fixture totals now match exactly', () => {
-    // The electrostatic stub was the only remaining total gap; with it
-    // live, every typed fixture's total matches its obenergy log.
+    // Electrostatic was the last term to land; with it live, every
+    // typed fixture's total matches its obenergy log.
     const refs: Record<string, number> = {
       benzene: 16.22697,
       pyridine: 15.5234,

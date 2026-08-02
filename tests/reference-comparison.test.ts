@@ -4,16 +4,11 @@
  * For each SDF in tests/fixtures/sdf/, assign atom types, compute all energy
  * terms, and compare against the obenergy log in tests/references/.
  *
- * Terms asserted in this file (0.02 kcal/mol tolerance):
- *   bond_stretch, angle_bend, van_der_waals
+ * All seven terms and the total are asserted at 0.02 kcal/mol tolerance
+ * (formamide and other typing-gap fixtures are skipped — the reference
+ * log's types are the roadmap targets, see TYPING_GAP_SKIPS below).
  *
- * Terms with known discrepancies (printed in the comparison, not asserted):
- *   stretch_bend — near zero in practice; reference often < 0.01
- *
- * Term still a stub:
- *   electrostatic (returns 0)
- *
- * out_of_plane is implemented and validated against BatchMin in
+ * out_of_plane is additionally validated against BatchMin in
  * validate-against-suite.test.ts; here it is printed for reference only.
  */
 
