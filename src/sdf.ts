@@ -53,6 +53,12 @@ export function parse_sdf(sdf_text: string): Molecule {
     const y = parse_float(line, 10, 20);
     const z = parse_float(line, 20, 30);
     const element = line.substring(31, 34).trim();
+    // V2000 charge field, columns 36-39: 0 = neutral, 1 = +3, 2 = +2,
+    // 3 = +1, 5 = −1, 6 = −2, 7 = −3 (V2000 spec). Absent or 0 → neutral.
+    const chargeCode = parseInt(line.substring(36, 39).trim(), 10);
+    const formal_charge =
+      chargeCode === 1 ? 3 : chargeCode === 2 ? 2 : chargeCode === 3 ? 1
+      : chargeCode === 5 ? -1 : chargeCode === 6 ? -2 : chargeCode === 7 ? -3 : 0;
 
     // Accept any valid element symbol (one uppercase letter, optionally
     // followed by a lowercase one); anything else is a malformed line.
@@ -64,6 +70,7 @@ export function parse_sdf(sdf_text: string): Molecule {
       x: isNaN(x) ? 0 : x,
       y: isNaN(y) ? 0 : y,
       z: isNaN(z) ? 0 : z,
+      formal_charge,
     });
   }
 

@@ -7,9 +7,18 @@
  *
  * All seven terms are implemented; the per-component assertions run on
  * the subset of molecules whose atom typing reproduces the reference
- * types exactly (91/550 in the suite scoreboard — see
+ * types exactly (140/550 in the suite scoreboard — see
  * atom-types-suite.test.ts), so the comparison isolates the terms
  * themselves rather than the typing gaps.
+ *
+ * Known residuals on the typing-exact set:
+ *   - angle: JALSOE + SO18A (the two thiosulfinate anions, 73-typed).
+ *     Their S=O...S angle parameters were never transcribed into the
+ *     .par files (no 0-1-73-7 / 0-7-73-72 entries exist anywhere), and
+ *     BatchMin additionally adjusts the S–S bond to its dative
+ *     representation — the reference values are not recoverable from
+ *     the component totals alone. Same family as the JIYJAC strbnd
+ *     loss, minus a second source to restore from.
  */
 
 import { describe, it, expect } from 'vitest';

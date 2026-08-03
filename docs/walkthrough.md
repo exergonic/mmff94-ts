@@ -171,8 +171,17 @@ the ring directly. Fused rings, chorded cage rings, and saturated rings
 `compute_bci_charges()` lives in its own module, `src/mmff94/charges.ts` — it is
 the electrostatics model, not atom typing. The Bond Charge Increment model: each
 bond contributes a fixed increment to both of its atoms; the partial charge on an
-atom is the sum of all its bond contributions. The reference logs' per-atom
-charges are pinned in `charges.test.ts`.
+atom is the sum of all its bond contributions, plus the formal-charge correction
+of part V eq. (15). Charged types carry a primary formal charge q⁰ (e.g. +1 on
+quaternary N, −0.5 on a carboxylate oxygen, +1/3 on a guanidinium N); a NEGATIVE
+q⁰ shares half of itself with the bonded atoms — q_i = (1 − α_i·crd_i)·q⁰_i +
+Σ_k α_k·q⁰_k + Σ w_ik, where α (fcadj, part V Table III) is the sharing factor and
+the neighbor sum uses the NEIGHBOR's α. Type 32 is environment-dependent: −0.5
+on a carboxylate oxygen, 0 on sulfone/nitro/nitrate oxygens. The suite's
+reference per-atom charges (the `.mmd` pchg column) pin the model: 138/140
+typing-exact molecules reproduce them to < 1e-3 (`charges-suite.test.ts`); the
+two thiosulfinate anions are excluded (BatchMin's dative adjustment). The
+fixture logs' per-atom charges are pinned in `charges.test.ts`.
 
 ---
 
@@ -451,7 +460,7 @@ Requires `compute_bci_charges()` to have been called first to fill in the
 `partial_charges[]` array (the term also computes them on demand).
 
 Validated against the reference logs (per-atom charges AND energies) and
-against BatchMin: 120/123 typing-exact suite molecules match the
+against BatchMin: 140/140 typing-exact suite molecules match the
 electrostatic component — the three misses (BAOXLM01, CAMALD03, TAGVIG)
 are formal-charge salts (ammonium/metal carboxylates) whose formal
 charges are not yet read.
@@ -479,7 +488,7 @@ Applied to every tri-coordinate center (planar or pyramidal) with exactly three
 bonded neighbors. The sign of k_oop encodes real chemistry: zero for amine N
 (pyramidalization comes from angle-bend reference values), negative for amide N
 (MMFF94 gives pyramidal amide nitrogen deliberately). Validated against
-BatchMin: exact on all 123 typing-exact suite molecules.
+BatchMin: exact on all 140 typing-exact suite molecules.
 
 ---
 
@@ -805,14 +814,14 @@ Every energy term is tested **in isolation** before it is tested in combination.
 | Data types | ✅ Complete | — |
 | SDF parser | ✅ Complete | 5 tests |
 | Vector math | ✅ Complete | 13 tests |
-| Atom typing | ✅ Implemented | 3 tests (suite scoreboard: 123/550 type-exact) |
+| Atom typing | ✅ Implemented | 3 tests (suite scoreboard: 140/550 type-exact) |
 | BCI charges | ✅ Implemented (charges.ts) | 6 tests (reference-log pins) |
 | Bond stretch | ✅ Implemented | 2 tests |
 | Angle bend | ✅ Implemented | 2 tests |
 | Stretch-bend | ✅ Implemented | 3 tests |
 | Torsion | ✅ Implemented | 4 tests |
 | Van der Waals | ✅ Implemented | 5 tests |
-| Electrostatic | ✅ Implemented (buffered r+0.05, 1-4 ×0.75) | 5 tests + reference logs + suite 120/123 |
+| Electrostatic | ✅ Implemented (buffered r+0.05, 1-4 ×0.75) | 5 tests + reference logs + suite 140/140 |
 | Out-of-plane | ✅ Implemented | 12 tests |
 | 1-4 scaling | ✅ Applied inside the electrostatic term | — |
 | Total energy | ✅ Sums all seven terms | 8 tests (reference + suite comparison) |
@@ -820,4 +829,4 @@ Every energy term is tested **in isolation** before it is tested in combination.
 | L-BFGS | ✅ Implemented (Nocedal & Wright Alg. 7.5 + strong-Wolfe) | 19 tests (16/16 fixtures at max\|g\| < 0.05) |
 | Steepest descent | ❌ Stub | 0 tests |
 | MMD parser (Halgren suite) | ✅ Complete | 4 tests |
-| **All tests** | **161 passing \| 2 skipped** | **18 files** |
+| **All tests** | **166 passing** | **19 files** |

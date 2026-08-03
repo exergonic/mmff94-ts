@@ -156,10 +156,18 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
               const target = molecule.atoms[nb.nbr];
               return target.element === 'O';
             });
+            const dbl_to_N = double_nbrs.some(nb => {
+              const target = molecule.atoms[nb.nbr];
+              return target.element === 'N';
+            });
 
             if (carboxylate_carbons.has(i)) {
               // Carboxylate carbon C(=O)O⁻ → type 41 (CO₂M)
               atom_types[i] = 41;
+            } else if (dbl_to_N && n3_neighbor_count(i, adj, molecule) >= 2) {
+              // Guanidinium carbon (CGD+): C=N with at least two
+              // 3-coordinate N neighbors — the guanidinium core.
+              atom_types[i] = 57;
             } else if (dbl_to_O) {
               // Carbonyl: C=O with 3 neighbors → type 3 (C=O)
               atom_types[i] = 3;
@@ -174,7 +182,9 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
           }
 
           // 3 neighbors, no double, no aromatic (should be rare for C)
-          atom_types[i] = 1;
+          // — the protonated guanidinium core C(NH₂)₃ is type 57 (CGD+)
+          // even without the C=N double bond.
+          atom_types[i] = n3_neighbor_count(i, adj, molecule) === 3 ? 57 : 1;
           break;
         }
 
@@ -251,12 +261,42 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
         } else if (n_neighbors === 1 && carboxylate_carbons.has(neighbors[0].nbr)) {
           // Carboxylate oxygen — the =O or the terminal -O⁻ → type 32 (O2CM)
           atom_types[i] = 32;
+        } else if (n_neighbors === 1 && !has_double) {
+          // Terminal single-bonded oxygen. With explicit hydrogens this
+          // is never a neutral O–H (that has two neighbors): on carbon it
+          // is the oxide O⁻ (type 35, OM — alkoxide or phenoxide); on
+          // nitrogen it is the nitro/nitrate O (32), an oxide on an
+          // imine/pyridine N (35), or an N-oxide O (32) — the N's
+          // environment decides (the O-N bond of -N(=O)-O⁻ etc.).
+          const target = molecule.atoms[neighbors[0].nbr];
+          if (target.element === 'C') {
+            atom_types[i] = 35; // OM — oxide O on sp3/sp2 C
+          } else if (target.element === 'N') {
+            let nbrTerminalO = 0;
+            let nbrValence = 0;
+            for (const b of adj[neighbors[0].nbr]) {
+              const bn = molecule.atoms[b.nbr];
+              if (bn.element === 'O' && adj[b.nbr].length === 1) nbrTerminalO++;
+              nbrValence += b.order;
+            }
+            if (nbrTerminalO >= 2) atom_types[i] = 32; // nitro/nitrate O
+            else if (adj[neighbors[0].nbr].length === 2 || nbrValence === 3) {
+              atom_types[i] = 35; // oxide O on imine/pyridine N
+            } else {
+              atom_types[i] = 32; // N-oxide O (ONX)
+            }
+          } else {
+            atom_types[i] = 6;
+          }
+        } else if (n_neighbors === 2 && has_double) {
+          // Oxenium O⁺: one double bond and one single (pyrylium)
+          // → type 51 (O=+)
+          atom_types[i] = 51;
         } else if (has_double) {
           // Carbonyl oxygen O=C → type 7 (O=C)
           atom_types[i] = 7;
         } else {
-          // Ether, alcohol, and terminal O are all type 6 for now;
-          // the carboxylate (32) and oxide (35) distinctions are not yet typed.
+          // Ether or alcohol oxygen → type 6
           atom_types[i] = 6;
         }
         break;
@@ -284,28 +324,66 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
           break;
         }
 
-        if (n_neighbors === 3 && !has_double && !has_aromatic) {
-          // Amine N: 3 single bonds → type 8 (NR)
-          atom_types[i] = 8;
+        if (n_neighbors === 4) {
+          // Quaternary N: 4 single bonds → type 34 (NR+). A terminal
+          // oxygen neighbor makes it the sp3 N-oxide → type 68 (N3OX).
+          const has_terminal_O = neighbors.some(nb => {
+            const t = molecule.atoms[nb.nbr];
+            return t.element === 'O' && adj[nb.nbr].length === 1;
+          });
+          atom_types[i] = has_terminal_O ? 68 : 34;
+        } else if (n_neighbors === 3 && !has_double && !has_aromatic) {
+          // Amine N: 3 single bonds → type 8 (NR). The guanidinium
+          // family: a carbon neighbor carrying three 3-coordinate N's
+          // is the guanidinium core — its N's are 56 (NGD+), or 55
+          // (NCN+) when that carbon also has an N=C double bond.
+          let charged = 0;
+          for (const nb of neighbors) {
+            if (molecule.atoms[nb.nbr].element !== 'C') continue;
+            let n3 = 0;
+            let dbl_to_N = false;
+            for (const b of adj[nb.nbr]) {
+              const bn = molecule.atoms[b.nbr];
+              if (bn.element === 'N' && adj[b.nbr].length === 3) n3++;
+              if (b.order === 2 && bn.element === 'N') dbl_to_N = true;
+            }
+            if (n3 === 3) { charged = 56; break; }
+            if (n3 === 2 && dbl_to_N) charged = 55;
+          }
+          atom_types[i] = charged || 8;
         } else if (n_neighbors === 2 && has_double) {
           // Imine N=C → type 9 (N=C)
           // (nitrogen with a double bond and one other neighbor)
           atom_types[i] = 9;
         } else if (n_neighbors === 3 && has_double) {
-          // N with three neighbors AND its own double bond: N=O is the
-          // N-oxide (type 67, placeholder). N=C/N=N (enamine, N-N=C
-          // with delocalized lone pair) also take type 10 in the
-          // reference — the true amide (N–C(=O), no N double bond) is
-          // handled above by the amide_nitrogens pre-scan.
-          const dbl_to_O = double_nbrs.some(nb => {
-            const target = molecule.atoms[nb.nbr];
-            return target.element === 'O';
-          });
-          if (dbl_to_O) {
-            // N-oxide (N→O): placeholder — N2OX (type 67)
-            atom_types[i] = 67;
+          // N with three neighbors AND its own double bond. Count the
+          // terminal oxygens first: one → the sp2 N-oxide (67, N2OX),
+          // two or more → nitro/nitrate N (45, NO2/NO3). Otherwise the
+          // double goes to C or N and the iminium family applies: the
+          // N3-neighbors of the double-bonded carbon fix the subtype —
+          // 1 (or 0) → iminium (54, N+=C), 2 → the NCN+ pair (55),
+          // 3 → guanidinium N (56, NGD+); N+=N is also 54.
+          let terminalO = 0;
+          for (const nb of neighbors) {
+            const t = molecule.atoms[nb.nbr];
+            if (t.element === 'O' && adj[nb.nbr].length === 1) terminalO++;
+          }
+          if (terminalO === 1) {
+            atom_types[i] = 67; // N2OX — sp2 N-oxide
+          } else if (terminalO >= 2) {
+            atom_types[i] = 45; // NO2/NO3 — nitro/nitrate N
           } else {
-            atom_types[i] = 10;
+            const dbl_nbr = double_nbrs[0].nbr;
+            if (molecule.atoms[dbl_nbr].element === 'N') {
+              atom_types[i] = 54; // N+=N — diazenium
+            } else {
+              let n3 = 0;
+              for (const b of adj[dbl_nbr]) {
+                const bn = molecule.atoms[b.nbr];
+                if (bn.element === 'N' && adj[b.nbr].length === 3) n3++;
+              }
+              atom_types[i] = n3 === 3 ? 56 : n3 === 2 ? 55 : 54;
+            }
           }
         } else {
           atom_types[i] = 8; // fallback: amine N
@@ -331,11 +409,33 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
           });
           if (dbl_to_O && n_neighbors >= 4) {
             atom_types[i] = 18; // SO2 (sulfone)
+          } else if (dbl_to_O && n_neighbors === 3) {
+            // 3-coordinate S with an S=O double bond: the sulfoxide
+            // (17) unless it also carries two terminal oxygens — the
+            // anionic sulfinate R-S(=O)-O⁻ (73, SO2M); a terminal O
+            // plus a terminal S is the thiosulfinate (also 73).
+            let terminalO = 0;
+            let terminalS = 0;
+            for (const nb of neighbors) {
+              const t = molecule.atoms[nb.nbr];
+              if (t.element === 'O' && adj[nb.nbr].length === 1) terminalO++;
+              if (t.element === 'S' && adj[nb.nbr].length === 1) terminalS++;
+            }
+            if (terminalO === 2 || (terminalO >= 1 && terminalS >= 1)) {
+              atom_types[i] = 73; // SO2M — sulfinate S
+            } else {
+              atom_types[i] = 17; // S=O (sulfoxide)
+            }
           } else if (dbl_to_O) {
             atom_types[i] = 17; // S=O (sulfoxide)
           } else {
             atom_types[i] = 16; // S=C (thiocarbonyl)
           }
+        } else if (n_neighbors === 1) {
+          // Terminal S with a single bond: anionic (or bonded to P) →
+          // type 72 (SM). A thiol's S has two neighbors (C + H) and
+          // stays type 15 below.
+          atom_types[i] = 72;
         } else {
           // Thiol or sulfide → type 15 (S)
           atom_types[i] = 15;
@@ -344,9 +444,19 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
       }
 
       // ── Halogens ────────────────────────────────────────────────────
-      case 'F':  atom_types[i] = 11; break;
-      case 'Cl': atom_types[i] = 12; break;
-      case 'Br': atom_types[i] = 13; break;
+      // A bare halogen atom is the halide anion (89 F⁻, 90 Cl⁻, 91 Br⁻);
+      // 4-coordinate Cl with four oxygens is perchlorate (77).
+      case 'F':
+        atom_types[i] = n_neighbors === 0 ? 89 : 11;
+        break;
+      case 'Cl':
+        atom_types[i] = n_neighbors === 0 ? 90
+          : n_neighbors === 4 && neighbors.every(nb => molecule.atoms[nb.nbr].element === 'O') ? 77
+          : 12;
+        break;
+      case 'Br':
+        atom_types[i] = n_neighbors === 0 ? 91 : 13;
+        break;
       case 'I':  atom_types[i] = 14; break;
 
       // ── Silicon, phosphorus ─────────────────────────────────────────
@@ -581,6 +691,17 @@ function type_aromatic_5ring_carbon(
   aromatic: AromaticInfo,
 ): number {
   const { alpha, beta } = five_ring_alpha_beta(i, adj, molecule, aromatic);
+  // The carbon between two protonated (3-coordinate) N's in the SAME
+  // ring is the imidazolium carbon (CIM+). The same-ring gate matters
+  // for fusion carbons: two α-N's in different rings are not an
+  // imidazolium (FARMAM's bridgehead carbon).
+  if (
+    alpha.length === 2 &&
+    alpha.every(a => molecule.atoms[a].element === 'N' && adj[a].length === 3) &&
+    shares_ring(alpha[0], alpha[1], aromatic)
+  ) {
+    return 80; // CIM+
+  }
   if (alpha.length === 0 && beta.length === 0) return 78; // C5
   if (alpha.length > 0 && beta.length === 0) return 63; // C5A
   if (alpha.length === 0 && beta.length > 0) return 64; // C5B
@@ -629,6 +750,23 @@ function type_aromatic_5ring_nitrogen(
   if (s_o(alpha)) return 65;
   if (s_o(beta)) return 66;
   return 79;
+}
+
+/**
+ * Count the 3-coordinate N neighbors of atom i — the "N3 count" that
+ * anchors the guanidinium rules (a carbon with three N3 neighbors is
+ * the guanidinium core; an N3 attached to it is NGD+).
+ */
+function n3_neighbor_count(
+  i: number,
+  adj: { nbr: number; order: number }[][],
+  molecule: Molecule,
+): number {
+  let count = 0;
+  for (const nb of adj[i]) {
+    if (molecule.atoms[nb.nbr].element === 'N' && adj[nb.nbr].length === 3) count++;
+  }
+  return count;
 }
 
 /**

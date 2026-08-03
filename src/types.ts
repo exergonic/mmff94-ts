@@ -13,6 +13,10 @@ export interface Atom {
   x: number;
   y: number;
   z: number;
+  /** Formal charge in electrons (0 = neutral). Read from the SDF/MOL
+   * charge field when present; used by atom typing (charged type
+   * variants) and by the BCI charge model's primary charges. */
+  formal_charge?: number;
 }
 
 /** A bond connecting two atoms by their index in the atoms array. */

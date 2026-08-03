@@ -44,6 +44,12 @@ const KNOWN_GOOD: string[] = [
   'FIHXID', 'FIVRAD', 'FOJPAV', 'FUFDIT', 'GEHPUE', 'GOHVUU',
   'JECVUI', 'JIKHUG', 'KODFUE', 'KOFMEX', 'SALVEG', 'SIZWUT',
   'TAGVIG', 'ZZZVCQ01',
+  // Charged-molecule typing (types 34/35/55/72/73/89/90/91, the
+  // carboxylate/oxide O's, and the imidazolium family) landed
+  // 2026-08-02: +17 exact codes.
+  'AN05A', 'BRMW1', 'CLMW1', 'CONLIA', 'CULHIA10', 'DUWGAD',
+  'FAGZOC', 'FMW1', 'FUSPEO', 'JALSOE', 'JISZAM', 'JIYTOA',
+  'KIMLEX01', 'NH20A', 'NH22A', 'SO18A', 'VUWXUG',
 ];
 
 interface MoleculeResult {
