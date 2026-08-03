@@ -8,8 +8,8 @@ condensed public version of this ledger.
 
 ## Method
 
-- **Fixtures**: 9 molecules in `tests/fixtures/sdf/`, typed with our
-  own `assign_atom_types()`.
+- **Reference molecules**: 16 in `tests/fixtures/sdf/` (the obenergy
+  comparison set), typed with our own `assign_atom_types()`.
 - **Fixture references**: `obenergy -ff MMFF94` logs in
   `tests/references/` (OpenBabel 3.1.0, generated via
   `tests/scripts/get_mmff94_breakdown.py`).

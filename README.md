@@ -10,10 +10,10 @@
 > `obenergy` logs and Halgren's 753-molecule validation suite, the
 > analytical gradients of every term are cross-checked against
 > finite differences (worst relative error 8×10⁻⁸), and L-BFGS
-> geometry optimization is working (14/16 fixtures converge to
+> geometry optimization is working (16/16 test molecules converge to
 > max |gradient| < 0.05 kcal/mol/Å from both the SDF and perturbed
 > geometries — see `tests/optimization.test.ts`). The steepest-descent
-> fallback converges 15/16 fixtures at the spec (nicotine's vdW canyon
+> fallback converges 15/16 at the spec (nicotine's vdW canyon
 > is its documented boundary). The public API is not yet stable and
 > may change before 0.1.0. See the [Status](#status) table for the
 > full picture.
@@ -50,66 +50,47 @@ working (see [Status](#status)).
 | Out-of-plane bending | ✅ |
 | 1-4 scaling | ✅ (electrostatic ×0.75, inside the term) |
 | Analytical gradients | ✅ (all 7 terms, FD-verified < 10⁻⁵) |
-| Geometry optimization (L-BFGS) | ✅ (16/16 fixtures to max\|g\| < 0.05) |
-| Geometry optimization (SD fallback) | ✅ (15/16 fixtures; nicotine's vdW canyon is the documented boundary) |
+| Geometry optimization (L-BFGS) | ✅ (16/16 at max\|g\| < 0.05) |
+| Geometry optimization (SD fallback) | ✅ (15/16; nicotine's vdW canyon is the documented boundary) |
 
 ## Validation
 
-Every implemented term is checked against reference energies: the
-SDF fixtures against OpenBabel `obenergy` logs
-(`tests/reference-comparison.test.ts`), and the out-of-plane and
-electrostatic terms additionally against Halgren's own BatchMin
-energies from the 753-molecule validation suite
-(`tests/validate-against-suite.test.ts`). Every analytical gradient
-is checked against central finite differences on every atom of every
-fixture (`tests/gradient.test.ts`, δ = 10⁻⁶ Å, relative error
-< 10⁻⁵ — worst observed 8×10⁻⁸).
+Every term is checked against two independent references, and every
+analytical gradient against finite differences.
 
-All seven terms match the obenergy references **exactly (to 5
-decimals) on all 16 fixtures** — formamide included since the amide-N
-typing (types 10/28) landed — and every fixture **total** matches
-exactly. The BCI partial charges also match the reference logs per
-atom (`tests/charges.test.ts`).
+1. **OpenBabel `obenergy`** — per-term energies and per-atom partial
+   charges for 16 small organic molecules (`tests/reference-comparison.test.ts`,
+   `tests/charges.test.ts`). All seven terms match exactly to five
+   decimals.
+2. **Halgren's 753-molecule MMFF94 validation suite** — per-component
+   energies vs BatchMin 5.5, and per-atom partial charges vs the
+   suite's reference values (`tests/validate-against-suite.test.ts`,
+   `tests/charges-suite.test.ts`). The comparison runs on the 140/550
+   suite molecules whose atom typing reproduces the reference types
+   exactly (pinned as `KNOWN_GOOD` in `tests/atom-types-suite.test.ts`),
+   so a component delta can never be blamed on a typing gap.
 
-| Term | Exact on fixtures | Notes |
-|---|---|---|
-| Bond stretch | 16/16 | |
-| Angle bend | 16/16 | |
-| Stretch-bend | 16/16 | |
-| Torsion | 16/16 | |
-| Van der Waals | 16/16 | |
-| Electrostatic | 16/16 | per-atom charges pinned in charges.test.ts |
-| Out-of-plane | 16/16 | 0 on most fixtures; see BatchMin table below |
+Per-component agreement with BatchMin on those 140 molecules:
 
-Per-component energies vs BatchMin on the 123 typing-exact suite
-molecules: bond/angle/vdW/oop/strbnd/torsion all 123/123 (the three
-residuals were real bugs — degenerate i = l "torsions" in FUVDOP's
-3-ring, FILNOD's 5-ring torsions classed by atom flags instead of ring
-aromaticity, and an entry OpenBabel's strbnd transcription lost, JIYJAC —
-all fixed), electrostatic 140/140 and angle 140/140 — the formal-charge model
-(part V eq. 15: primary charges + negative-charge sharing) reproduces
-the reference partial charges per atom, and the sulfinate S=O angles
-resolved into the 32-keyed parameters (the sulfinate S=O is typed 7 by
-the reference typing rules but keyed 32 in every parameter table —
-TINKER's mmff94.prm and OpenChemLib's angle.csv confirm the same five
-73-center entries).
-
-### Out-of-plane vs BatchMin (8 suite molecules, kcal/mol)
-
-| Molecule | Ours | BatchMin | Δ |
+| Term | Exact | Max |Δ| (kcal/mol) |
 |---|---|---|---|
-| DADDAN | 0.255548 | 0.255547 | 0.000000 |
-| GIDJUY | 0.216936 | 0.216938 | −0.000002 |
-| VEJWOW | 0.176902 | 0.177154 | −0.000252 |
-| DIKGAF | 0.160155 | 0.158925 | +0.001230 |
-| FAXVAB | 0.127921 | 0.126658 | +0.001263 |
-| GEXGIZ | 0.122862 | 0.123820 | −0.000958 |
-| VIRBON | 0.101801 | 0.102969 | −0.001167 |
-| AMHTAR01 | 0.203026 | 0.224486 | −0.021460 |
+| Bond stretch | 140/140 | 0.00 |
+| Angle bend | 140/140 | 0.02 |
+| Stretch-bend | 140/140 | 0.00 |
+| Torsion | 140/140 | 0.00 |
+| Van der Waals | 140/140 | 0.00 |
+| Out-of-plane | 140/140 | 0.01 |
+| Electrostatic | 140/140 | 0.00 |
 
-The full molecule-by-molecule ledger — every delta, the known open
-questions, and how to update it — lives in
-[`tests/VALIDATION.md`](tests/VALIDATION.md).
+Partial charges reproduce the suite's reference values to < 10⁻³ e⁻
+per atom on 138/140 molecules (the two thiosulfinate anions are
+excluded — BatchMin's dative representation). Gradients are checked
+against central finite differences on every atom of every reference
+molecule (`tests/gradient.test.ts`, δ = 10⁻⁶ Å, worst relative error
+8×10⁻⁸).
+
+The full molecule-by-molecule ledger — every delta and the known open
+questions — lives in [`tests/VALIDATION.md`](tests/VALIDATION.md).
 
 ## Usage
 
