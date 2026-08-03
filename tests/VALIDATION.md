@@ -6,32 +6,39 @@ molecule by molecule, term by term. The numbers here are produced by
 The README's [Validation](../README.md#validation) section is the
 condensed public version of this ledger.
 
-## Current status (2026-08-03, evening)
+## Current status (2026-08-03, night)
 
-- **Atom typing**: 512/550 suite molecules type-exact vs OpenBabel
-  (93.1%), pinned as `KNOWN_GOOD` in `atom-types-suite.test.ts`.
-  Two jumps today: the phosphate/sulfonate oxygen cluster (140 → 241,
-  morning) and the amidine/sp-N cluster (241 → 512, evening): C=N → 3,
-  amidinium 57 by =N coordination, N3-on-sp2-C → 40 (amidine,
-  enamine, aniline), amidinium/guanidinium N 55/56, nitrile N 42,
-  sulfonamide/cyanamide N 43, H-on-N rules (27/28/36) via a dedicated
-  N-type pass, 4-ring alkene 30, and the cyclopropane ring-size BFS
-  fix. The remaining 38 non-exact molecules are aromatic-perception
-  gaps (furan/isoxazole rings, sulfolene false-aromatics, pyridazine
-  misses) — the next typing workstream.
-- **Energy terms** vs BatchMin on the 512 typing-exact molecules:
-  stretch/torsion/vdw/elec 512/512 exact; bend 511/512 (worst 0.07),
-  strbnd 503/512 (worst 0.40), oop 506/512 (worst 0.20). The 17
-  mismatches (list below) are parameter-table corners — missing class
-  entries for newly-unlocked types — tracked as the parameter-gap
-  workstream: BODKOU/CEFMEN/COYVIV/DESWUT/DUWKUB/FORJUR/SONZIE oop,
-  CIVLAU02/COMKAQ/CONBAI/DAJXER/DIVTUX/DULTIN/FINPEX/FORJIF/VIYPAU
-  strbnd, GESNIB bend.
-- **Partial charges** vs the suite's reference values: **512/512** to
-  < 10⁻³ e⁻ per atom. The imidazolium N q⁰ is environment-dependent
-  (1/(#N3 on the central C80): 1/2 plain, 1/3 2-aminoimidazolium),
-  and CIM+ (80) is treated as aromatic for the BTij/Bci class (its
-  par entry lacks the arom flag).
+- **Atom typing**: **550/550 suite molecules type-exact vs OpenBabel
+  (100%)**, pinned as `KNOWN_GOOD` in `atom-types-suite.test.ts`.
+  Three jumps today: the phosphate/sulfonate oxygen cluster (140 →
+  241, morning), the amidine/sp-N cluster (241 → 512, evening), and
+  the aromatic-perception cluster (512 → 550, night): the π-count
+  Kekulé rule with the fused-aromatic exocyclic-double allowance
+  (fixpoint over the candidate rings — benzimidazole/furan/isoxazole/
+  thiophene fusions found, sulfolenes and COGDEH's triazine-fused
+  ring excluded), sulfone/sulfoxide S's dropped from the lone-pair
+  donor role, nitroso N 46, sulfonyl-imine N 48, triazene N 10,
+  P=C carbon 3, allene C 4, the amidinium 57/55 refined by the =N
+  coordination with the pyridinium exclusion (COJFIQ's adenine), the
+  imidazolium C 80 via the N-type gate (CUDREY's 2-aminoimidazolium),
+  and the hydroxide O 35 (OHMW1).
+- **Energy terms** vs BatchMin on all 550 typing-exact molecules:
+  stretch/torsion/vdw/elec **550/550** exact; bend 549/550 (worst
+  0.07, GESNIB), strbnd 541/550 (worst 0.40, VIYPAU), oop 542/550
+  (worst 0.20, COYVIV). The 18 mismatches are parameter-table corners
+  — missing class entries for the newly-unlocked types — tracked as
+  the parameter-gap workstream: oop
+  BODKOU/CEFMEN/COYVIV/DESWUT/DUWKUB/FORJUR/JIGCIL/SONZIE, strbnd
+  CIVLAU02/COMKAQ/CONBAI/DAJXER/DIVTUX/DULTIN/FINPEX/FORJIF/VIYPAU,
+  bend GESNIB.
+- **Partial charges** vs the suite's reference values: **550/550** to
+  < 10⁻³ e⁻ per atom. The default-BCI sign convention is part V
+  eq. 14 (the unparametrized pair's increment flows TO the smaller
+  type — the hydroxide's 21–35 pair, OHMW1); the parametrized pairs
+  keep the par's own direction. The imidazolium N q⁰ is
+  environment-dependent (1/(#N3 on the central C80): 1/2 plain, 1/3
+  2-aminoimidazolium), and CIM+ (80) is treated as aromatic for the
+  BTij/Bci class (its par entry lacks the arom flag).
 - **The 16 obenergy reference molecules**: all seven terms and the
   total exact to 5 decimals.
 - **Gradients**: every analytical gradient FD-verified on every atom
@@ -219,11 +226,12 @@ The per-term threads below were closed across the parameter-class work
    (same day — C=N → 3, amidinium 57 by =N coordination, N3-on-sp2-C
    40, nitrile 42, sulfonamide/cyanamide 43, H rules 27/28/36 via an
    N-type pass, 4-ring alkene 30, cyclopropane BFS fix) took it to
-   512. Energy terms match BatchMin on all but the 17 parameter-gap
-   molecules listed in Current status. Biggest remaining classes
-   (from the current worst-10): aromatic-perception gaps — furan/
-   isoxazole rings (59/65), sulfolene false-aromatics (S 18 vs 44),
-   pyridazine 6-ring misses (38/37) — and the OHMW1 oxide-O corner.
+   512; the aromatic-perception cluster (same night — the π-count
+   Kekulé rule with the fused-aromatic exo-double fixpoint, sulfolene
+   exclusion, nitroso 46, sulfonyl-imine 48, triazene 10, P=C 3,
+   allene 4, amidinium refinements, imidazolium-C 80, hydroxide 35)
+   took it to **550 — 100%**. Energy terms match BatchMin on all but
+   the 18 parameter-gap molecules listed in Current status.
 
 ## Updating this ledger
 

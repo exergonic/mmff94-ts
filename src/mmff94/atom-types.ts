@@ -145,13 +145,19 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
         if (aromatic.atoms.has(i)) {
           const in_5ring = (aromatic.rings_of.get(i) ?? []).some(r => r.path.length === 5);
           atom_types[i] = in_5ring
-            ? type_aromatic_5ring_carbon(i, adj, molecule, aromatic)
+            ? type_aromatic_5ring_carbon(i, adj, molecule, aromatic, n_types)
             : 37;
           break;
         }
 
-        // Acetylenic: 2 neighbors, triple bond → type 4 (CSP)
+        // Acetylenic: 2 neighbors, triple bond → type 4 (CSP). The
+        // cumulene/allene central C (two double bonds — JOFDUD's
+        // N=C=C ketenimine) is also sp → 4.
         if (n_neighbors <= 2 && has_triple) {
+          atom_types[i] = 4;
+          break;
+        }
+        if (n_neighbors === 2 && double_nbrs.length === 2) {
           atom_types[i] = 4;
           break;
         }
@@ -177,15 +183,23 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
               const target = molecule.atoms[nb.nbr];
               return target.element === 'S';
             });
+            const dbl_to_P = double_nbrs.some(nb => {
+              const target = molecule.atoms[nb.nbr];
+              return target.element === 'P';
+            });
+            const n_N_neighbors = neighbors.filter(nb => molecule.atoms[nb.nbr].element === 'N').length;
 
             if (carboxylate_carbons.has(i)) {
               // Carboxylate carbon C(=O)O⁻ → type 41 (CO₂M)
               atom_types[i] = 41;
-            } else if (dbl_to_N && adj[double_nbrs.find(nb => molecule.atoms[nb.nbr].element === 'N')!.nbr].length === 3) {
-              // The charged amidinium/guanidinium core: C(=N+)(N)(N)
-              // with the =N carrying a third bond. The neutral
+            } else if (dbl_to_N && n_N_neighbors >= 2
+              && adj[double_nbrs.find(nb => molecule.atoms[nb.nbr].element === 'N')!.nbr].length === 3) {
+              // The charged amidinium/guanidinium core: C(=N+)(N)(R)
+              // with the =N carrying a third bond AND a second N
+              // neighbor (JIFYUS's N+=C(NH2)...). The neutral
               // amidine's =N is 2-coordinate and its C is the plain
-              // carbonyl type 3 below.
+              // carbonyl type 3; an iminium C(=N+)(C)(C) with a
+              // single N (CIJXOI10) is also 3.
               atom_types[i] = 57;
             } else if (dbl_to_O) {
               // Carbonyl: C=O with 3 neighbors → type 3 (C=O)
@@ -199,6 +213,10 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
               // The C=N carbon (amidines, imines) is also the general
               // carbonyl type 3 — the type list's C=O entry covers
               // C=N and C=S as well.
+              atom_types[i] = 3;
+            } else if (dbl_to_P) {
+              // The C=P carbon (phosphoalkenes, the P=C(NH2)2 ylides)
+              // shares the general carbonyl type 3.
               atom_types[i] = 3;
             } else if (dbl_to_C) {
               // Alkene: C=C with 3 neighbors → type 2 (C=C, vinylic);
@@ -271,7 +289,7 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
             if (n_type === 34 || n_type === 54 || n_type === 55
               || n_type === 56 || n_type === 58 || n_type === 76 || n_type === 81) {
               atom_types[i] = 36;
-            } else if (n_type === 10 || n_type === 40 || n_type === 43) {
+            } else if (n_type === 10 || n_type === 40 || n_type === 43 || n_type === 48) {
               atom_types[i] = 28;
             } else if (n_type === 9) {
               atom_types[i] = 27;
@@ -358,7 +376,12 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
           // imine/pyridine N (35), or an N-oxide O (32) — the N's
           // environment decides (the O-N bond of -N(=O)-O⁻ etc.).
           const target = molecule.atoms[neighbors[0].nbr];
-          if (target.element === 'C') {
+          if (target.element === 'H') {
+            // A bare O–H (no other bonds) is the hydroxide anion
+            // → type 35 (OM — oxide). A neutral O–H always has a
+            // second bond (water has two H's → 70 above).
+            atom_types[i] = 35;
+          } else if (target.element === 'C') {
             atom_types[i] = 35; // OM — oxide O on sp3/sp2 C
           } else if (target.element === 'N') {
             let nbrTerminalO = 0;
@@ -475,6 +498,11 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
             }
           } else if (dbl_to_O) {
             atom_types[i] = 17; // S=O (sulfoxide)
+          } else if (n_neighbors === 3 && double_nbrs.some(nb => molecule.atoms[nb.nbr].element === 'N')) {
+            // 3-coordinate S with an S=N double and no oxygen: the
+            // sulfinimide S (FIZGEA's ring S) shares the sulfoxide
+            // type 17.
+            atom_types[i] = 17;
           } else {
             atom_types[i] = 16; // S=C (thiocarbonyl)
           }
@@ -644,8 +672,60 @@ function find_aromatic_rings(
     }
   };
 
-  for (const path of cycles) {
+  const is_donor = (a: number): boolean => {
+    const el = molecule.atoms[a].element;
+    const has_terminal_O = adj[a].some(nb => {
+      return molecule.atoms[nb.nbr].element === 'O' && adj[nb.nbr].length === 1;
+    });
+    if (el === 'N') return !has_terminal_O;
+    if (el === 'O') return adj[a].length === 2;
+    if (el === 'S') return adj[a].length === 2 && !has_terminal_O;
+    return false;
+  };
+
+  // π evaluation: every ring atom must be conjugated — exactly one
+  // ring double bond, OR a lone-pair donor, OR an exocyclic double to
+  // a ring C/N (the fusion atom of a fused aromatic: the mmd writes
+  // its π bond into the adjacent ring — benzimidazole's C3=C4/C7=C8,
+  // benzofuran's C13=C14). The donor is an N (not an N-oxide), a
+  // 2-coordinate O (furan), or a 2-coordinate S without terminal
+  // oxygens — sulfone/sulfoxide sulfurs cannot donate, which keeps
+  // the sulfolenes (FIZGOK/FIZGEA) non-aromatic. An exocyclic double
+  // to a chain atom is a separate π system (COCXUN's allenyl-nitrile
+  // substituents) and does not conjugate the ring. The π sum must be
+  // 6 (donors count 2, conjugated atoms 1); anything else — an sp3
+  // atom — breaks the ring.
+  const eval_pi = (path: number[]): Map<number, number> | null => {
     const set = new Set(path);
+    let pi = 0;
+    const exo = new Map<number, number>();
+    for (const a of path) {
+      const ring_doubles = adj[a].filter(nb => set.has(nb.nbr) && nb.order === 2).length;
+      if (ring_doubles > 1) return null;
+      if (ring_doubles === 1) { pi += 1; continue; }
+      if (is_donor(a)) { pi += 2; continue; }
+      const e = adj[a].find(nb => !set.has(nb.nbr) && nb.order === 2);
+      if (e && (molecule.atoms[e.nbr].element === 'C' || molecule.atoms[e.nbr].element === 'N')
+        && is_ring[e.nbr]) {
+        pi += 1;
+        exo.set(a, e.nbr);
+        continue;
+      }
+      return null;
+    }
+    return pi === 6 ? exo : null;
+  };
+
+  // The fused-aromatic exo allowance is mutually recursive (a
+  // benzimidazole's two rings each carry the other's π bond), so the
+  // candidate rings converge as a fixpoint: a ring survives only when
+  // every exo partner lies in a ring that also survives. COGDEH's
+  // first naphthalene ring is excluded this way — its exo partners
+  // (the =N's) belong to the as-triazine ring, which is 7π and never
+  // a candidate.
+  const ring_candidates: { path: number[]; exo: Map<number, number> }[] = [];
+  const ring_kept: boolean[] = [];
+  for (const path of cycles) {
     const size = path.length;
 
     // Chord check: a genuine ring has no bond between non-consecutive
@@ -668,31 +748,37 @@ function find_aromatic_rings(
       if (o >= 4) input_aromatic = true;
     }
     if (input_aromatic) {
-      mark(path);
+      ring_candidates.push({ path, exo: new Map() });
+      ring_kept.push(true);
       continue;
     }
-    // Kekulé pattern: every ring atom carries exactly one ring double
-    // bond, except that a 5-ring may have exactly one N/O/S with none
-    // — the lone-pair donor (pyrrole's N, furan's O, thiophene's S).
-    // The 6π count is implied (2 doubles + 1 lone pair in a 5-ring,
-    // 3 doubles in a 6-ring); adjacent double bonds and saturated
-    // rings (FUVDOP's all-single triazine cage, KAGBOJ's pyrone ring
-    // with a bare carbon) fail the pattern.
-    let zero_double_atoms = 0;
-    let kekule = true;
-    for (const a of path) {
-      const ring_doubles = adj[a].filter(nb => set.has(nb.nbr) && nb.order === 2).length;
-      if (ring_doubles > 1) { kekule = false; break; }
-      if (ring_doubles === 0) {
-        zero_double_atoms++;
-        const el = molecule.atoms[a].element;
-        if (el !== 'N' && el !== 'O' && el !== 'S') { kekule = false; break; }
+    const exo = eval_pi(path);
+    if (exo) {
+      ring_candidates.push({ path, exo });
+      ring_kept.push(true);
+    }
+  }
+
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (let k = 0; k < ring_candidates.length; k++) {
+      if (!ring_kept[k]) continue;
+      for (const partner of ring_candidates[k].exo.values()) {
+        const partner_kept = ring_candidates.some(
+          (r2, k2) => ring_kept[k2] && r2.path.includes(partner),
+        );
+        if (!partner_kept) {
+          ring_kept[k] = false;
+          changed = true;
+          break;
+        }
       }
     }
-    if (!kekule) continue;
-    if (size === 6 && zero_double_atoms !== 0) continue;
-    if (size === 5 && zero_double_atoms !== 1) continue;
-    mark(path);
+  }
+
+  for (let k = 0; k < ring_candidates.length; k++) {
+    if (ring_kept[k]) mark(ring_candidates[k].path);
   }
 
   return { atoms, rings_of };
@@ -754,17 +840,19 @@ function type_aromatic_5ring_carbon(
   adj: { nbr: number; order: number }[][],
   molecule: Molecule,
   aromatic: AromaticInfo,
+  n_types: number[],
 ): number {
   const { alpha, beta } = five_ring_alpha_beta(i, adj, molecule, aromatic);
-  // The carbon between two protonated (3-coordinate) N's in the SAME
-  // ring is the imidazolium carbon (CIM+). The same-ring gate matters
-  // for fusion carbons: two α-N's in different rings are not an
-  // imidazolium (FARMAM's bridgehead carbon).
-  if (
-    alpha.length === 2 &&
-    alpha.every(a => molecule.atoms[a].element === 'N' && adj[a].length === 3) &&
-    shares_ring(alpha[0], alpha[1], aromatic)
-  ) {
+  // The carbon between two 3-coordinate N's where at least one is an
+  // imidazolium N (81) is the imidazolium carbon (CIM+). The n_types
+  // gate replaces the old same-ring α check: CUDREY's 2-aminoimidazolium
+  // C (ring N + exocyclic NH2) is 80, while FARMAM's bridgehead
+  // (two pyrrole-type 39 N's in different rings) stays 63/64, and a
+  // 2-aminopyrrole α-C (39 + exocyclic NH2) stays 63.
+  const n3_nbrs = adj[i].filter(nb => {
+    return molecule.atoms[nb.nbr].element === 'N' && adj[nb.nbr].length === 3;
+  });
+  if (n3_nbrs.length >= 2 && n3_nbrs.some(nb => n_types[nb.nbr] === 81)) {
     return 80; // CIM+
   }
   if (alpha.length === 0 && beta.length === 0) return 78; // C5
@@ -885,18 +973,31 @@ function type_nitrogen(
   if (n_neighbors === 3 && !has_double && !has_aromatic) {
     // Amine N with 3 single bonds. The delocalized NC=C family (40):
     // an N whose lone pair conjugates with an sp2 center — the
-    // amidine/guanidine N-C=N, enamine/aniline N-C=C. The guanidinium
-    // (56) and amidinium (55) cations are the charged members; the
-    // neutral amidine's N is plain 40. Sulfonamide (43, NSO2/NSO3)
-    // and cyanamide (43, H2N-C≡N) take precedence.
+    // amidine/guanidine N-C=N, enamine/aniline N-C=C, and the
+    // ylide-adjacent P=C(NH2)2. The guanidinium (56) and amidinium
+    // (55) cations are the charged members; the neutral amidine's N
+    // is plain 40. Sulfonamide (43, NSO2/NSO3 — also the
+    // phosphonamide N-PO2 and the cyanamide H2N-C≡N) takes
+    // precedence over the neutral delocalized type, but the charged
+    // amidinium/guanidinium wins over the sulfonyl (JIFYUS's
+    // amidinium N also carries the sulfonate counterion → 55, not 43).
+    let charged = 0;
     let sulfonyl = false;
     let cyanamide = false;
-    let charged = 0;
+    let azo_amide = false;
     let delocalized = false;
     for (const nb of neighbors) {
       const nbr = molecule.atoms[nb.nbr];
-      if (nbr.element === 'S' && count_terminal_oxygens(nb.nbr, adj, molecule) >= 2) {
-        sulfonyl = true; // NSO2 — sulfonamide/sulfamate N
+      if (nbr.element === 'N') {
+        // The triazene N–N=N: the lone pair conjugates with the azo
+        // group — the reference types it like an amide (10).
+        if (adj[nb.nbr].some(b => b.order === 2 && (molecule.atoms[b.nbr].element === 'N' || molecule.atoms[b.nbr].element === 'O'))) {
+          azo_amide = true;
+        }
+      }
+      if ((nbr.element === 'S' || nbr.element === 'P')
+        && count_terminal_oxygens(nb.nbr, adj, molecule) >= 2) {
+        sulfonyl = true; // NSO2 — sulfonamide/sulfamate/phosphonamide N
       }
       if (nbr.element === 'C' && adj[nb.nbr].some(b => b.order === 3 && molecule.atoms[b.nbr].element === 'N')) {
         cyanamide = true; // H2N-C≡N
@@ -908,32 +1009,80 @@ function type_nitrogen(
       let n3 = 0;
       let dbl_N = -1;
       let dbl_to_C = false;
+      let dbl_to_P = false;
       for (const b of adj[nb.nbr]) {
         const bn = molecule.atoms[b.nbr];
         if (bn.element === 'N' && adj[b.nbr].length === 3) n3++;
         if (b.order === 2 && bn.element === 'N') dbl_N = b.nbr;
         if (b.order === 2 && bn.element === 'C') dbl_to_C = true;
+        if (b.order === 2 && bn.element === 'P') dbl_to_P = true;
       }
       if (n3 === 3) { charged = 56; break; } // NGD+ — guanidinium N
       if (dbl_N >= 0) {
-        if (adj[dbl_N].length === 3) charged = 55; // NCN+ — amidinium N
-        else delocalized = true; // neutral amidine NC=N
+        // NCN+ — amidinium N: the =N carries a third bond (JIFYUS's
+        // acyclic amidinium, CUDREY's 5-ring imidazolium). A 6-ring
+        // aromatic =N (the pyridinium-type ring N of a protonated
+        // adenine, COJFIQ) is not an amidinium — its amino N stays
+        // the delocalized 40.
+        const dblN_in_6ring = (aromatic.rings_of.get(dbl_N) ?? []).some(r => r.path.length === 6);
+        if (adj[dbl_N].length === 3 && !dblN_in_6ring) {
+          charged = 55;
+        } else {
+          delocalized = true; // neutral amidine NC=N
+        }
       }
       if (dbl_to_C) delocalized = true; // enamine/aniline NC=C
+      if (dbl_to_P) delocalized = true; // the P=C(NH2)2 ylide N
     }
-    if (sulfonyl || cyanamide) return 43; // NSO2 / cyanamide
     if (charged) return charged;
+    if (sulfonyl || cyanamide) return 43; // NSO2 / cyanamide
+    // The triazene N–N=N types like an amide (10) — but only when it
+    // does not also conjugate with an sp2 carbon: SEMXOX's
+    // tetrazolyl-alkene N (azo + C=C) is the delocalized 40.
+    if (azo_amide && !delocalized) return 10;
     if (delocalized) return 40; // NC=C — delocalized lone pair
     return 8; // NR — plain amine
   }
 
   if (n_neighbors === 2 && has_double) {
-    // Imine N=C → type 9 (N=C)
-    // (nitrogen with a double bond and one other neighbor)
+    // The nitroso N=O (46, NNO) — nitrosomethane, the dinitroso
+    // ring N's.
+    if (double_nbrs[0].nbr !== undefined && molecule.atoms[double_nbrs[0].nbr].element === 'O') {
+      return 46;
+    }
+    // The N=S family: an N double-bonded to a sulfonyl/sulfoximine S
+    // is the sulfonyl imine 48 (FIZGOK's =N–S(=O)2); an N
+    // double-bonded to a sulfoxide-type S while single-bonded to a
+    // true sulfonyl is the sulfonamide 43 (FIZGEA's =N–S–SO2). An
+    // N=C imine stays 9 even with an SO2 substituent (CAGREH10's
+    // ring N — the imine wins over the sulfonyl).
+    const dbl_nbr = double_nbrs[0].nbr;
+    const dbl_el = molecule.atoms[dbl_nbr].element;
+    if (dbl_el === 'C' || dbl_el === 'N') return 9; // imine / azo
+    // The double goes to S.
+    const to = count_terminal_oxygens(dbl_nbr, adj, molecule);
+    const s_has_dbl_N = adj[dbl_nbr].some(b => b.order === 2 && molecule.atoms[b.nbr].element === 'N');
+    if (to >= 2 || (to >= 1 && s_has_dbl_N)) return 48; // NS2O — N=S(=O)2 / sulfoximine
+    for (const nb of neighbors) {
+      if (nb.nbr === dbl_nbr) continue;
+      const t = molecule.atoms[nb.nbr];
+      if (t.element === 'S' && count_terminal_oxygens(nb.nbr, adj, molecule) >= 2) {
+        return 43; // NSO2 — N bonded to a sulfonyl
+      }
+    }
     return 9;
   }
 
   if (n_neighbors === 3 && has_double) {
+    // The sulfonyl imine with an extra H/substituent (the
+    // sulfoximine's =N–S(=O)) is also 48.
+    for (const nb of neighbors) {
+      const t = molecule.atoms[nb.nbr];
+      if (nb.order === 2 && t.element === 'S' && count_terminal_oxygens(nb.nbr, adj, molecule) >= 1) {
+        const s_has_dbl_N = adj[nb.nbr].some(b => b.order === 2 && molecule.atoms[b.nbr].element === 'N');
+        if (s_has_dbl_N) return 48;
+      }
+    }
     // N with three neighbors AND its own double bond. Count the
     // terminal oxygens first: one → the sp2 N-oxide (67, N2OX),
     // two or more → nitro/nitrate N (45, NO2/NO3). Otherwise the

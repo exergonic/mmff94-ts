@@ -110,13 +110,26 @@ export function assign_bci_charges(molecule: TypedMolecule): TypedMolecule {
       bci = pa - pb;
     }
 
-    // The increment flows from the smaller type to the larger one.
-    if (ti === t_min) {
-      charges[bond.atom1] -= bci;
-      charges[bond.atom2] += bci;
-    } else {
+    // The increment flows from the smaller type to the larger one for
+    // the parametrized pairs (the par's w values carry the direction).
+    // The unparametrized default is the difference w = pbci(I) −
+    // pbci(K), the contribution to the atom of type I — so the
+    // smaller type RECEIVES +bci (part V eq. 14; verified on the
+    // hydroxide's 21–35 pair, OHMW1).
+    if (entry) {
+      if (ti === t_min) {
+        charges[bond.atom1] -= bci;
+        charges[bond.atom2] += bci;
+      } else {
+        charges[bond.atom1] += bci;
+        charges[bond.atom2] -= bci;
+      }
+    } else if (ti === t_min) {
       charges[bond.atom1] += bci;
       charges[bond.atom2] -= bci;
+    } else {
+      charges[bond.atom1] -= bci;
+      charges[bond.atom2] += bci;
     }
   }
 
