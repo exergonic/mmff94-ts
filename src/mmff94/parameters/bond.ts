@@ -374,6 +374,11 @@ export const BOND_PARAMS: Record<string, BondParams> = {
   '0-32-68': { k_b: 4.398, r0: 1.348 },
   '0-32-69': { k_b: 6.098, r0: 1.261 },
   '0-32-73': { k_b: 8.427, r0: 1.51 },
+  // The sulfinate S=O bond is keyed 32-73 in the parameter tables
+  // (the S=O oxygen is typed 7 by the reference typing rules but 32
+  // in the tables - same bridge as angle.ts). The 7-typed form uses
+  // the 32-73 parameters (JALSOE/SO18A reproduce BatchMin exactly).
+  '0-7-73': { k_b: 8.427, r0: 1.51 },
   '0-32-77': { k_b: 10.648, r0: 1.45 },
   '0-32-82': { k_b: 8.594, r0: 1.252 },
   '0-34-36': { k_b: 6.163, r0: 1.028 },

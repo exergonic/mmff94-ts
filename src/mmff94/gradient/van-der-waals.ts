@@ -24,9 +24,8 @@
  */
 
 import type { TypedMolecule } from '../../types';
-import { VDW_PARAMS } from '../parameters';
 import { Vec3 } from '../../utils/vector';
-import { vdw_pair_parameters } from '../energy/van-der-waals';
+import { vdw_pair_parameters, vdw_parameters_for } from '../energy/van-der-waals';
 import { bond_length_derivatives } from './derivatives';
 
 /**
@@ -55,7 +54,7 @@ export function calc_vdw_gradient(molecule: TypedMolecule): number[][] {
   }
 
   for (let i = 0; i < molecule.atoms.length; i++) {
-    const param_i = VDW_PARAMS[molecule.atom_types[i]];
+    const param_i = vdw_parameters_for(molecule, adj, i);
     if (!param_i) continue;
 
     const posI: Vec3 = [molecule.atoms[i].x, molecule.atoms[i].y, molecule.atoms[i].z];
@@ -67,7 +66,7 @@ export function calc_vdw_gradient(molecule: TypedMolecule): number[][] {
       if (adj[i].includes(j)) continue;
       if (pairs_1_3[i].has(j)) continue;
 
-      const param_j = VDW_PARAMS[molecule.atom_types[j]];
+      const param_j = vdw_parameters_for(molecule, adj, j);
       if (!param_j) continue;
 
       const posJ: Vec3 = [molecule.atoms[j].x, molecule.atoms[j].y, molecule.atoms[j].z];

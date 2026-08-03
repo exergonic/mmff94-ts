@@ -59,6 +59,31 @@ export interface VdwPairParams {
 }
 
 /**
+ * Per-atom vdW parameters for atom i, with the sulfinate-S=O bridge.
+ *
+ * The S=O oxygen of an anionic sulfinate (bonded to a type-73 sulfur)
+ * is typed 7 by the reference typing rules but keyed 32 in every
+ * parameter table — the same story as the angle bridge in angle.ts —
+ * and the reference energies were computed with the 32 typing. The
+ * 7-typed oxygen therefore uses type 32's vdW parameters (JALSOE,
+ * SO18A reproduce BatchMin exactly with this mapping).
+ *
+ * Shared with the gradient so the energy and its derivative use the
+ * same parameters.
+ */
+export function vdw_parameters_for(
+  molecule: TypedMolecule,
+  adj: number[][],
+  i: number,
+): { A_i: number; alpha_i: number; N_i: number; G_i: number; DA: number } | undefined {
+  const t = molecule.atom_types[i];
+  if (t === 7 && adj[i].some(nb => molecule.atom_types[nb] === 73)) {
+    return VDW_PARAMS[32];
+  }
+  return VDW_PARAMS[t];
+}
+
+/**
  * Combine the per-atom vdW parameters of i and j (see the header of
  * this file for the equations). The VDW_PARAMS entries carry the
  * per-atom reduced radius pieces (A_i, α_i, N_i, G_i, DA flag).
@@ -139,7 +164,7 @@ export function calc_vdw_energy(molecule: TypedMolecule): number {
   }
 
   for (let i = 0; i < molecule.atoms.length; i++) {
-    const param_i = VDW_PARAMS[molecule.atom_types[i]];
+    const param_i = vdw_parameters_for(molecule, adj, i);
     if (!param_i) continue;
 
     const posI: Vec3 = [molecule.atoms[i].x, molecule.atoms[i].y, molecule.atoms[i].z];
@@ -150,7 +175,7 @@ export function calc_vdw_energy(molecule: TypedMolecule): number {
       if (adj[i].includes(j)) continue;
       if (pairs_1_3[i].has(j)) continue;
 
-      const param_j = VDW_PARAMS[molecule.atom_types[j]];
+      const param_j = vdw_parameters_for(molecule, adj, j);
       if (!param_j) continue;
 
       const posJ: Vec3 = [molecule.atoms[j].x, molecule.atoms[j].y, molecule.atoms[j].z];
