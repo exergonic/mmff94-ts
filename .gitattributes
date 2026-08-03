@@ -1,0 +1,6 @@
+# LF line endings everywhere. CRLF is Windows-specific; LF is read
+# by every OS including Windows. text=auto keeps binary files (PDFs,
+# images) untouched. Generated parameter tables are written CRLF by
+# the extraction script on Windows; git normalizes them to LF at
+# add time.
+* text=auto eol=lf
