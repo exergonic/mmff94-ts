@@ -118,9 +118,9 @@ import { parse_sdf, assign_atom_types, compute_bci_charges, calc_energy } from '
 
 const mol = parse_sdf(sdfText);
 const typed = assign_atom_types(mol);
-compute_bci_charges(typed);       // BCI partial charges (the electrostatic
-                                  // term also computes them on demand)
-const energy = calc_energy(typed);
+const charged = compute_bci_charges(typed); // returns the molecule with
+                                            // partial charges attached
+const energy = calc_energy(charged);
 
 console.log(energy.total);           // kcal/mol
 console.log(energy.bond_stretch);    // per-component breakdown

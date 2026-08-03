@@ -38,7 +38,9 @@ export interface Molecule {
  *
  * Every atom now has an MMFF94 type number, which is the key that
  * unlocks the right parameters for every energy term.
- * Partial charges are filled in by compute_bci_charges().
+ * Partial charges are attached by compute_bci_charges() (which
+ * returns the charged molecule); the energy terms fall back to
+ * computing them on demand when the field is absent.
  */
 export interface TypedMolecule extends Molecule {
   atom_types: number[];          // MMFF94 type index per atom, same order as atoms[]

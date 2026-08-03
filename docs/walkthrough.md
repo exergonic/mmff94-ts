@@ -59,11 +59,13 @@ the key that unlocks the right parameters for every energy term. Getting it wron
 means every subsequent calculation is wrong — which is why atom typing is the single
 hardest piece.
 
-Partial charges (`partial_charges[]`) are filled in by `compute_bci_charges()`, which
-must be called before energy terms that need electrostatics. They are stored on the
-TypedMolecule rather than computed on-the-fly because the same charges are reused
-by the gradient calculation. But if you only need vdW + bonds + angles, you can
-skip the BCI step.
+Partial charges (`partial_charges[]`) are attached by `compute_bci_charges()`,
+which returns a copy of the molecule with the charges on it — pure like the rest
+of the pipeline (the input is untouched). They are reused by the gradient
+calculation and stay valid through geometry optimization because MMFF94 charges
+are geometry-independent. The energy terms also compute the charges on demand if
+given a bare typed molecule, so you can skip the BCI step entirely if you only
+need vdW + bonds + angles.
 
 ---
 
@@ -456,8 +458,8 @@ MMFF94 never evaluates the bare 1/r form.
   scaling lives inside this term because the term functions return
   totals, not pair lists.
 
-Requires `compute_bci_charges()` to have been called first to fill in the
-`partial_charges[]` array (the term also computes them on demand).
+Consumes the `partial_charges[]` attached by `compute_bci_charges()` (the term
+also computes them on demand if they are absent).
 
 Validated against the reference logs (per-atom charges AND energies) and
 against BatchMin: 140/140 typing-exact suite molecules match the
@@ -701,7 +703,7 @@ SDF string (.mol/.sdf)
 └─────────┬─────────┘           │  angle-bend          │
           │                     │  stretch-bend        │
           ▼                     │  torsion             │
-  partial_charges[]             │  van-der-waals       │
+  charged molecule              │  van-der-waals       │
                                 │  electrostatic       │
                                 │  out-of-plane        │
                                 │  ┌──────────────┐   │

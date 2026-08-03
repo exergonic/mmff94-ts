@@ -59,13 +59,14 @@ describe('Electrostatic energy', () => {
   });
 
   it('computes charges on the fly when none are stored', () => {
-    // Ammonia without precomputed charges: the term fills them in and
-    // (all pairs 1-2/1-3) still gives zero.
+    // Ammonia without precomputed charges: the term computes them
+    // internally (all pairs 1-2/1-3) and still gives zero — the
+    // input molecule stays untouched (pure contract).
     const sdf = readFileSync(join(__dirname, 'fixtures', 'sdf', 'ammonia.sdf'), 'utf-8');
     const typed = assign_atom_types(parse_sdf(sdf));
     expect(typed.partial_charges).toBeUndefined();
     expect(calc_electrostatic_energy(typed)).toBe(0);
-    expect(typed.partial_charges).toBeDefined(); // computed on the fly
+    expect(typed.partial_charges).toBeUndefined(); // input never mutated
   });
 
   it('matches the reference logs for every fixture (with charges)', () => {
@@ -80,8 +81,8 @@ describe('Electrostatic energy', () => {
     for (const [name, ref] of Object.entries(refs)) {
       const sdf = readFileSync(join(__dirname, 'fixtures', 'sdf', `${name}.sdf`), 'utf-8');
       const typed = assign_atom_types(parse_sdf(sdf));
-      compute_bci_charges(typed);
-      expect(Math.abs(calc_electrostatic_energy(typed) - ref)).toBeLessThan(0.001);
+      const charged = compute_bci_charges(typed);
+      expect(Math.abs(calc_electrostatic_energy(charged) - ref)).toBeLessThan(0.001);
     }
   });
 
@@ -97,8 +98,8 @@ describe('Electrostatic energy', () => {
     for (const [name, ref] of Object.entries(refs)) {
       const sdf = readFileSync(join(__dirname, 'fixtures', 'sdf', `${name}.sdf`), 'utf-8');
       const typed = assign_atom_types(parse_sdf(sdf));
-      compute_bci_charges(typed);
-      expect(Math.abs(calc_energy(typed).total - ref)).toBeLessThan(0.001);
+      const charged = compute_bci_charges(typed);
+      expect(Math.abs(calc_energy(charged).total - ref)).toBeLessThan(0.001);
     }
   });
 });

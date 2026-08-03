@@ -70,10 +70,18 @@ const PRIMARY_FORMAL_CHARGES: Record<number, number> = {
 
 /**
  * Compute the partial charges for every atom of a typed molecule and
- * store them on `molecule.partial_charges` (the electrostatics term
- * and the gradient both consume them).
+ * return a COPY of the molecule with `partial_charges` attached (the
+ * electrostatics term and the gradient both consume them).
+ *
+ * Pure by design, like the rest of the pipeline: the input molecule is
+ * not mutated, and the returned charged molecule is the value that
+ * flows into calc_energy / calc_gradient / optimize_lbfgs. This is
+ * sound because MMFF94 partial charges are geometry-independent — they
+ * depend only on connectivity and atom types — so the charged
+ * molecule stays valid while an optimizer moves the atoms (the
+ * optimizer clones only the atom positions and keeps this field).
  */
-export function compute_bci_charges(molecule: TypedMolecule): void {
+export function compute_bci_charges(molecule: TypedMolecule): TypedMolecule {
   // Adjacency + the shared class context (the BTij flag selects the
   // bci class for conjugated single bonds).
   const adj: number[][] = Array.from({ length: molecule.atoms.length }, () => []);
@@ -151,5 +159,9 @@ export function compute_bci_charges(molecule: TypedMolecule): void {
   }
   for (let i = 0; i < n; i++) charges[i] += formal[i];
 
-  molecule.partial_charges = charges;
+  // The charged molecule is a shallow copy: atoms and bonds are shared
+  // references — only the new field is added. Geometry and typing are
+  // untouched, so this is the value that flows into the energy terms
+  // and the optimizer.
+  return { ...molecule, partial_charges: charges };
 }

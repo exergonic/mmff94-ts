@@ -54,12 +54,15 @@ describe('BCI partial charges', () => {
     it(`matches the reference charges for ${filename}`, () => {
       const sdf = readFileSync(join(SDF_DIR, filename), 'utf-8');
       const typed = assign_atom_types(parse_sdf(sdf));
-      compute_bci_charges(typed);
+      // Pure step: the ORIGINAL molecule is untouched; the charges
+      // arrive on the returned copy.
+      const charged = compute_bci_charges(typed);
 
-      expect(typed.partial_charges).toBeDefined();
-      expect(typed.partial_charges!.length).toBe(expected.length);
+      expect(typed.partial_charges).toBeUndefined();
+      expect(charged.partial_charges).toBeDefined();
+      expect(charged.partial_charges!.length).toBe(expected.length);
       for (let i = 0; i < expected.length; i++) {
-        expect(typed.partial_charges![i]).toBeCloseTo(expected[i], 5);
+        expect(charged.partial_charges![i]).toBeCloseTo(expected[i], 5);
       }
     });
   }
@@ -68,10 +71,10 @@ describe('BCI partial charges', () => {
     for (const file of ['ammonia', 'water', 'benzene', 'pyridine', 'formaldehyde']) {
       const sdf = readFileSync(join(SDF_DIR, `${file}.sdf`), 'utf-8');
       const typed = assign_atom_types(parse_sdf(sdf));
-      compute_bci_charges(typed);
+      const charged = compute_bci_charges(typed);
       const ref = parse_reference_charges(join(REF_DIR, `${file}.mmff94.log`));
-      expect(typed.partial_charges!.length).toBe(ref.length);
-      typed.partial_charges!.forEach((q, i) => {
+      expect(charged.partial_charges!.length).toBe(ref.length);
+      charged.partial_charges!.forEach((q, i) => {
         expect(Math.abs(q - ref[i])).toBeLessThan(1e-4);
       });
     }

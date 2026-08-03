@@ -61,13 +61,13 @@ describe('partial charges vs the validation-suite reference (pchg)', () => {
       if (!typed.atom_types.every((t, i) => t === refTypes[i])) continue;
       if (DATIVE_EXCLUDED.has(mol.name)) continue;
 
-      compute_bci_charges(typed);
+      const charged = compute_bci_charges(typed);
       const ref = reference_charges(mmdText, mol.name, mol.atoms.length);
       checked++;
       for (let i = 0; i < typed.atoms.length; i++) {
-        const dev = Math.abs(typed.partial_charges![i] - ref[i]);
+        const dev = Math.abs(charged.partial_charges![i] - ref[i]);
         worst = Math.max(worst, dev);
-        expect(dev, `${mol.name} atom ${i}: got ${typed.partial_charges![i]}, ref ${ref[i]}`)
+        expect(dev, `${mol.name} atom ${i}: got ${charged.partial_charges![i]}, ref ${ref[i]}`)
           .toBeLessThan(1e-3);
       }
     }

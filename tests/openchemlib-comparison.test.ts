@@ -73,8 +73,7 @@ function to_molfile(mol: Molecule): string {
 
 function our_total(mol: Molecule): number {
   const typed = assign_atom_types(mol);
-  compute_bci_charges(typed);
-  return calc_energy(typed).total;
+  return calc_energy(compute_bci_charges(typed)).total;
 }
 
 function ocl_total(mol: Molecule): number | string {

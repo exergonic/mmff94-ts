@@ -87,11 +87,13 @@ function check_term(
   let worst_overall = 0;
   console.log(`\n=== ${name} gradient vs finite differences (δ = ${DELTA} Å) ===`);
   for (const molecule of molecules) {
-    // Charges are geometry-independent; compute once so the
-    // electrostatic term (and its gradient) stay consistent.
-    compute_bci_charges(molecule);
+    // Charges are geometry-independent; compute once (the returned
+    // charged molecule shares the atoms, so the FD perturbations
+    // below move the same geometry) so the electrostatic term (and
+    // its gradient) stay consistent.
+    const charged = compute_bci_charges(molecule);
 
-    const analytic = gradient_fn(molecule);
+    const analytic = gradient_fn(charged);
     let worst = 0;
     let worst_atom = -1;
 
@@ -99,9 +101,9 @@ function check_term(
       for (let axis = 0; axis < 3; axis++) {
         const original = molecule.atoms[a][axis === 0 ? 'x' : axis === 1 ? 'y' : 'z'];
         molecule.atoms[a][axis === 0 ? 'x' : axis === 1 ? 'y' : 'z'] = original + DELTA;
-        const e_plus = energy_fn(molecule);
+        const e_plus = energy_fn(charged);
         molecule.atoms[a][axis === 0 ? 'x' : axis === 1 ? 'y' : 'z'] = original - DELTA;
-        const e_minus = energy_fn(molecule);
+        const e_minus = energy_fn(charged);
         molecule.atoms[a][axis === 0 ? 'x' : axis === 1 ? 'y' : 'z'] = original;
 
         const fd = (e_plus - e_minus) / (2 * DELTA);
@@ -169,17 +171,17 @@ describe('gradient finite-difference checks', () => {
     // would silently vanish from the public API — pin the identity.
     const molecules = load_fixtures();
     for (const molecule of molecules) {
-      compute_bci_charges(molecule);
-      const total = calc_gradient(molecule);
+      const charged = compute_bci_charges(molecule);
+      const total = calc_gradient(charged);
       const sum = molecule.atoms.map(() => [0, 0, 0]);
       for (const term of [
-        calc_bond_stretch_gradient(molecule),
-        calc_angle_bend_gradient(molecule),
-        calc_stretch_bend_gradient(molecule),
-        calc_torsion_gradient(molecule),
-        calc_vdw_gradient(molecule),
-        calc_electrostatic_gradient(molecule),
-        calc_oop_gradient(molecule),
+        calc_bond_stretch_gradient(charged),
+        calc_angle_bend_gradient(charged),
+        calc_stretch_bend_gradient(charged),
+        calc_torsion_gradient(charged),
+        calc_vdw_gradient(charged),
+        calc_electrostatic_gradient(charged),
+        calc_oop_gradient(charged),
       ]) {
         for (let a = 0; a < molecule.atoms.length; a++) {
           for (let axis = 0; axis < 3; axis++) sum[a][axis] += term[a][axis];

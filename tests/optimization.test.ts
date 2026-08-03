@@ -70,10 +70,13 @@ describe('L-BFGS optimization', () => {
     const raw = parse_sdf(readFileSync(join(SDF_DIR, file), 'utf-8'));
     raw.name = name;
     const typed = assign_atom_types(raw);
-    compute_bci_charges(typed);
+    // The charged copy flows into the optimizer (and into perturb()
+    // below, whose spread keeps the charges — valid because they are
+    // geometry-independent).
+    const charged = compute_bci_charges(typed);
 
-    const starting_gradient = max_gradient(calc_gradient(typed));
-    const starting_energy = calc_energy(typed).total;
+    const starting_gradient = max_gradient(calc_gradient(charged));
+    const starting_energy = calc_energy(charged).total;
 
     it(`${name}: converges from the SDF geometry and from a perturbed one`, () => {
       const caveat = OPTIMIZER_CAVEATS[name];
@@ -82,13 +85,13 @@ describe('L-BFGS optimization', () => {
         // Documented caveat (typing gap / pathological surface): the
         // optimizer still runs and must descend, but no convergence
         // claim is made. See OPTIMIZER_CAVEATS above.
-        const from_sdf = optimize_lbfgs(typed, energy_gradient_fn(), { gradient_tolerance: tol, max_iterations: 500 });
+        const from_sdf = optimize_lbfgs(charged, energy_gradient_fn(), { gradient_tolerance: tol, max_iterations: 500 });
         expect(from_sdf.energy.total).toBeLessThan(starting_energy + 1e-6);
         return;
       }
 
       // Run 1: from the SDF geometry — the "given" starting point.
-      const from_sdf = optimize_lbfgs(typed, energy_gradient_fn(), {
+      const from_sdf = optimize_lbfgs(charged, energy_gradient_fn(), {
         gradient_tolerance: tol,
       });
       expect(from_sdf.converged).toBe(true);
@@ -104,7 +107,7 @@ describe('L-BFGS optimization', () => {
       }
 
       // Run 2: from a perturbed geometry — every atom shaken by ~0.2 Å.
-      const perturbed = perturb(typed, name.length * 7919 + 17, 0.2);
+      const perturbed = perturb(charged, name.length * 7919 + 17, 0.2);
       const perturbed_start = calc_energy(perturbed).total;
       const from_perturbed = optimize_lbfgs(perturbed, energy_gradient_fn(), {
         gradient_tolerance: tol,
@@ -125,8 +128,8 @@ describe('L-BFGS optimization', () => {
   it('respects a tighter gradient tolerance', () => {
     const raw = parse_sdf(readFileSync(join(SDF_DIR, 'butane.sdf'), 'utf-8'));
     const typed = assign_atom_types(raw);
-    compute_bci_charges(typed);
-    const result = optimize_lbfgs(typed, energy_gradient_fn(), {
+    const charged = compute_bci_charges(typed);
+    const result = optimize_lbfgs(charged, energy_gradient_fn(), {
       gradient_tolerance: 0.005,
     });
     expect(result.converged).toBe(true);
@@ -136,9 +139,9 @@ describe('L-BFGS optimization', () => {
   it('does not mutate the input molecule', () => {
     const raw = parse_sdf(readFileSync(join(SDF_DIR, 'propane.sdf'), 'utf-8'));
     const typed = assign_atom_types(raw);
-    compute_bci_charges(typed);
+    const charged = compute_bci_charges(typed);
     const before = typed.atoms.map(a => [a.x, a.y, a.z]);
-    optimize_lbfgs(typed, energy_gradient_fn());
+    optimize_lbfgs(charged, energy_gradient_fn());
     expect(typed.atoms.map(a => [a.x, a.y, a.z])).toEqual(before);
   });
 

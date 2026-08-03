@@ -41,8 +41,8 @@ export function calc_electrostatic_gradient(molecule: TypedMolecule): number[][]
   const gradient: number[][] = molecule.atoms.map(() => [0, 0, 0]);
 
   // Partial charges from the BCI model — same as the energy term.
-  if (!molecule.partial_charges) compute_bci_charges(molecule);
-  const charges = molecule.partial_charges!;
+  const charges =
+    molecule.partial_charges ?? compute_bci_charges(molecule).partial_charges!;
 
   // Adjacency: for the 1-2/1-3 exclusion and the 1-4 classification.
   const adj: number[][] = Array.from({ length: molecule.atoms.length }, () => []);

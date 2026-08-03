@@ -50,13 +50,15 @@ function main() {
   const typed = assign_atom_types(molecule);
   console.log(`Atom types: ${typed.atom_types.join(', ')}`);
 
-  // Step 3: compute partial charges from bond charge increments
-  // (BCI partial charges from src/mmff94/charges.ts — required by the
-  // electrostatic term; the term also computes them on demand)
-  compute_bci_charges(typed);
+  // Step 3: compute partial charges from bond charge increments.
+  // compute_bci_charges returns a COPY of the molecule with the
+  // charges attached — the value that flows into the energy terms
+  // (which also compute the charges on demand if given a bare typed
+  // molecule).
+  const charged = compute_bci_charges(typed);
 
   // Step 4: calculate the full MMFF94 energy
-  const energy = calc_energy(typed);
+  const energy = calc_energy(charged);
   console.log(`\nMMFF94 Energy (kcal/mol):`);
   console.log(`  Bond stretch:     ${energy.bond_stretch.toFixed(4)}`);
   console.log(`  Angle bend:       ${energy.angle_bend.toFixed(4)}`);
