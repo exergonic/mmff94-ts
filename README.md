@@ -48,21 +48,21 @@ analytical gradient against finite differences.
    decimals. Will continue to expand molecular coverage.
 2. **Halgren's 753-molecule MMFF94 validation suite** — per-component
    energies and per-atom partial charges vs the
-   suite's reference values. The comparison runs on the 140/550
+   suite's reference values. The comparison runs on the 241/550
    suite molecules whose atom typing reproduces the reference types
    exactly. As our atom-typing implementation matures, we will expand the coverage to include more molecules.
 
-Per-component agreement with BatchMin on those 140 molecules:
+Per-component agreement with BatchMin on those 241 molecules:
 
 | Term | Exact | Max abs(Δ) (kcal/mol) |
 |-------|---|---|
-| Bond stretch | 140/140 | 0.00 |
-| Angle bend | 140/140 | 0.02 |
-| Stretch-bend | 140/140 | 0.00 |
-| Torsion | 140/140 | 0.00 |
-| Van der Waals | 140/140 | 0.00 |
-| Out-of-plane | 140/140 | 0.01 |
-| Electrostatic | 140/140 | 0.00 |
+| Bond stretch | 241/241 | 0.00 |
+| Angle bend | 241/241 | 0.03 |
+| Stretch-bend | 241/241 | 0.00 |
+| Torsion | 241/241 | 0.00 |
+| Van der Waals | 241/241 | 0.00 |
+| Out-of-plane | 241/241 | 0.01 |
+| Electrostatic | 241/241 | 0.00 |
 
  More details in [`tests/VALIDATION.md`](tests/VALIDATION.md).
 

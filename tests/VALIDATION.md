@@ -6,15 +6,24 @@ molecule by molecule, term by term. The numbers here are produced by
 The README's [Validation](../README.md#validation) section is the
 condensed public version of this ledger.
 
-## Current status (2026-08-02)
+## Current status (2026-08-03)
 
-- **Atom typing**: 140/550 suite molecules type-exact vs OpenBabel
-  (25.5%), pinned as `KNOWN_GOOD` in `atom-types-suite.test.ts`.
-- **All seven energy terms** match BatchMin on all **140/140**
-  typing-exact molecules (max |Δ| 0.02, mean 0.001).
-- **Partial charges** vs the suite's reference values: **138/140** to
-  < 10⁻³ e⁻ per atom (JALSOE/SO18A excluded — BatchMin's dative
-  representation; their *energies* still match).
+- **Atom typing**: 241/550 suite molecules type-exact vs OpenBabel
+  (43.8%), pinned as `KNOWN_GOOD` in `atom-types-suite.test.ts`.
+  The 2026-08-03 jump (140 → 241) is the phosphate/sulfonate oxygen
+  cluster: P=O and S=O/S–O⁻ terminal-oxygen rules (type 32 by
+  terminal-O count), H-on-P (71), acid/enol/phenol H types
+  (24/33/29), H on cationic N (36), C=S → 3, sulfine (74),
+  P 25/75/26.
+- **All seven energy terms** match BatchMin on all **241/241**
+  typing-exact molecules (max |Δ| 0.03, mean 0.001).
+- **Partial charges** vs the suite's reference values: **241/241** to
+  < 10⁻³ e⁻ per atom. The type-32 q⁰ is now the spec's own
+  environment rule (q⁰ = −(n−k)/n over the terminal oxygens —
+  carboxylate −1/2, phosphinate −1/2, sulfonate −1/3, sulfate −1/2,
+  PO₄³⁻ −3/4, perchlorate −1/4), and H on cationic N is type 36 so
+  the 34-36 BCI applies. (BatchMin's dative representation excludes
+  JALSOE/SO18A from the charge check; their energies still match.)
 - **The 16 obenergy reference molecules**: all seven terms and the
   total exact to 5 decimals.
 - **Gradients**: every analytical gradient FD-verified on every atom
@@ -179,7 +188,7 @@ The per-term threads below were closed across the parameter-class work
    — benzene +3.07810, ethene +8.0530, pyridine +2.0939, pyrrole
    +3.0720, nicotine −2.2135 — and the fixture totals match exactly
    (they were the last gap). The suite's per-component report covers
-   electrostatics: **140/140** typing-exact molecules match BatchMin's
+   electrostatics: **241/241** typing-exact molecules match BatchMin's
    electrostatic component (the earlier 89/91 with the two
    metal-carboxylate misses closed when the formal-charge model of
    part V eq. 15 — primary charges + negative-charge sharing, with the
@@ -187,17 +196,22 @@ The per-term threads below were closed across the parameter-class work
    are excluded (ammonia's electrostatic is zero — the BatchMin log
    confirms), 1-4 pairs ×0.75 inside the term.
 
-6. **Typing scoreboard.** 140/550 suite molecules type-exact vs
-   OpenBabel (25.5%; see `atom-types-suite.test.ts`). The climb:
+6. **Typing scoreboard.** 241/550 suite molecules type-exact vs
+   OpenBabel (43.8%; see `atom-types-suite.test.ts`). The climb:
    aromatic-ring perception (Kekulé pattern + lone-pair heteroatoms in
    5-rings) took 65 → 91 (2026-08-01); amide-N typing (types 10/28,
    with the sulfonyl exclusion) and the formally-charged types
    (34/35/51/54/55/56/57/58/68/72/73/77/80/81/89/90/91, structural
-   valence-based branches) took it to 140 (2026-08-02). Every new
+   valence-based branches) took it to 140 (2026-08-02); the
+   phosphate/sulfonate oxygen cluster (2026-08-03 — type-32 rules for
+   P=O/S=O/S–O⁻ keyed on the terminal-oxygen count, H-on-P 71,
+   acid/enol/phenol H 24/33/29, H-on-cationic-N 36, C=S → 3,
+   sulfine 74, P 25/75/26) took it to 241. Every new
    typing-exact molecule's energy terms match BatchMin. Biggest
-   remaining classes (from the worst-10): sulfonyl/sulfate S (18),
-   phosphate P (25), thioamide S (16/17), and the rest of the
-   charged-molecule periphery.
+   remaining classes (from the current worst-10): the
+   amidine/guanidine-neutral N's (40/55/57 vs 3), aromatic 5-ring
+   N/O positions (65/78/59), cyclopropanes (22), cyanamide sp N
+   (42/43), and the sp2-carbon/imine edge cases.
 
 ## Updating this ledger
 

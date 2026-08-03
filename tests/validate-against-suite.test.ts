@@ -7,7 +7,7 @@
  *
  * All seven terms are implemented; the per-component assertions run on
  * the subset of molecules whose atom typing reproduces the reference
- * types exactly (140/550 in the suite scoreboard — see
+ * types exactly (241/550 in the suite scoreboard — see
  * atom-types-suite.test.ts), so the comparison isolates the terms
  * themselves rather than the typing gaps.
  *

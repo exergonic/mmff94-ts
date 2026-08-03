@@ -63,7 +63,9 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
   // Carboxylate detection: C(=O)-O⁻ with a TERMINAL single-bonded oxygen
   // (no H or other bonds — the free acid's -OH has two neighbors and
   // stays 3/7/6). Carboxylate C → type 41 (CO₂M), both oxygens → 32
-  // (O2CM). Pre-scanned so the O case works regardless of atom order.
+  // (O2CM). The thiocarboxylate C(=S)-S⁻ (CS2M) follows the same rule
+  // with S in place of O (its =S is the S2CM type 72, not 16).
+  // Pre-scanned so the O case works regardless of atom order.
   const carboxylate_carbons = new Set<number>();
   for (let i = 0; i < n; i++) {
     const atom = molecule.atoms[i];
@@ -72,7 +74,11 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
     const has_terminal_O = adj[i].some(
       nb => nb.order === 1 && molecule.atoms[nb.nbr].element === 'O' && adj[nb.nbr].length === 1,
     );
-    if (has_dbl_O && has_terminal_O) carboxylate_carbons.add(i);
+    const has_dbl_S = adj[i].some(nb => nb.order === 2 && molecule.atoms[nb.nbr].element === 'S');
+    const has_terminal_S = adj[i].some(
+      nb => nb.order === 1 && molecule.atoms[nb.nbr].element === 'S' && adj[nb.nbr].length === 1,
+    );
+    if ((has_dbl_O && has_terminal_O) || (has_dbl_S && has_terminal_S)) carboxylate_carbons.add(i);
   }
 
   // Amide N detection: N bonded to a carbonyl (or thiocarbonyl) carbon
@@ -108,6 +114,37 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
       );
     });
     if (bonded_to_carbonyl) amide_nitrogens.add(i);
+  }
+
+  // Cationic nitrogen prescan: N's that will type as quaternary NR+
+  // (34), the iminium family (54/55/56), or pyridinium (58). Their
+  // hydrogens type 36 (HNR+) — the BCI table's 34-36/36-54/36-56
+  // entries carry the N–H bond increments, so the charges follow
+  // automatically once the H is typed 36. N-oxides (68, terminal O
+  // neighbor) and nitro (45) stay out — their H's are the HNOX type 23.
+  const cationic_nitrogens = new Set<number>();
+  for (let i = 0; i < n; i++) {
+    const atom = molecule.atoms[i];
+    if (atom.element !== 'N') continue;
+    const nbrs = adj[i];
+    if (aromatic.atoms.has(i)) {
+      const in_5ring = (aromatic.rings_of.get(i) ?? []).some(r => r.path.length === 5);
+      if (!in_5ring && nbrs.length === 3) cationic_nitrogens.add(i); // pyridinium (58)
+      continue;
+    }
+    if (nbrs.length === 4) {
+      const has_terminal_O = nbrs.some(nb => {
+        return molecule.atoms[nb.nbr].element === 'O' && adj[nb.nbr].length === 1;
+      });
+      if (!has_terminal_O) cationic_nitrogens.add(i); // NR+ (34)
+    } else if (nbrs.length === 3 && nbrs.some(nb => nb.order === 2)) {
+      // The iminium family (54/55/56): 3 neighbors with the N's own
+      // double bond and no terminal oxygens (those are 67/45).
+      const has_terminal_O = nbrs.some(nb => {
+        return molecule.atoms[nb.nbr].element === 'O' && adj[nb.nbr].length === 1;
+      });
+      if (!has_terminal_O) cationic_nitrogens.add(i);
+    }
   }
 
   for (let i = 0; i < n; i++) {
@@ -160,6 +197,10 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
               const target = molecule.atoms[nb.nbr];
               return target.element === 'N';
             });
+            const dbl_to_S = double_nbrs.some(nb => {
+              const target = molecule.atoms[nb.nbr];
+              return target.element === 'S';
+            });
 
             if (carboxylate_carbons.has(i)) {
               // Carboxylate carbon C(=O)O⁻ → type 41 (CO₂M)
@@ -170,6 +211,11 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
               atom_types[i] = 57;
             } else if (dbl_to_O) {
               // Carbonyl: C=O with 3 neighbors → type 3 (C=O)
+              atom_types[i] = 3;
+            } else if (dbl_to_S) {
+              // Thiocarbonyl C=S (thioamides, thioketones, sulfines)
+              // shares the generic carbonyl type 3 (C=O covers C=S in
+              // the MMFF94 type list).
               atom_types[i] = 3;
             } else if (dbl_to_C) {
               // Alkene: C=C with 3 neighbors → type 2 (C=C, vinylic)
@@ -230,18 +276,65 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
             // H bonded to carbon → type 5 (HC), regardless of C hybridization
             atom_types[i] = 5;
             break;
-          case 'N':
-            // H on an amide N (type 10) → 28 (HNCO). Other N–H stays
-            // type 23 (HNR) for now; the imine-H (27, HN=C) and
-            // sulfonamide-H (72) are roadmap items.
-            atom_types[i] = amide_nitrogens.has(neighbors[0].nbr) ? 28 : 23;
+          case 'N': {
+            // H on a cationic N (quaternary 34, iminium 54/55/56,
+            // pyridinium 58) → type 36 (HNR+); amide N → 28 (HNCO);
+            // other N–H stays type 23 (HNR, including N-oxide N's).
+            const n_nbr = neighbors[0].nbr;
+            atom_types[i] = cationic_nitrogens.has(n_nbr) ? 36 : amide_nitrogens.has(n_nbr) ? 28 : 23;
             break;
-          case 'O':
-            // Water hydrogen → type 31 (H-OH); other O-H → type 21 (HOR)
-            atom_types[i] = water_oxygens.has(neighbors[0].nbr) ? 31 : 21;
+          }
+          case 'O': {
+            // The O–H hydrogen type follows what ELSE the oxygen is
+            // bonded to: water H is 31 (HOH); an H on an oxenium O=+
+            // is 52 (HO=+); an acid H on P–OH is 24 (HOP, part I
+            // Table III), on S–OH it is 33 (HOS), on a carboxylic
+            // acid (the C also carries C=O) it is 24 (HOCO); an
+            // enol/phenol H on an aromatic or vinylic C is 29 (HOCC);
+            // the generic alcohol H is 21 (HOR).
+            const o = neighbors[0].nbr;
+            if (water_oxygens.has(o)) {
+              atom_types[i] = 31; // H-OH
+              break;
+            }
+            const other = adj[o].find(nb => nb.nbr !== i);
+            if (other === undefined) {
+              atom_types[i] = 21;
+              break;
+            }
+            if (adj[o].some(nb => nb.order === 2)) {
+              atom_types[i] = 52; // H on oxenium O=+
+              break;
+            }
+            const other_atom = molecule.atoms[other.nbr];
+            if (other_atom.element === 'P') {
+              atom_types[i] = 24; // H-O-P (HOP)
+            } else if (other_atom.element === 'S') {
+              atom_types[i] = 33; // H-O-S (HOS)
+            } else if (other_atom.element === 'C') {
+              if (adj[other.nbr].some(b => b.order === 2 && molecule.atoms[b.nbr].element === 'O')) {
+                atom_types[i] = 24; // carboxylic acid H (HOCO)
+              } else if (
+                aromatic.atoms.has(other.nbr)
+                || adj[other.nbr].some(b => b.order === 2
+                  && ['C', 'N'].includes(molecule.atoms[b.nbr].element))
+              ) {
+                atom_types[i] = 29; // enol/phenol H (HOCC)
+              } else {
+                atom_types[i] = 21; // alcohol H (HOR)
+              }
+            } else {
+              atom_types[i] = 21;
+            }
             break;
+          }
           case 'S':
             // H bonded to sulfur → type 71 (HS)
+            atom_types[i] = 71;
+            break;
+          case 'P':
+            // H bonded to phosphorus (PH3, H-P=O) → type 71 (HS —
+            // MMFF94 reuses the H-S type for P–H hydrogens)
             atom_types[i] = 71;
             break;
           default:
@@ -285,6 +378,19 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
             } else {
               atom_types[i] = 32; // N-oxide O (ONX)
             }
+          } else if (target.element === 'P' || target.element === 'Cl') {
+            // Terminal O on P or Cl is the O2CM type 32 (part I
+            // Table III: OP/O2P/O3P/O4P for phosphates, phosphonates
+            // and phosphine oxides; O4Cl for perchlorate). A
+            // hypochlorite O⁻ is 32 too (OpenBabel probe).
+            atom_types[i] = 32;
+          } else if (target.element === 'S') {
+            // Terminal O on S: 32 when the sulfur carries at least
+            // two terminal oxygens (the O2S/O3S/O4S spec entries —
+            // sulfonate, sulfate, sulfinate anion, sulfite dianion);
+            // a lone terminal O⁻ on a sulfide-type S has no suite
+            // case and stays the neutral 6.
+            atom_types[i] = count_terminal_oxygens(neighbors[0].nbr, adj, molecule) >= 2 ? 32 : 6;
           } else {
             atom_types[i] = 6;
           }
@@ -293,8 +399,26 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
           // → type 51 (O=+)
           atom_types[i] = 51;
         } else if (has_double) {
-          // Carbonyl oxygen O=C → type 7 (O=C)
-          atom_types[i] = 7;
+          // Double-bonded oxygen. O=C and O=N stay the generic 7, but
+          // terminal oxygens on P and on the sulfone family are the
+          // O2CM type 32 (spec: OP and O2S/O3S/O4S — Halgren types
+          // oxyanion O's as O2CM, not as carbonyl O). Sulfoxide-type
+          // S=O (one terminal O, no S=N) keeps 7.
+          const target = molecule.atoms[neighbors[0].nbr];
+          if (target.element === 'P') {
+            atom_types[i] = 32; // P=O — phosphine oxide, phosphate
+          } else if (target.element === 'S') {
+            // S=O: 32 on the sulfone family (≥ 2 terminal O's on the
+            // S — sulfone, sulfonate, sulfate, sulfite/sulfinate
+            // anions) and on sulfonyl imines (S=N double); 7 on the
+            // sulfoxide family (one terminal O — sulfoxide, sulfinic
+            // acid/ester, sulfine C=S=O, thiosulfinate).
+            const s = neighbors[0].nbr;
+            const s_has_dbl_N = adj[s].some(b => b.order === 2 && molecule.atoms[b.nbr].element === 'N');
+            atom_types[i] = count_terminal_oxygens(s, adj, molecule) >= 2 || s_has_dbl_N ? 32 : 7;
+          } else {
+            atom_types[i] = 7; // O=C or O=N
+          }
         } else {
           // Ether or alcohol oxygen → type 6
           atom_types[i] = 6;
@@ -401,7 +525,11 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
           atom_types[i] = 44;
           break;
         }
-        if (has_double && n_neighbors >= 3) {
+        if (has_double && n_neighbors === 2) {
+          // Two-coordinate S with a double bond: the sulfine C=S=O
+          // (74, =S=O — "sulfinyl sulfur").
+          atom_types[i] = 74;
+        } else if (has_double && n_neighbors >= 3) {
           // Check for S=O / SO₂
           const dbl_to_O = double_nbrs.some(nb => {
             const target = molecule.atoms[nb.nbr];
@@ -413,7 +541,9 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
             // 3-coordinate S with an S=O double bond: the sulfoxide
             // (17) unless it also carries two terminal oxygens — the
             // anionic sulfinate R-S(=O)-O⁻ (73, SO2M); a terminal O
-            // plus a terminal S is the thiosulfinate (also 73).
+            // plus a terminal S is the thiosulfinate (also 73). The
+            // R-S(=O)2⁻ form with a doubly bonded carbon (SURDOX02's
+            // sulfonyl carbene) is the sulfone 18, not 73.
             let terminalO = 0;
             let terminalS = 0;
             for (const nb of neighbors) {
@@ -421,7 +551,10 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
               if (t.element === 'O' && adj[nb.nbr].length === 1) terminalO++;
               if (t.element === 'S' && adj[nb.nbr].length === 1) terminalS++;
             }
-            if (terminalO === 2 || (terminalO >= 1 && terminalS >= 1)) {
+            if (terminalO === 2) {
+              const nonO = neighbors.find(nb => molecule.atoms[nb.nbr].element !== 'O');
+              atom_types[i] = nonO !== undefined && nonO.order === 1 ? 73 : 18;
+            } else if (terminalO >= 1 && terminalS >= 1) {
               atom_types[i] = 73; // SO2M — sulfinate S
             } else {
               atom_types[i] = 17; // S=O (sulfoxide)
@@ -432,10 +565,15 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
             atom_types[i] = 16; // S=C (thiocarbonyl)
           }
         } else if (n_neighbors === 1) {
-          // Terminal S with a single bond: anionic (or bonded to P) →
-          // type 72 (SM). A thiol's S has two neighbors (C + H) and
-          // stays type 15 below.
-          atom_types[i] = 72;
+          // Terminal S: with a single bond it is the anionic 72 (SM).
+          // A C=S double bond is the thiocarbonyl 16 (S=C — thioamides,
+          // thioketones), while P=S and S=S stay 72 (thiophosphate and
+          // disulfide anions use the same anionic type); the =S of a
+          // thiocarboxylate C(=S)-S⁻ is also 72 (S2CM).
+          const bond = neighbors[0];
+          const is_thiocarbonyl = bond.order === 2 && molecule.atoms[bond.nbr].element === 'C'
+            && !carboxylate_carbons.has(bond.nbr);
+          atom_types[i] = is_thiocarbonyl ? 16 : 72;
         } else {
           // Thiol or sulfide → type 15 (S)
           atom_types[i] = 15;
@@ -461,8 +599,21 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
 
       // ── Silicon, phosphorus ─────────────────────────────────────────
       case 'Si': atom_types[i] = 19; break;
-      // All P → 26 for now (placeholder; phosphate P, type 25, not yet handled)
-      case 'P':  atom_types[i] = 26; break;
+      case 'P': {
+        // 4-coordinate P, or P with a double bond to O or S, is the
+        // phosphate family (25: the spec's PO4/PO3/PO2/PO/PTET all
+        // share it — phosphates, phosphonates, phosphine oxides);
+        // tricoordinate P(III) is the phosphine 26; a C=P double
+        // bond is the ylide 75 (-P=C).
+        if (has_double && double_nbrs.some(nb => molecule.atoms[nb.nbr].element === 'C')) {
+          atom_types[i] = 75; // -P=C
+        } else if (n_neighbors >= 4 || has_double) {
+          atom_types[i] = 25; // PO4 family
+        } else {
+          atom_types[i] = 26; // P (phosphine)
+        }
+        break;
+      }
 
       default:
         atom_types[i] = 1; // fallback: generic sp³ C
@@ -765,6 +916,25 @@ function n3_neighbor_count(
   let count = 0;
   for (const nb of adj[i]) {
     if (molecule.atoms[nb.nbr].element === 'N' && adj[nb.nbr].length === 3) count++;
+  }
+  return count;
+}
+
+/**
+ * Count the terminal oxygens on atom i — O's whose only bond is to i.
+ * This is the count that decides the O2CM assignment for S=O and S-O⁻:
+ * a sulfone/sulfonate/sulfate/sulfinate-anion sulfur carries ≥ 2
+ * terminal oxygens (32), a sulfoxide/sulfinic-acid/sulfite-ester
+ * sulfur carries exactly 1 (its S=O stays the carbonyl-like 7).
+ */
+function count_terminal_oxygens(
+  i: number,
+  adj: { nbr: number; order: number }[][],
+  molecule: Molecule,
+): number {
+  let count = 0;
+  for (const nb of adj[i]) {
+    if (molecule.atoms[nb.nbr].element === 'O' && adj[nb.nbr].length === 1) count++;
   }
   return count;
 }

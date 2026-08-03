@@ -122,24 +122,36 @@ export function assign_bci_charges(molecule: TypedMolecule): TypedMolecule {
 
   // Formal-charge correction: eq. (15) of part V. q⁰ is per type; the
   // sharing (the α_k·q⁰_k flow) needs the full adjacency.
-  // Primary charge of atom i, with the type-32 environment rule (clean
-  // bimodal split in the reference): −0.5 on a carboxylate oxygen — a
-  // carbon neighbor carrying two terminal oxygens — and 0 on sulfone,
-  // nitro, and nitrate oxygens, whose polarization lives in the BCI.
+  // Primary charge of atom i, with the type-32 environment rule: an
+  // O2CM oxygen carries the central atom's anionic formal charge
+  // spread over its terminal oxygens — q⁰ = −(n−k)/n, where n is the
+  // number of terminal O's on the C/N/P/S/Cl center and k is the
+  // number of oxo (=O) oxygens in the neutral parent oxyacid (k = 1
+  // for C, P, and tricoordinate S(IV); 2 for N and tetracoordinate
+  // S(VI); 3 for Cl). This reproduces the spec's own values: PO₄³⁻
+  // −3/4, HPO₄²⁻ −2/3, H₂PO₄⁻ −1/2, H₃PO₄ 0 (part V), sulfate −1/2,
+  // perchlorate −1/4, nitrate −1/3, carboxylate −1/2 — and the
+  // neutral species (sulfone, sulfoxide, nitro, phosphine oxide) keep
+  // 0, their polarization living in the BCI. The formula is invariant
+  // to how the P=O/S=O bond is drawn (double or charge-separated).
   const q0_of = (i: number): number => {
     const t = molecule.atom_types[i];
     if (t === 32) {
-      return adj[i].some(nb => {
+      for (const nb of adj[i]) {
         const nbr = molecule.atoms[nb];
-        if (nbr.element !== 'C') return false;
+        let k = -1;
+        if (nbr.element === 'C' || nbr.element === 'P') k = 1;
+        else if (nbr.element === 'N') k = 2;
+        else if (nbr.element === 'Cl') k = 3;
+        else if (nbr.element === 'S') k = molecule.atom_types[nb] === 18 ? 2 : 1;
+        if (k < 0) continue;
         let terminalO = 0;
         for (const b of adj[nb]) {
           if (molecule.atoms[b].element === 'O' && adj[b].length === 1) terminalO++;
         }
-        return terminalO >= 2;
-      })
-        ? -0.5
-        : 0;
+        if (terminalO > k) return -(terminalO - k) / terminalO;
+      }
+      return 0;
     }
     return PRIMARY_FORMAL_CHARGES[t] ?? 0;
   };
