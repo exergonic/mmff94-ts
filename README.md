@@ -86,11 +86,13 @@ molecules: bond/angle/vdW/oop/strbnd/torsion all 123/123 (the three
 residuals were real bugs — degenerate i = l "torsions" in FUVDOP's
 3-ring, FILNOD's 5-ring torsions classed by atom flags instead of ring
 aromaticity, and an entry OpenBabel's strbnd transcription lost, JIYJAC —
-all fixed), electrostatic 140/140 — the formal-charge model (part V eq. 15:
-primary charges + negative-charge sharing) reproduces the reference
-partial charges per atom; angle 138/140 (JALSOE, SO18A — the two
-thiosulfinate anions, whose S=O…S angle parameters were never
-transcribed into the parameter files).
+all fixed), electrostatic 140/140 and angle 140/140 — the formal-charge model
+(part V eq. 15: primary charges + negative-charge sharing) reproduces
+the reference partial charges per atom, and the sulfinate S=O angles
+resolved into the 32-keyed parameters (the sulfinate S=O is typed 7 by
+the reference typing rules but keyed 32 in every parameter table —
+TINKER's mmff94.prm and OpenChemLib's angle.csv confirm the same five
+73-center entries).
 
 ### Out-of-plane vs BatchMin (8 suite molecules, kcal/mol)
 

@@ -386,13 +386,18 @@ export function angle_parameters(
   let k_a: number;
   let theta0: number;
   if (params) {
+    // A found entry is final — including the k_a = 0 out-of-range
+    // defaults (e.g. '0-0-73-0'): the reference's answer for an
+    // unparametrized angle on that center is "no contribution", NOT
+    // the empirical rules. Overriding a found k = 0 invented terms
+    // BatchMin never had (the sulfinate S=O angles).
     k_a = params.k_a;
     theta0 = params.theta0;
   } else {
-    k_a = 0;
+    // Total miss: the part II empirical θ₀ and force-constant rules.
     theta0 = empirical_theta0(ctx, j, cls);
+    k_a = empirical_ka(ctx, i, j, k, theta0, cls);
   }
-  if (k_a === 0) k_a = empirical_ka(ctx, i, j, k, theta0, cls);
 
   const linear = ATOM_TYPE_PROPERTIES[tj]?.lin === 1;
   return { k_a, theta0, linear };

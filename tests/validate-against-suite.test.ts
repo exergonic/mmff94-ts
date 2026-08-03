@@ -11,14 +11,14 @@
  * atom-types-suite.test.ts), so the comparison isolates the terms
  * themselves rather than the typing gaps.
  *
- * Known residuals on the typing-exact set:
- *   - angle: JALSOE + SO18A (the two thiosulfinate anions, 73-typed).
- *     Their S=O...S angle parameters were never transcribed into the
- *     .par files (no 0-1-73-7 / 0-7-73-72 entries exist anywhere), and
- *     BatchMin additionally adjusts the S–S bond to its dative
- *     representation — the reference values are not recoverable from
- *     the component totals alone. Same family as the JIYJAC strbnd
- *     loss, minus a second source to restore from.
+ * Sulfinate note: the S=O oxygen of an anionic sulfinate (73) is
+ * typed 7 by the reference typing rules but is keyed 32 in every
+ * parameter table (the anionic O family — confirmed identically in
+ * TINKER's mmff94.prm and OpenChemLib's angle.csv: 0-1-73-32 /
+ * 0-32-73-32 / 0-32-73-72 / 0-0-73-0). The two bridged entries in
+ * angle.ts map the 7-typed angles onto the 32-keyed parameters, and
+ * found k = 0 entries (the out-of-range defaults) are respected
+ * rather than overridden by the empirical rules.
  */
 
 import { describe, it, expect } from 'vitest';

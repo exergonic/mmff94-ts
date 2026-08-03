@@ -178,9 +178,9 @@ q⁰ shares half of itself with the bonded atoms — q_i = (1 − α_i·crd_i)·
 Σ_k α_k·q⁰_k + Σ w_ik, where α (fcadj, part V Table III) is the sharing factor and
 the neighbor sum uses the NEIGHBOR's α. Type 32 is environment-dependent: −0.5
 on a carboxylate oxygen, 0 on sulfone/nitro/nitrate oxygens. The suite's
-reference per-atom charges (the `.mmd` pchg column) pin the model: 138/140
-typing-exact molecules reproduce them to < 1e-3 (`charges-suite.test.ts`); the
-two thiosulfinate anions are excluded (BatchMin's dative adjustment). The
+reference per-atom charges (the `.mmd` pchg column) pin the model:
+138/140 typing-exact molecules reproduce them to < 1e-3 (`charges-suite.test.ts`);
+the two thiosulfinate anions are excluded (BatchMin's dative adjustment). The
 fixture logs' per-atom charges are pinned in `charges.test.ts`.
 
 ---

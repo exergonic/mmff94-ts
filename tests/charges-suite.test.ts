@@ -11,8 +11,7 @@
  * SO18A): BatchMin adjusts their S–S bond to the "MMFF dative
  * representation" (its log says so explicitly), and the reference
  * partial charges there are not reproducible from eq. (15) with the
- * transcribed parameters — the same family that carries the
- * documented angle-bend residual in validate-against-suite.test.ts.
+ * transcribed parameters.
  */
 
 import { describe, it, expect } from 'vitest';

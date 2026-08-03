@@ -2245,6 +2245,15 @@ export const ANGLE_PARAMS: Record<string, AngleParams> = {
   '0-38-69-38': { k_a: 1.122, theta0: 125.93 },
   '0-31-70-31': { k_a: 0.658, theta0: 103.978 },
   '0-0-73-0': { k_a: 0.0, theta0: 106.6 },
+  // The sulfinate S=O oxygen is typed 7 by the reference typing rules
+  // (OB's "isSulfoxide" branch) but is keyed 32 in the parameter
+  // tables — the anionic S(=O)(O⁻) group's oxygen is part of the 32
+  // family there. These two bridged entries map the 7-typed angles
+  // onto the 32-keyed parameters (cross-confirmed in TINKER's
+  // mmff94.prm: mmffangle 1 73 32 / 32 73 72 — the suite's reference
+  // energies were computed with the 32 typing). JALSOE's S=O angles.
+  '0-1-73-7': { k_a: 1.59, theta0: 100.18 },
+  '0-7-73-72': { k_a: 1.326, theta0: 115.134 },
   '0-1-73-32': { k_a: 1.59, theta0: 100.18 },
   '0-1-73-72': { k_a: 1.481, theta0: 96.166 },
   '0-32-73-32': { k_a: 1.665, theta0: 115.012 },
