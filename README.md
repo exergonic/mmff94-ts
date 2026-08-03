@@ -72,8 +72,8 @@ analytical gradient against finite differences.
 
 Per-component agreement with BatchMin on those 140 molecules:
 
-| Term | Exact | Max |Δ| (kcal/mol) |
-|---|---|---|---|
+| Term | Exact | Max Δ (kcal/mol) |
+|-------|---|---|
 | Bond stretch | 140/140 | 0.00 |
 | Angle bend | 140/140 | 0.02 |
 | Stretch-bend | 140/140 | 0.00 |
