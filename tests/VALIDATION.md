@@ -6,24 +6,32 @@ molecule by molecule, term by term. The numbers here are produced by
 The README's [Validation](../README.md#validation) section is the
 condensed public version of this ledger.
 
-## Current status (2026-08-03)
+## Current status (2026-08-03, evening)
 
-- **Atom typing**: 241/550 suite molecules type-exact vs OpenBabel
-  (43.8%), pinned as `KNOWN_GOOD` in `atom-types-suite.test.ts`.
-  The 2026-08-03 jump (140 → 241) is the phosphate/sulfonate oxygen
-  cluster: P=O and S=O/S–O⁻ terminal-oxygen rules (type 32 by
-  terminal-O count), H-on-P (71), acid/enol/phenol H types
-  (24/33/29), H on cationic N (36), C=S → 3, sulfine (74),
-  P 25/75/26.
-- **All seven energy terms** match BatchMin on all **241/241**
-  typing-exact molecules (max |Δ| 0.03, mean 0.001).
-- **Partial charges** vs the suite's reference values: **241/241** to
-  < 10⁻³ e⁻ per atom. The type-32 q⁰ is now the spec's own
-  environment rule (q⁰ = −(n−k)/n over the terminal oxygens —
-  carboxylate −1/2, phosphinate −1/2, sulfonate −1/3, sulfate −1/2,
-  PO₄³⁻ −3/4, perchlorate −1/4), and H on cationic N is type 36 so
-  the 34-36 BCI applies. (BatchMin's dative representation excludes
-  JALSOE/SO18A from the charge check; their energies still match.)
+- **Atom typing**: 512/550 suite molecules type-exact vs OpenBabel
+  (93.1%), pinned as `KNOWN_GOOD` in `atom-types-suite.test.ts`.
+  Two jumps today: the phosphate/sulfonate oxygen cluster (140 → 241,
+  morning) and the amidine/sp-N cluster (241 → 512, evening): C=N → 3,
+  amidinium 57 by =N coordination, N3-on-sp2-C → 40 (amidine,
+  enamine, aniline), amidinium/guanidinium N 55/56, nitrile N 42,
+  sulfonamide/cyanamide N 43, H-on-N rules (27/28/36) via a dedicated
+  N-type pass, 4-ring alkene 30, and the cyclopropane ring-size BFS
+  fix. The remaining 38 non-exact molecules are aromatic-perception
+  gaps (furan/isoxazole rings, sulfolene false-aromatics, pyridazine
+  misses) — the next typing workstream.
+- **Energy terms** vs BatchMin on the 512 typing-exact molecules:
+  stretch/torsion/vdw/elec 512/512 exact; bend 511/512 (worst 0.07),
+  strbnd 503/512 (worst 0.40), oop 506/512 (worst 0.20). The 17
+  mismatches (list below) are parameter-table corners — missing class
+  entries for newly-unlocked types — tracked as the parameter-gap
+  workstream: BODKOU/CEFMEN/COYVIV/DESWUT/DUWKUB/FORJUR/SONZIE oop,
+  CIVLAU02/COMKAQ/CONBAI/DAJXER/DIVTUX/DULTIN/FINPEX/FORJIF/VIYPAU
+  strbnd, GESNIB bend.
+- **Partial charges** vs the suite's reference values: **512/512** to
+  < 10⁻³ e⁻ per atom. The imidazolium N q⁰ is environment-dependent
+  (1/(#N3 on the central C80): 1/2 plain, 1/3 2-aminoimidazolium),
+  and CIM+ (80) is treated as aromatic for the BTij/Bci class (its
+  par entry lacks the arom flag).
 - **The 16 obenergy reference molecules**: all seven terms and the
   total exact to 5 decimals.
 - **Gradients**: every analytical gradient FD-verified on every atom
@@ -188,16 +196,17 @@ The per-term threads below were closed across the parameter-class work
    — benzene +3.07810, ethene +8.0530, pyridine +2.0939, pyrrole
    +3.0720, nicotine −2.2135 — and the fixture totals match exactly
    (they were the last gap). The suite's per-component report covers
-   electrostatics: **241/241** typing-exact molecules match BatchMin's
+   electrostatics: **512/512** typing-exact molecules match BatchMin's
    electrostatic component (the earlier 89/91 with the two
    metal-carboxylate misses closed when the formal-charge model of
    part V eq. 15 — primary charges + negative-charge sharing, with the
-   sharing flowing from each *neighbor's* α — landed). Pairs 1-2/1-3
+   sharing flowing from each *neighbor's* α — landed; the imidazolium
+   q⁰ rule and the CIM+ arom-flag fix closed the rest). Pairs 1-2/1-3
    are excluded (ammonia's electrostatic is zero — the BatchMin log
    confirms), 1-4 pairs ×0.75 inside the term.
 
-6. **Typing scoreboard.** 241/550 suite molecules type-exact vs
-   OpenBabel (43.8%; see `atom-types-suite.test.ts`). The climb:
+6. **Typing scoreboard.** 512/550 suite molecules type-exact vs
+   OpenBabel (93.1%; see `atom-types-suite.test.ts`). The climb:
    aromatic-ring perception (Kekulé pattern + lone-pair heteroatoms in
    5-rings) took 65 → 91 (2026-08-01); amide-N typing (types 10/28,
    with the sulfonyl exclusion) and the formally-charged types
@@ -206,12 +215,15 @@ The per-term threads below were closed across the parameter-class work
    phosphate/sulfonate oxygen cluster (2026-08-03 — type-32 rules for
    P=O/S=O/S–O⁻ keyed on the terminal-oxygen count, H-on-P 71,
    acid/enol/phenol H 24/33/29, H-on-cationic-N 36, C=S → 3,
-   sulfine 74, P 25/75/26) took it to 241. Every new
-   typing-exact molecule's energy terms match BatchMin. Biggest
-   remaining classes (from the current worst-10): the
-   amidine/guanidine-neutral N's (40/55/57 vs 3), aromatic 5-ring
-   N/O positions (65/78/59), cyclopropanes (22), cyanamide sp N
-   (42/43), and the sp2-carbon/imine edge cases.
+   sulfine 74, P 25/75/26) took it to 241; the amidine/sp-N cluster
+   (same day — C=N → 3, amidinium 57 by =N coordination, N3-on-sp2-C
+   40, nitrile 42, sulfonamide/cyanamide 43, H rules 27/28/36 via an
+   N-type pass, 4-ring alkene 30, cyclopropane BFS fix) took it to
+   512. Energy terms match BatchMin on all but the 17 parameter-gap
+   molecules listed in Current status. Biggest remaining classes
+   (from the current worst-10): aromatic-perception gaps — furan/
+   isoxazole rings (59/65), sulfolene false-aromatics (S 18 vs 44),
+   pyridazine 6-ring misses (38/37) — and the OHMW1 oxide-O corner.
 
 ## Updating this ledger
 

@@ -137,7 +137,12 @@ export function bond_type_flag(ctx: ClassContext, i: number, j: number): number 
   const pj = ATOM_TYPE_PROPERTIES[mol.atom_types[j]];
   if (!pi || !pj) return 0;
 
-  if (pi.arom && pj.arom) {
+  // CIM+ (80) is an aromatic ring type whose par entry lacks the arom
+  // flag — treat it as aromatic so its ring bonds read class 0 (the
+  // BCI table keys them 0-80-81).
+  const a_i = pi.arom || mol.atom_types[i] === 80;
+  const a_j = pj.arom || mol.atom_types[j] === 80;
+  if (a_i && a_j) {
     // Aromatic pair: 0 inside an aromatic ring (BatchMin's ring bonds
     // are aromatic), 1 for a non-aromatic bond like biphenyl's.
     return in_ring(ctx, i, j) ? 0 : 1;

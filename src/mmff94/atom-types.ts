@@ -116,35 +116,13 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
     if (bonded_to_carbonyl) amide_nitrogens.add(i);
   }
 
-  // Cationic nitrogen prescan: N's that will type as quaternary NR+
-  // (34), the iminium family (54/55/56), or pyridinium (58). Their
-  // hydrogens type 36 (HNR+) — the BCI table's 34-36/36-54/36-56
-  // entries carry the N–H bond increments, so the charges follow
-  // automatically once the H is typed 36. N-oxides (68, terminal O
-  // neighbor) and nitro (45) stay out — their H's are the HNOX type 23.
-  const cationic_nitrogens = new Set<number>();
+  // Nitrogen typing pass: the N branch is self-contained (connectivity,
+  // elements, aromatic perception, and the order-independent prescans
+  // above), so it runs as its own pass — the H-on-N rule needs the N's
+  // type regardless of atom order.
+  const n_types = new Array<number>(n).fill(-1);
   for (let i = 0; i < n; i++) {
-    const atom = molecule.atoms[i];
-    if (atom.element !== 'N') continue;
-    const nbrs = adj[i];
-    if (aromatic.atoms.has(i)) {
-      const in_5ring = (aromatic.rings_of.get(i) ?? []).some(r => r.path.length === 5);
-      if (!in_5ring && nbrs.length === 3) cationic_nitrogens.add(i); // pyridinium (58)
-      continue;
-    }
-    if (nbrs.length === 4) {
-      const has_terminal_O = nbrs.some(nb => {
-        return molecule.atoms[nb.nbr].element === 'O' && adj[nb.nbr].length === 1;
-      });
-      if (!has_terminal_O) cationic_nitrogens.add(i); // NR+ (34)
-    } else if (nbrs.length === 3 && nbrs.some(nb => nb.order === 2)) {
-      // The iminium family (54/55/56): 3 neighbors with the N's own
-      // double bond and no terminal oxygens (those are 67/45).
-      const has_terminal_O = nbrs.some(nb => {
-        return molecule.atoms[nb.nbr].element === 'O' && adj[nb.nbr].length === 1;
-      });
-      if (!has_terminal_O) cationic_nitrogens.add(i);
-    }
+    if (molecule.atoms[i].element === 'N') n_types[i] = type_nitrogen(i, adj, molecule, aromatic, amide_nitrogens);
   }
 
   for (let i = 0; i < n; i++) {
@@ -155,8 +133,6 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
     // Check bond orders going out from this atom
     const has_double = neighbors.some(nb => nb.order === 2);
     const has_triple = neighbors.some(nb => nb.order === 3);
-    // V2000 stores aromatic bonds as order 4; the SDF parser passes them through
-    const has_aromatic = neighbors.some(nb => nb.order >= 4);
     const double_nbrs = neighbors.filter(nb => nb.order === 2);
 
     switch (atom.element) {
@@ -205,9 +181,11 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
             if (carboxylate_carbons.has(i)) {
               // Carboxylate carbon C(=O)O⁻ → type 41 (CO₂M)
               atom_types[i] = 41;
-            } else if (dbl_to_N && n3_neighbor_count(i, adj, molecule) >= 2) {
-              // Guanidinium carbon (CGD+): C=N with at least two
-              // 3-coordinate N neighbors — the guanidinium core.
+            } else if (dbl_to_N && adj[double_nbrs.find(nb => molecule.atoms[nb.nbr].element === 'N')!.nbr].length === 3) {
+              // The charged amidinium/guanidinium core: C(=N+)(N)(N)
+              // with the =N carrying a third bond. The neutral
+              // amidine's =N is 2-coordinate and its C is the plain
+              // carbonyl type 3 below.
               atom_types[i] = 57;
             } else if (dbl_to_O) {
               // Carbonyl: C=O with 3 neighbors → type 3 (C=O)
@@ -217,9 +195,15 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
               // shares the generic carbonyl type 3 (C=O covers C=S in
               // the MMFF94 type list).
               atom_types[i] = 3;
+            } else if (dbl_to_N) {
+              // The C=N carbon (amidines, imines) is also the general
+              // carbonyl type 3 — the type list's C=O entry covers
+              // C=N and C=S as well.
+              atom_types[i] = 3;
             } else if (dbl_to_C) {
-              // Alkene: C=C with 3 neighbors → type 2 (C=C, vinylic)
-              atom_types[i] = 2;
+              // Alkene: C=C with 3 neighbors → type 2 (C=C, vinylic);
+              // an olefinic C in a 4-membered ring is CE4R (30).
+              atom_types[i] = estimate_ring_size(i, adj, molecule) === 4 ? 30 : 2;
             } else {
               // Other sp² (e.g., C=N) → type 2 as generic sp² default
               atom_types[i] = 2;
@@ -277,11 +261,23 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
             atom_types[i] = 5;
             break;
           case 'N': {
-            // H on a cationic N (quaternary 34, iminium 54/55/56,
-            // pyridinium 58) → type 36 (HNR+); amide N → 28 (HNCO);
-            // other N–H stays type 23 (HNR, including N-oxide N's).
-            const n_nbr = neighbors[0].nbr;
-            atom_types[i] = cationic_nitrogens.has(n_nbr) ? 36 : amide_nitrogens.has(n_nbr) ? 28 : 23;
+            // The H type follows the N's own type (computed in the
+            // n_types pass): H on a cationic N (34 NR+, 54/55/56
+            // iminium/guanidinium, 58 pyridinium, 76/81 imidazolium)
+            // → 36 (HNR+); H on an amide (10), delocalized (40) or
+            // sulfonamide/cyanamide (43) N → 28 (HNCO/HSP2/HNSO);
+            // H on an imine =N (9) → 27 (HN=C); other N–H → 23 (HNR).
+            const n_type = n_types[neighbors[0].nbr];
+            if (n_type === 34 || n_type === 54 || n_type === 55
+              || n_type === 56 || n_type === 58 || n_type === 76 || n_type === 81) {
+              atom_types[i] = 36;
+            } else if (n_type === 10 || n_type === 40 || n_type === 43) {
+              atom_types[i] = 28;
+            } else if (n_type === 9) {
+              atom_types[i] = 27;
+            } else {
+              atom_types[i] = 23;
+            }
             break;
           }
           case 'O': {
@@ -427,93 +423,11 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
       }
 
       // ── Nitrogen ────────────────────────────────────────────────────
-      case 'N': {
-        // Aromatic ring nitrogen: 38 in a 6-ring (pyridine), 39/65/66
-        // in a 5-ring by position (pyrrole's N is 39; imidazole- and
-        // thiazole-type N's are 65/66). The charged variants (58/76/81)
-        // follow the same positions (part II).
-        if (aromatic.atoms.has(i)) {
-          const in_5ring = (aromatic.rings_of.get(i) ?? []).some(r => r.path.length === 5);
-          atom_types[i] = in_5ring
-            ? type_aromatic_5ring_nitrogen(i, adj, molecule, aromatic)
-            : adj[i].length === 3 ? 58 : 38;
-          break;
-        }
-
-        // Amide N (type 10, NC=O): single-bonded to a carbonyl carbon —
-        // trigonal by resonance, not by an N=double bond (formamide).
-        // See the amide_nitrogens pre-scan above.
-        if (amide_nitrogens.has(i)) {
-          atom_types[i] = 10;
-          break;
-        }
-
-        if (n_neighbors === 4) {
-          // Quaternary N: 4 single bonds → type 34 (NR+). A terminal
-          // oxygen neighbor makes it the sp3 N-oxide → type 68 (N3OX).
-          const has_terminal_O = neighbors.some(nb => {
-            const t = molecule.atoms[nb.nbr];
-            return t.element === 'O' && adj[nb.nbr].length === 1;
-          });
-          atom_types[i] = has_terminal_O ? 68 : 34;
-        } else if (n_neighbors === 3 && !has_double && !has_aromatic) {
-          // Amine N: 3 single bonds → type 8 (NR). The guanidinium
-          // family: a carbon neighbor carrying three 3-coordinate N's
-          // is the guanidinium core — its N's are 56 (NGD+), or 55
-          // (NCN+) when that carbon also has an N=C double bond.
-          let charged = 0;
-          for (const nb of neighbors) {
-            if (molecule.atoms[nb.nbr].element !== 'C') continue;
-            let n3 = 0;
-            let dbl_to_N = false;
-            for (const b of adj[nb.nbr]) {
-              const bn = molecule.atoms[b.nbr];
-              if (bn.element === 'N' && adj[b.nbr].length === 3) n3++;
-              if (b.order === 2 && bn.element === 'N') dbl_to_N = true;
-            }
-            if (n3 === 3) { charged = 56; break; }
-            if (n3 === 2 && dbl_to_N) charged = 55;
-          }
-          atom_types[i] = charged || 8;
-        } else if (n_neighbors === 2 && has_double) {
-          // Imine N=C → type 9 (N=C)
-          // (nitrogen with a double bond and one other neighbor)
-          atom_types[i] = 9;
-        } else if (n_neighbors === 3 && has_double) {
-          // N with three neighbors AND its own double bond. Count the
-          // terminal oxygens first: one → the sp2 N-oxide (67, N2OX),
-          // two or more → nitro/nitrate N (45, NO2/NO3). Otherwise the
-          // double goes to C or N and the iminium family applies: the
-          // N3-neighbors of the double-bonded carbon fix the subtype —
-          // 1 (or 0) → iminium (54, N+=C), 2 → the NCN+ pair (55),
-          // 3 → guanidinium N (56, NGD+); N+=N is also 54.
-          let terminalO = 0;
-          for (const nb of neighbors) {
-            const t = molecule.atoms[nb.nbr];
-            if (t.element === 'O' && adj[nb.nbr].length === 1) terminalO++;
-          }
-          if (terminalO === 1) {
-            atom_types[i] = 67; // N2OX — sp2 N-oxide
-          } else if (terminalO >= 2) {
-            atom_types[i] = 45; // NO2/NO3 — nitro/nitrate N
-          } else {
-            const dbl_nbr = double_nbrs[0].nbr;
-            if (molecule.atoms[dbl_nbr].element === 'N') {
-              atom_types[i] = 54; // N+=N — diazenium
-            } else {
-              let n3 = 0;
-              for (const b of adj[dbl_nbr]) {
-                const bn = molecule.atoms[b.nbr];
-                if (bn.element === 'N' && adj[b.nbr].length === 3) n3++;
-              }
-              atom_types[i] = n3 === 3 ? 56 : n3 === 2 ? 55 : 54;
-            }
-          }
-        } else {
-          atom_types[i] = 8; // fallback: amine N
-        }
+      // Assigned in the n_types pass above (its H rule needs the N
+      // type regardless of atom order).
+      case 'N':
+        atom_types[i] = n_types[i];
         break;
-      }
 
       // ── Sulfur ──────────────────────────────────────────────────────
       case 'S': {
@@ -921,6 +835,139 @@ function n3_neighbor_count(
 }
 
 /**
+ * The nitrogen typing decision tree, run as its own pass (the H-on-N
+ * rule needs the N's type regardless of atom order). The branch is
+ * self-contained: it reads only connectivity, elements, the aromatic
+ * perception, and the order-independent amide prescan.
+ */
+function type_nitrogen(
+  i: number,
+  adj: { nbr: number; order: number }[][],
+  molecule: Molecule,
+  aromatic: AromaticInfo,
+  amide_nitrogens: Set<number>,
+): number {
+  const neighbors = adj[i];
+  const n_neighbors = neighbors.length;
+  const has_double = neighbors.some(nb => nb.order === 2);
+  const has_aromatic = neighbors.some(nb => nb.order >= 4);
+  const double_nbrs = neighbors.filter(nb => nb.order === 2);
+
+  // Aromatic ring nitrogen: 38 in a 6-ring (pyridine), 39/65/66
+  // in a 5-ring by position (pyrrole's N is 39; imidazole- and
+  // thiazole-type N's are 65/66). The charged variants (58/76/81)
+  // follow the same positions (part II).
+  if (aromatic.atoms.has(i)) {
+    const in_5ring = (aromatic.rings_of.get(i) ?? []).some(r => r.path.length === 5);
+    return in_5ring
+      ? type_aromatic_5ring_nitrogen(i, adj, molecule, aromatic)
+      : adj[i].length === 3 ? 58 : 38;
+  }
+
+  // Amide N (type 10, NC=O): single-bonded to a carbonyl carbon —
+  // trigonal by resonance, not by an N=double bond (formamide).
+  // See the amide_nitrogens pre-scan above.
+  if (amide_nitrogens.has(i)) return 10;
+
+  // Terminal nitrile N (C≡N) → 42 (NSP). The sp carbon itself is 4.
+  if (n_neighbors === 1 && neighbors[0].order === 3) return 42;
+
+  if (n_neighbors === 4) {
+    // Quaternary N: 4 single bonds → type 34 (NR+). A terminal
+    // oxygen neighbor makes it the sp3 N-oxide → type 68 (N3OX).
+    const has_terminal_O = neighbors.some(nb => {
+      const t = molecule.atoms[nb.nbr];
+      return t.element === 'O' && adj[nb.nbr].length === 1;
+    });
+    return has_terminal_O ? 68 : 34;
+  }
+
+  if (n_neighbors === 3 && !has_double && !has_aromatic) {
+    // Amine N with 3 single bonds. The delocalized NC=C family (40):
+    // an N whose lone pair conjugates with an sp2 center — the
+    // amidine/guanidine N-C=N, enamine/aniline N-C=C. The guanidinium
+    // (56) and amidinium (55) cations are the charged members; the
+    // neutral amidine's N is plain 40. Sulfonamide (43, NSO2/NSO3)
+    // and cyanamide (43, H2N-C≡N) take precedence.
+    let sulfonyl = false;
+    let cyanamide = false;
+    let charged = 0;
+    let delocalized = false;
+    for (const nb of neighbors) {
+      const nbr = molecule.atoms[nb.nbr];
+      if (nbr.element === 'S' && count_terminal_oxygens(nb.nbr, adj, molecule) >= 2) {
+        sulfonyl = true; // NSO2 — sulfonamide/sulfamate N
+      }
+      if (nbr.element === 'C' && adj[nb.nbr].some(b => b.order === 3 && molecule.atoms[b.nbr].element === 'N')) {
+        cyanamide = true; // H2N-C≡N
+      }
+      if (nbr.element !== 'C') continue;
+      // The amidine core: the double-bonded N's coordination decides
+      // the subtype — the charged amidinium carries a third bond on
+      // its =N; the neutral amidine's =N is 2-coordinate.
+      let n3 = 0;
+      let dbl_N = -1;
+      let dbl_to_C = false;
+      for (const b of adj[nb.nbr]) {
+        const bn = molecule.atoms[b.nbr];
+        if (bn.element === 'N' && adj[b.nbr].length === 3) n3++;
+        if (b.order === 2 && bn.element === 'N') dbl_N = b.nbr;
+        if (b.order === 2 && bn.element === 'C') dbl_to_C = true;
+      }
+      if (n3 === 3) { charged = 56; break; } // NGD+ — guanidinium N
+      if (dbl_N >= 0) {
+        if (adj[dbl_N].length === 3) charged = 55; // NCN+ — amidinium N
+        else delocalized = true; // neutral amidine NC=N
+      }
+      if (dbl_to_C) delocalized = true; // enamine/aniline NC=C
+    }
+    if (sulfonyl || cyanamide) return 43; // NSO2 / cyanamide
+    if (charged) return charged;
+    if (delocalized) return 40; // NC=C — delocalized lone pair
+    return 8; // NR — plain amine
+  }
+
+  if (n_neighbors === 2 && has_double) {
+    // Imine N=C → type 9 (N=C)
+    // (nitrogen with a double bond and one other neighbor)
+    return 9;
+  }
+
+  if (n_neighbors === 3 && has_double) {
+    // N with three neighbors AND its own double bond. Count the
+    // terminal oxygens first: one → the sp2 N-oxide (67, N2OX),
+    // two or more → nitro/nitrate N (45, NO2/NO3). Otherwise the
+    // double goes to C or N and the iminium family applies: the
+    // N3-neighbors of the double-bonded carbon fix the subtype —
+    // 1 (or 0) → iminium (54, N+=C), 2 → the NCN+ pair (55),
+    // 3 → guanidinium N (56, NGD+); N+=N is also 54.
+    let terminalO = 0;
+    for (const nb of neighbors) {
+      const t = molecule.atoms[nb.nbr];
+      if (t.element === 'O' && adj[nb.nbr].length === 1) terminalO++;
+    }
+    if (terminalO === 1) {
+      return 67; // N2OX — sp2 N-oxide
+    }
+    if (terminalO >= 2) {
+      return 45; // NO2/NO3 — nitro/nitrate N
+    }
+    const dbl_nbr = double_nbrs[0].nbr;
+    if (molecule.atoms[dbl_nbr].element === 'N') {
+      return 54; // N+=N — diazenium
+    }
+    let n3 = 0;
+    for (const b of adj[dbl_nbr]) {
+      const bn = molecule.atoms[b.nbr];
+      if (bn.element === 'N' && adj[b.nbr].length === 3) n3++;
+    }
+    return n3 === 3 ? 56 : n3 === 2 ? 55 : 54;
+  }
+
+  return 8; // fallback: amine N
+}
+
+/**
  * Count the terminal oxygens on atom i — O's whose only bond is to i.
  * This is the count that decides the O2CM assignment for S=O and S-O⁻:
  * a sulfone/sulfonate/sulfate/sulfinate-anion sulfur carries ≥ 2
@@ -942,8 +989,14 @@ function count_terminal_oxygens(
 /**
  * Estimate the size of the smallest ring containing atom i.
  *
- * Uses BFS from i back to i, bounded to depth 6. Returns 0 if no ring
- * is found within the search depth.
+ * BFS from i with a depth map. A cycle closes when an edge joins two
+ * BFS-tree nodes (length = d(x) + d(y) + 1) — including the case where
+ * two children of the start node are bonded to each other, which the
+ * naive visited-set BFS misses (a cyclopropane's triangle closes
+ * exactly that way: both ring neighbors are depth-1 children of the
+ * start). The tree-child edge (the reverse of a parent edge) is
+ * skipped, so no false cycle is counted. Bounded to depth 6; returns
+ * 0 if no ring is found within the bound.
  *
  * This is a heuristic: it finds the shortest cycle, not the SSSR ring.
  * For the typing rules, only 3- and 4-membered rings matter.
@@ -954,33 +1007,34 @@ function estimate_ring_size(
   molecule: Molecule,
 ): number {
   void molecule;  // accepted for the planned API; unused until implemented
-  // BFS limited to depth 6
-  const visited = new Set<number>();
-  const queue: { node: number; depth: number; parent: number }[] = [];
+  const depth = new Map<number, number>();
+  const parent = new Map<number, number>();
+  const queue: number[] = [];
+  depth.set(start, 0);
+  parent.set(start, -1);
+  queue.push(start);
 
-  visited.add(start);
-  queue.push({ node: start, depth: 0, parent: -1 });
-
+  let best = 7; // bound: only 3- and 4-membered rings matter
   let head = 0;
   while (head < queue.length) {
-    const { node, depth, parent } = queue[head++];
-
-    if (depth > 5) continue; // don't search beyond 6-membered rings
+    const node = queue[head++];
+    const d = depth.get(node)!;
+    if (d > 5) continue; // don't search beyond 6-membered rings
 
     for (const { nbr } of adj[node]) {
-      if (nbr === parent) continue;
-
-      // If we reached start via a different path, we found a cycle
-      if (nbr === start && parent !== -1) {
-        return depth + 1;
-      }
-
-      if (!visited.has(nbr)) {
-        visited.add(nbr);
-        queue.push({ node: nbr, depth: depth + 1, parent: node });
+      if (nbr === parent.get(node)) continue; // the tree edge back up
+      const dn = depth.get(nbr);
+      if (dn === undefined) {
+        depth.set(nbr, d + 1);
+        parent.set(nbr, node);
+        queue.push(nbr);
+      } else if (parent.get(nbr) !== node) {
+        // A second path to an already-visited node closes a cycle
+        // through start: start→...→node + node–nbr + nbr→...→start.
+        best = Math.min(best, d + dn + 1);
       }
     }
   }
 
-  return 0; // no ring found within depth limit
+  return best <= 6 ? best : 0;
 }

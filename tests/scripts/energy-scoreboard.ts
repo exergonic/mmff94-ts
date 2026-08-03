@@ -72,6 +72,12 @@ for (const mol of mols) {
   const molWorst = Math.max(...terms.map(t => Math.abs(components[t] - ref[t])));
   if (molWorst > totals.worst) { totals.worst = molWorst; totals.worstMol = mol.name; }
   if (molExact) totals.exact++;
+  else {
+    const bad = terms.filter(t => Math.abs(components[t] - ref[t]) >= 0.05)
+      .map(t => `${t}=${Math.abs(components[t] - ref[t]).toFixed(3)}`)
+      .join(' ');
+    console.log(`  MISMATCH ${mol.name}: ${bad}`);
+  }
 }
 
 console.log(`typing-exact molecules with bmin refs: ${totals.n}`);

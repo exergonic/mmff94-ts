@@ -48,21 +48,26 @@ analytical gradient against finite differences.
    decimals. Will continue to expand molecular coverage.
 2. **Halgren's 753-molecule MMFF94 validation suite** — per-component
    energies and per-atom partial charges vs the
-   suite's reference values. The comparison runs on the 241/550
+   suite's reference values. The comparison runs on the 512/550
    suite molecules whose atom typing reproduces the reference types
    exactly. As our atom-typing implementation matures, we will expand the coverage to include more molecules.
 
-Per-component agreement with BatchMin on those 241 molecules:
+Per-component agreement with BatchMin on those 512 molecules:
 
 | Term | Exact | Max abs(Δ) (kcal/mol) |
 |-------|---|---|
-| Bond stretch | 241/241 | 0.00 |
-| Angle bend | 241/241 | 0.03 |
-| Stretch-bend | 241/241 | 0.00 |
-| Torsion | 241/241 | 0.00 |
-| Van der Waals | 241/241 | 0.00 |
-| Out-of-plane | 241/241 | 0.01 |
-| Electrostatic | 241/241 | 0.00 |
+| Bond stretch | 512/512 | 0.00 |
+| Angle bend | 511/512 | 0.07 |
+| Stretch-bend | 503/512 | 0.40 |
+| Torsion | 512/512 | 0.00 |
+| Van der Waals | 512/512 | 0.00 |
+| Out-of-plane | 506/512 | 0.20 |
+| Electrostatic | 512/512 | 0.00 |
+
+ The 17 remaining per-term mismatches are parameter-table corners
+ (missing class entries for newly-unlocked types, e.g. the oop of the
+ delocalized N 40 and strbnd of acetal centers) — the current
+ parameter-gap workstream, tracked in `tests/VALIDATION.md`.
 
  More details in [`tests/VALIDATION.md`](tests/VALIDATION.md).
 

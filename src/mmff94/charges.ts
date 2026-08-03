@@ -153,6 +153,21 @@ export function assign_bci_charges(molecule: TypedMolecule): TypedMolecule {
       }
       return 0;
     }
+    if (t === 81) {
+      // NIM+ — imidazolium N: the +1 of the imidazolium core is
+      // shared over the 3-coordinate N's on the central C(80) — 1/2
+      // in a plain imidazolium (CUBTUO), 1/3 when the C also carries
+      // an amino/guanidinium group (2-aminoimidazolium, DIPDIP10).
+      for (const nb of adj[i]) {
+        if (molecule.atoms[nb].element !== 'C') continue;
+        let n3 = 0;
+        for (const b of adj[nb]) {
+          if (molecule.atoms[b].element === 'N' && adj[b].length === 3) n3++;
+        }
+        if (n3 >= 2) return 1 / n3;
+      }
+      return 0.5;
+    }
     return PRIMARY_FORMAL_CHARGES[t] ?? 0;
   };
 
