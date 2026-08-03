@@ -123,7 +123,7 @@ Type:  Vec3 = [number, number, number]
 
 | Function | What it computes | Used by |
 |---|---|---|
-| `distance(a, b)` | Euclidean distance `|a - b|` | bond-stretch, vdW, electrostatic |
+| `distance(a, b)` | Euclidean distance \|a − b\| | bond-stretch, vdW, electrostatic |
 | `angle_in_radians(b, a, c)` | Angle a-b-c at vertex b | angle-bend, stretch-bend |
 | `dihedral_angle(i, j, k, l)` | Torsion angle i-j-k-l | torsion |
 
@@ -814,7 +814,7 @@ Every energy term is tested **in isolation** before it is tested in combination.
 | Test | What it checks | How |
 |---|---|---|
 | **Unit** | Single energy function returns the right value for a known geometry | Compute by hand or with a reference for a 2-3 atom test case (H₂ for bond stretch, H₂O for angle bend) |
-| **Regression** | Total and per-component energies match Halgren suite | OPTIMOL totals from `MMFF94.energies`, component breakdowns from `MMFF94_bmin.log`; assert `|computed − reference| < 0.01 kcal/mol` |
+| **Regression** | Total and per-component energies match Halgren suite | OPTIMOL totals from `MMFF94.energies`, component breakdowns from `MMFF94_bmin.log`; assert \|computed − reference\| < 0.01 kcal/mol |
 | **Gradient** | Analytical dE/dx matches (E(x+δ) − E(x−δ)) / (2δ) | Finite-difference on every coordinate of every atom in every fixture: δ = 10⁻⁶ Å, relative error < 10⁻⁵ |
 | **Optimization** | After minimization, max gradient < threshold and energy is lower | L-BFGS on each fixture from the SDF geometry and from a perturbed geometry (DONE — 16/16 at max\|g\| < 0.05) |
 
