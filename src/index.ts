@@ -34,13 +34,10 @@ export {
   calc_gradient,
 } from './mmff94';
 
-// Geometry optimizers — L-BFGS is the primary minimizer. The
-// steepest-descent fallback is not exported yet: it is still a stub
-// (AGENTS.md Phase 6), and a placeholder that returns converged: false
-// does not belong in the public API.
-export {
-  optimize_lbfgs,
-} from './optimize/l-bfgs';
+// Geometry optimizers — L-BFGS is the primary minimizer; steepest
+// descent is the fallback (robust but slow — Armijo line search).
+export { optimize_lbfgs } from './optimize/l-bfgs';
+export { optimize_steepest_descent } from './optimize/steepest-descent';
 
 // Utility — for advanced users who want to build their own tools
 export {

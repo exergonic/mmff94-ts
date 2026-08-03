@@ -12,16 +12,16 @@
 > finite differences (worst relative error 8×10⁻⁸), and L-BFGS
 > geometry optimization is working (14/16 fixtures converge to
 > max |gradient| < 0.05 kcal/mol/Å from both the SDF and perturbed
-> geometries; formamide is skipped for its documented typing gap and
-> nicotine converges at a relaxed tolerance — see
-> `tests/optimization.test.ts`). The steepest-descent fallback is
-> still a stub. The public API is not yet stable and may change
-> before 0.1.0. See the [Status](#status) table for the full picture.
+> geometries — see `tests/optimization.test.ts`). The steepest-descent
+> fallback converges 15/16 fixtures at the spec (nicotine's vdW canyon
+> is its documented boundary). The public API is not yet stable and
+> may change before 0.1.0. See the [Status](#status) table for the
+> full picture.
 
 Energy evaluation for organic molecules, running in the browser or
 Node.js without WebAssembly, native binaries, or external services.
-Analytical gradients and L-BFGS optimization are complete; the
-steepest-descent fallback is in progress.
+Analytical gradients and geometry optimization (L-BFGS primary,
+steepest-descent fallback) are complete.
 
 ## Why
 
@@ -51,7 +51,7 @@ working (see [Status](#status)).
 | 1-4 scaling | ✅ (electrostatic ×0.75, inside the term) |
 | Analytical gradients | ✅ (all 7 terms, FD-verified < 10⁻⁵) |
 | Geometry optimization (L-BFGS) | ✅ (16/16 fixtures to max\|g\| < 0.05) |
-| Geometry optimization (SD fallback) | ⬜ |
+| Geometry optimization (SD fallback) | ✅ (15/16 fixtures; nicotine's vdW canyon is the documented boundary) |
 
 ## Validation
 

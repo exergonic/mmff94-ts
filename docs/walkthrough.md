@@ -603,19 +603,23 @@ comments for the full why):
   reset: wall-limited steps on vdW canyons would otherwise poison the direction
   with ill-scaled curvature information.
 
-### 10.2 Steepest descent (fallback — still a stub)
+### 10.2 Steepest descent (fallback)
 
-Simple gradient descent with Armijo line search. Used when the L-BFGS line search
-fails or for the first few iterations to improve the starting point.
+Simple gradient descent with Armijo line search: x ← x − α·∇E with α
+halved until E decreases by at least c₁·α·‖∇E‖² (c₁ = 1e-4). The first
+trial is capped in physical space (no atom moves more than 2 Å), the same
+wall-guard as L-BFGS's first trial. Used when the L-BFGS line search fails or
+as a robustness fallback.
 
-L-BFGS stops when the maximum |gradient| component falls below
+Both optimizers stop when the maximum |gradient| component falls below
 `gradient_tolerance` (default 0.05 kcal/mol/Å).
 
-**Current status**: L-BFGS is implemented and tested — all 16 fixtures
-converge to max|g| < 0.05 kcal/mol/Å from both the SDF and the perturbed
-geometry (`tests/optimization.test.ts`, 19 tests; nicotine needs ~450
-iterations from its vdW-canyon start). Steepest descent is still a stub and is
-not exported from the public barrel until it works.
+**Current status**: L-BFGS converges all 16 fixtures at the spec from both
+the SDF and the perturbed geometry (nicotine needs ~450 iterations from its
+vdW-canyon start). Steepest descent converges 15/16 at the spec — its
+linear valley zig-zag costs 20-400+ iterations where L-BFGS needs a handful —
+and nicotine's canyon is its documented boundary (descent-only there).
+`tests/optimization.test.ts` covers both.
 
 ---
 
@@ -791,7 +795,8 @@ src/index.ts  (public barrel)
   └── src/optimize/
         ├── l-bfgs.ts            ← types only (energy + gradient arrive
         │                          via the callback argument)
-        └── steepest-descent.ts  ← types (stub — not exported)
+        └── steepest-descent.ts  ← types (energy + gradient via
+                                  the callback argument)
 ```
 
 ---
@@ -831,4 +836,4 @@ Every energy term is tested **in isolation** before it is tested in combination.
 | L-BFGS | ✅ Implemented (Nocedal & Wright Alg. 7.5 + strong-Wolfe) | 19 tests (16/16 fixtures at max\|g\| < 0.05) |
 | Steepest descent | ❌ Stub | 0 tests |
 | MMD parser (Halgren suite) | ✅ Complete | 4 tests |
-| **All tests** | **166 passing** | **19 files** |
+| **All tests** | **183 passing** | **19 files** |
