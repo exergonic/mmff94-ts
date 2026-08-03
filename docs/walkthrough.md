@@ -627,6 +627,21 @@ linear valley zig-zag costs 20-400+ iterations where L-BFGS needs a handful —
 and nicotine's canyon is its documented boundary (descent-only there).
 `tests/optimization.test.ts` covers both.
 
+### 10.3 Considered and deferred: DIIS (GDIIS)
+
+Direct inversion of the iterative subspace (Császár & Pulay, 1984) was
+considered as a third optimizer. Deferred as superfluous: it assembles
+the same gradient history L-BFGS already exploits (its extrapolation is
+effectively a particular quasi-Newton scheme — Farkas & Schlegel, PCCP
+2002), it has no descent guarantee without bolting on the same line-search
+and trial-step machinery we already built, and its failure profile overlaps
+ours (the error vector is the gradient, so nicotine's vdW canyon would
+defeat it as it defeats steepest descent). Its famous habitats — SCF
+convergence and constrained optimization — are out of scope here (fixed BCI
+charges, no constraints). Revisit only if constrained optimization or
+transition-state search ever enters scope. See Schlegel, *WIREs Comput.
+Mol. Sci.* 2011, *1*, 790–809.
+
 ---
 
 ## 11. The parameter extraction pipeline

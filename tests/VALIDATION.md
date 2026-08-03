@@ -6,151 +6,99 @@ molecule by molecule, term by term. The numbers here are produced by
 The README's [Validation](../README.md#validation) section is the
 condensed public version of this ledger.
 
-## Method
+## Current status (2026-08-02)
 
-- **Reference molecules**: 16 in `tests/fixtures/sdf/` (the obenergy
-  comparison set), typed with our own `assign_atom_types()`.
-- **Fixture references**: `obenergy -ff MMFF94` logs in
-  `tests/references/` (OpenBabel 3.1.0, generated via
-  `tests/scripts/get_mmff94_breakdown.py`).
-- **Suite references**: Halgren's 753-molecule MMFF94 validation
-  suite in `tests/fixtures/validation-suite/` — structures from
-  `MMFF94.mmd`, BatchMin component energies from `MMFF94_bmin.log`.
-- **Asserted in CI** (`tests/reference-comparison.test.ts`,
-  `tests/validate-against-suite.test.ts`):
-  - bond, angle, stretch-bend, torsion, vdW vs obenergy: all 9
-    fixtures, |Δ| < 0.02
-  - out-of-plane vs BatchMin: 8 suite molecules, |Δ| < 0.05
+- **Atom typing**: 140/550 suite molecules type-exact vs OpenBabel
+  (25.5%), pinned as `KNOWN_GOOD` in `atom-types-suite.test.ts`.
+- **All seven energy terms** match BatchMin on all **140/140**
+  typing-exact molecules (max |Δ| 0.02, mean 0.001).
+- **Partial charges** vs the suite's reference values: **138/140** to
+  < 10⁻³ e⁻ per atom (JALSOE/SO18A excluded — BatchMin's dative
+  representation; their *energies* still match).
+- **The 16 obenergy reference molecules**: all seven terms and the
+  total exact to 5 decimals.
+- **Gradients**: every analytical gradient FD-verified on every atom
+  of every reference molecule (worst relative error 8.5×10⁻⁸).
+- **Tests**: 187 passing, 0 skipped.
 
-## Fixtures — per-term deltas vs obenergy (kcal/mol, |ours − ref|)
+## Reference molecules vs obenergy (16 molecules, kcal/mol)
 
-From the printed comparisons in `reference-comparison.test.ts`
-(2026-08-01). "stub" in the elec column = we return 0; the reference
-value is shown in parentheses when nonzero.
+Asserted in `reference-comparison.test.ts` (exact to 5 decimals).
+Deltas are `ours − obenergy`; every row is all zeros.
 
-| molecule | bond | angle | strbnd | torsion | vdw | oop | elec |
-|---|---|---|---|---|---|---|---|
-| benzene | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | stub (ref 3.07810) |
-| butane | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | stub |
-| cyclohexane | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | stub |
-| ethane | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | stub |
-| ethene | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | stub (ref 8.05300) |
-| formaldehyde | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | stub |
-| methane | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | stub |
-| propane | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | stub |
-| water | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | stub |
+| molecule | bond | angle | strbnd | torsion | vdw | elec | oop | total |
+|---|---|---|---|---|---|---|---|---|
+| ammonia | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 |
+| benzene | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 16.22697 |
+| butane | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | −5.07596 |
+| cyclohexane | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | −3.56091 |
+| ethane | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | −4.73436 |
+| ethene | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 8.20010 |
+| formaldehyde | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.05416 |
+| formamide | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | −30.90735 |
+| methane | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.02638 |
+| nicotine | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 30.25415 |
+| piperidine | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | −5.99401 |
+| propane | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | −4.89729 |
+| pyridine | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 15.52345 |
+| pyrrole | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 3.28684 |
+| trimethylamine | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 7.36863 |
+| water | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 | 0.00000 |
 
-Total energies match exactly where every term matches: ethane
-(−4.73436), butane (−5.07596), cyclohexane (−3.56091), propane
-(−4.89729), methane (0.02638), formaldehyde (0.05416), water
-(0.00000). The only remaining total deltas are the electrostatic
-stub: benzene (3.078) and ethene (8.053).
+The `total` column is our value (== reference). Per-atom partial
+charges also match the obenergy logs (`charges.test.ts`, |Δ| < 1e-4).
 
-## Suite — out-of-plane vs BatchMin (8 molecules, kcal/mol)
+## Suite — out-of-plane pins vs BatchMin (8 molecules, kcal/mol)
 
 Asserted in `validate-against-suite.test.ts` (|Δ| < 0.05). These
-molecules are chosen because our typing reproduces the reference
-types exactly, so the comparison isolates the oop term.
+molecules are pinned beyond the typing-exact set because they exercise
+specific oop chemistry. AMHTAR01's −0.021 gap closed when the
+formally-charged typing landed (2026-08-02, commit `4b13f34`): its
+CO₂M carbon/oxygen pair now types 41/32 like the reference.
 
 | code | ours | BatchMin | Δ |
 |---|---|---|---|
 | DADDAN | 0.255548 | 0.255547 | +0.000000 |
 | GIDJUY | 0.216936 | 0.216938 | −0.000002 |
-| VEJWOW | 0.176902 | 0.177154 | −0.000252 |
+| VEJWOW | 0.177150 | 0.177154 | −0.000004 |
 | DIKGAF | 0.160155 | 0.158925 | +0.001230 |
 | FAXVAB | 0.127921 | 0.126658 | +0.001263 |
-| GEXGIZ | 0.122862 | 0.123820 | −0.000958 |
+| GEXGIZ | 0.123819 | 0.123820 | −0.000001 |
 | VIRBON | 0.101801 | 0.102969 | −0.001167 |
-| AMHTAR01 | 0.203026 | 0.224486 | −0.021460 |
-
-## Known open questions
-
-1. ~~Water typing (bond Δ 0.01008)~~ — **RESOLVED 2026-08-01.**
-   MMFF94 has dedicated water types — O = 70 ("OXYGEN IN WATER"),
-   H = 31 ("H-OH") — with bond `'0-31-70': r₀ 0.969` (already in our
-   parameter table). We typed water as generic alcohol (6/21,
-   r₀ 0.972). Fix: `assign_atom_types` now pre-scans for water (O with
-   exactly two H neighbors, each H bonded only to that O → O=70,
-   H=31). Water's bond term is now exact and its total matches
-   obenergy exactly (0.00000). Note: the validation suite has no
-   bare-water BatchMin reference (only hydrates), so obenergy is the
-   only cross-check. The typing reference (`atom-types.test.ts`) pins
-   water as [70, 31, 31]; the suite scoreboard is unaffected (no bare
-   water in the 550 typed molecules).
-
-2. ~~Cyclohexane torsion (Δ 0.554, 5% low)~~ — **RESOLVED 2026-08-01.**
-   Root cause: `lookup_param`'s generic wildcard fallback ran before the
-   reversed-direction exact match. An H–C–C–C dihedral (5,1,1,1) has no
-   forward exact entry, so it matched the generic `'0-0-1-1-0'`
-   (`*-1-1-*`, V3 = 0.300) instead of the exact reversed entry
-   `'0-1-1-1-5'` (0.639 / −0.630 / 0.264) that OpenBabel uses (its
-   direction canonicalization + exact lookup never reaches the
-   wildcard). Fix: torsion.ts now tries exact keys in both directions
-   before any wildcard (Halgren part I, p. 513 step-down protocol).
-   All 9 fixture torsions now match obenergy exactly; the torsion
-   assertion is extended to every fixture. The RING = AL log column is
-   informational — the torsion class (TTijkl, part IV p. 609) is 0 for
-   six-membered rings; class 5 applies only to five-membered rings.
-
-3. **AMHTAR01 oop (Δ 0.021).** Largest suite oop delta, within
-   tolerance. Ester/carboxyl pyramidalization; reference types the
-   CO₂M carbon 41 and oxygens 32/32 where we type 3/7/6 — typing gap
-   (see the atom-types suite scoreboard).
-
-4. **AGLYSL01 components.** Stretch-bend 0.00000 vs 0.24423, torsion
-   −3.00231 vs −4.71331, vdW 3.51572 vs 2.78652 — all traceable to
-   typing (sulfonate S, ammonium N). The OOP row is exact (0/0).
-
-5. **Electrostatic — RESOLVED (2026-08): the term is live.** The BCI
-   charges (charges.ts) and the buffered Coulomb term (eq. 6, part III:
-   E = 332.0716·q_i·q_j/(r + 0.05), the electrostatic buffering
-   constant S = 0.05 Å) match the reference logs per-atom AND
-   per-energy for every typed fixture — benzene +3.07810, ethene
-   +8.0530, pyridine +2.0939, pyrrole +3.0720, nicotine −2.2135 —
-   and the fixture totals now match exactly (they were the last gap).
-   The suite per-component report now covers electrostatics: 89/91
-   typing-exact molecules match BatchMin's electrostatic component;
-   the two misses (CAMALD03, BAOXLM01) are metal-carboxylate salts
-   whose formal charges our parser does not read yet (the fcadj
-   machinery of mmffpbci.par is the documented remaining piece).
-   Pairs 1-2/1-3 are excluded (ammonia's electrostatic is zero — the
-   BatchMin log confirms), 1-4 pairs ×0.75 inside the term.
-
-6. **Typing scoreboard.** 91/550 suite molecules type-exact vs
-   OpenBabel (16.5%; 228 ≥90% atoms; see `atom-types-suite.test.ts`).
-   The aromatic-ring perception (Kekulé pattern + lone-pair
-   heteroatoms in 5-rings) landed 2026-08: pyridine/pyrrole/imine
-   heteroaromatics type as 37/38/39/63/64/65/66/44/59, taking the
-   scoreboard from 65 to 91 with zero regressions, and every new
-   typing-exact molecule's energy terms match BatchMin. The torsion
-   assertions on non-ethane fixtures stay skipped until typing
-   isolates the term. Biggest remaining classes (from the worst-10):
-   sulfonyl/sulfate S (18), phosphate P (25) with H–S (71),
-   amide/cyanamide N (10, 28, 42/43), thioamide S (16/17),
-   imidazolium N (80/81 — needs formal-charge input).
+| AMHTAR01 | 0.224483 | 0.224486 | −0.000003 |
 
 ## Suite — per-component report (typing-exact molecules)
 
-Regenerated by `npm run test` (validate-against-suite.test.ts "reports
-per-component energies for typing-exact molecules"): per-term deltas vs
-BatchMin on the currently typing-exact molecules (65 of 550, computed
-fresh from `mmff94-atom-types.json`). Snapshot 2026-08-01 (after the
-parameter-class work, commits `9997d0d`–`e75805c`):
+Regenerated by `npm run test` (`validate-against-suite.test.ts`
+"reports per-component energies for typing-exact molecules"): per-term
+deltas vs BatchMin on the currently typing-exact molecules (140 of
+550, computed fresh from `mmff94-atom-types.json`). Snapshot
+2026-08-02, after the formally-charged typing (`4b13f34`) and the
+sulfinate S=O bridges (`86cc3c8`, `5834bce`):
 
 | term | \|Δ\|≤0.05 | mean\|Δ\| | max\|Δ\| | worst |
 |---|---|---|---|---|
-| bond | 65/65 | 0.000 | 0.00 | — |
-| angle | 65/65 | 0.001 | 0.02 | FAGVEO −0.02 |
-| strbnd | 64/65 | 0.001 | 0.05 | JIYJAC +0.05 |
-| torsion | 63/65 | 0.021 | 1.12 | FUVDOP +1.12, FILNOD +0.22 |
-| vdw | 65/65 | 0.000 | 0.00 | — |
-| oop | 65/65 | 0.000 | 0.00 | — |
-| elec (stub) | — | 17.90 | 218.72 | magnitude the stub omits |
+| bond | 140/140 | 0.000 | 0.00 | — |
+| angle | 140/140 | 0.001 | 0.02 | FAGVEO −0.02, DUBNET +0.01, DAWYUV −0.01 |
+| strbnd | 140/140 | 0.000 | 0.00 | — |
+| torsion | 140/140 | 0.000 | 0.00 | — |
+| vdw | 140/140 | 0.000 | 0.00 | — |
+| oop | 140/140 | 0.000 | 0.01 | COYNAF +0.01, CITNOI10 +0.01 |
+| elec | 140/140 | 0.000 | 0.00 | — |
 
-The comparison is valid: BatchMin's log is a single-point calculation at
-the .mmd geometry (suite README), so deltas on typing-exact molecules
-are term bugs by construction. What closed each thread (all verified
-against OpenBabel ≡ BatchMin on the affected molecules):
+The comparison is valid: BatchMin's log is a single-point calculation
+at the .mmd geometry (suite README), so deltas on typing-exact
+molecules are term bugs by construction. The sulfinate family
+(JALSOE/SO18A) is the instructive recent case: its S=O oxygen is typed
+7 by the reference typing rules but keyed 32 in every parameter table
+(OB, TINKER, OpenChemLib agree), so the angle, vdW, and bond lookups
+carry documented 7→32 bridges; with them, all three terms match
+BatchMin exactly on both molecules.
+
+### How each thread closed (history)
+
+The per-term threads below were closed across the parameter-class work
+(commits `9997d0d`–`e75805c`); kept here as the design record.
 
 - **FAGVEO +88.94 angle / JIYJAC +25.80 bond** — the parameter-class
   system was missing: BTij (part V p. 620, sbmb flag — case (a) applies
@@ -180,14 +128,86 @@ against OpenBabel ≡ BatchMin on the affected molecules):
   (28.5478 vs 28.5477), so the remainder is a BatchMin-internal detail
   of the N-cage torsion handling, not reachable from the par data.
   FILNOD +0.22 (benzothiazole S-oxide) is a separate small residual.
+  Both closed later by the 3-ring i = l "torsion" skip (FUVDOP) and
+  ring-aromaticity classing (FILNOD).
+
+## Known open questions
+
+1. ~~Water typing (bond Δ 0.01008)~~ — **RESOLVED 2026-08-01.**
+   MMFF94 has dedicated water types — O = 70 ("OXYGEN IN WATER"),
+   H = 31 ("H-OH") — with bond `'0-31-70': r₀ 0.969` (already in our
+   parameter table). We typed water as generic alcohol (6/21,
+   r₀ 0.972). Fix: `assign_atom_types` now pre-scans for water (O with
+   exactly two H neighbors, each H bonded only to that O → O=70,
+   H=31). Water's bond term is now exact and its total matches
+   obenergy exactly (0.00000). Note: the validation suite has no
+   bare-water BatchMin reference (only hydrates), so obenergy is the
+   only cross-check. The typing reference (`atom-types.test.ts`) pins
+   water as [70, 31, 31]; the suite scoreboard is unaffected (no bare
+   water in the 550 typed molecules).
+
+2. ~~Cyclohexane torsion (Δ 0.554, 5% low)~~ — **RESOLVED 2026-08-01.**
+   Root cause: `lookup_param`'s generic wildcard fallback ran before the
+   reversed-direction exact match. An H–C–C–C dihedral (5,1,1,1) has no
+   forward exact entry, so it matched the generic `'0-0-1-1-0'`
+   (`*-1-1-*`, V3 = 0.300) instead of the exact reversed entry
+   `'0-1-1-1-5'` (0.639 / −0.630 / 0.264) that OpenBabel uses (its
+   direction canonicalization + exact lookup never reaches the
+   wildcard). Fix: torsion.ts now tries exact keys in both directions
+   before any wildcard (Halgren part I, p. 513 step-down protocol).
+   All fixture torsions now match obenergy exactly; the torsion
+   assertion is extended to every fixture. The RING = AL log column is
+   informational — the torsion class (TTijkl, part IV p. 609) is 0 for
+   six-membered rings; class 5 applies only to five-membered rings.
+
+3. **AMHTAR01 oop (Δ 0.021).** — **RESOLVED 2026-08-02** (commit
+   `4b13f34`). Ester/carboxyl pyramidalization; the reference types
+   the CO₂M carbon 41 and oxygens 32/32. The formally-charged typing
+   now reproduces those types, and AMHTAR01's oop matches BatchMin to
+   −0.000003 (see the pin table above).
+
+4. **AGLYSL01 components.** Stretch-bend 0.00000 vs 0.24423, torsion
+   −3.00231 vs −4.71331, vdW 3.51572 vs 2.78652 — all traceable to
+   typing (sulfonate S, ammonium N); not typing-exact, so not in the
+   per-component report. The OOP row is exact (0/0).
+
+5. **Electrostatic — RESOLVED (2026-08-01, term live; fully closed
+   2026-08-02, commit `4b13f34`).** The BCI charges (charges.ts) and
+   the buffered Coulomb term (eq. 6, part III: E = 332.0716·q_i·q_j/
+   (r + 0.05), the electrostatic buffering constant S = 0.05 Å) match
+   the reference logs per-atom AND per-energy for every typed fixture
+   — benzene +3.07810, ethene +8.0530, pyridine +2.0939, pyrrole
+   +3.0720, nicotine −2.2135 — and the fixture totals match exactly
+   (they were the last gap). The suite's per-component report covers
+   electrostatics: **140/140** typing-exact molecules match BatchMin's
+   electrostatic component (the earlier 89/91 with the two
+   metal-carboxylate misses closed when the formal-charge model of
+   part V eq. 15 — primary charges + negative-charge sharing, with the
+   sharing flowing from each *neighbor's* α — landed). Pairs 1-2/1-3
+   are excluded (ammonia's electrostatic is zero — the BatchMin log
+   confirms), 1-4 pairs ×0.75 inside the term.
+
+6. **Typing scoreboard.** 140/550 suite molecules type-exact vs
+   OpenBabel (25.5%; see `atom-types-suite.test.ts`). The climb:
+   aromatic-ring perception (Kekulé pattern + lone-pair heteroatoms in
+   5-rings) took 65 → 91 (2026-08-01); amide-N typing (types 10/28,
+   with the sulfonyl exclusion) and the formally-charged types
+   (34/35/51/54/55/56/57/58/68/72/73/77/80/81/89/90/91, structural
+   valence-based branches) took it to 140 (2026-08-02). Every new
+   typing-exact molecule's energy terms match BatchMin. Biggest
+   remaining classes (from the worst-10): sulfonyl/sulfate S (18),
+   phosphate P (25), thioamide S (16/17), and the rest of the
+   charged-molecule periphery.
 
 ## Updating this ledger
 
 1. Run `npm run test`; the reference-comparison tests print every
-   fixture's per-term comparison, and the suite test prints AGLYSL01.
-2. Update the fixture delta table and the oop table with the new
-   numbers (re-run the oop table script if the values drift — the
-   numbers live in the test's printed output).
-3. When an open question is resolved, move it to a short "Resolved"
-   note at the bottom with the commit that fixed it, and tighten the
-   corresponding assertion in the test files.
+   molecule's per-term comparison, and the suite test prints the
+   per-component sweep.
+2. Update the fixture delta table and the oop pin table with the new
+   numbers. The oop values can be regenerated with a throwaway test
+   (parse `MMFF94.mmd`, `calc_oop_energy`, read `Out-of-Plane =` from
+   `MMFF94_bmin.log`, remembering the Fortran D exponents).
+3. When an open question is resolved, strike it with the commit that
+   fixed it, and tighten the corresponding assertion in the test
+   files.
