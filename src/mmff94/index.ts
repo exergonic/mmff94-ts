@@ -13,7 +13,7 @@ export {
 } from './atom-types';
 
 export {
-  compute_bci_charges,
+  assign_bci_charges,
 } from './charges';
 
 export {

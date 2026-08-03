@@ -23,8 +23,11 @@
  * the default.
  */
 
-import type { TypedMolecule, OptimizationResult } from '../types';
+import type { Molecule, TypedMolecule, OptimizationResult } from '../types';
 import type { EnergyGradientFn } from './l-bfgs';
+import { prepare_molecule } from '../mmff94/prepare';
+import { calc_energy } from '../mmff94/energy/total';
+import { calc_gradient } from '../mmff94/gradient/total';
 
 export interface SteepestDescentOptions {
   max_iterations?: number;
@@ -51,25 +54,40 @@ function max_gradient_norm(gradient: number[][]): number {
  *
  * Primarily a fallback for when L-BFGS fails to converge. The input
  * molecule is not mutated; the result carries the optimized geometry.
+ * A bare Molecule is typed and charged on demand, and the
+ * energy-and-gradient oracle defaults to the built-in one — the
+ * simple path is a single call: optimize_steepest_descent(molecule).
  */
 export function optimize_steepest_descent(
-  molecule: TypedMolecule,
-  calc_energy_gradient: EnergyGradientFn,
+  molecule: Molecule,
+  calc_energy_gradient_or_options?: EnergyGradientFn | SteepestDescentOptions,
   options?: SteepestDescentOptions,
 ): OptimizationResult {
-  const max_iterations = options?.max_iterations ?? 1000;
-  const gradient_tolerance = options?.gradient_tolerance ?? 0.05;
-  const initial_step_size = options?.initial_step_size ?? 1.0;
+  // The callback is optional, so the second slot accepts either the
+  // oracle or the options (same convention as L-BFGS).
+  const has_oracle = typeof calc_energy_gradient_or_options === 'function';
+  const calc_energy_gradient = has_oracle ? calc_energy_gradient_or_options : undefined;
+  const opts = has_oracle ? options : (calc_energy_gradient_or_options ?? options);
+  const max_iterations = opts?.max_iterations ?? 1000;
+  const gradient_tolerance = opts?.gradient_tolerance ?? 0.05;
+  const initial_step_size = opts?.initial_step_size ?? 1.0;
+
+  // Simple path: type + charge on demand, built-in oracle by default
+  // (same as L-BFGS).
+  const prepared = prepare_molecule(molecule);
+  const oracle =
+    calc_energy_gradient ??
+    ((m: TypedMolecule) => ({ energy: calc_energy(m), gradient: calc_gradient(m) }));
 
   // Working copy — the optimizer owns its coordinates and never
   // mutates the caller's molecule (same pattern as L-BFGS: the spread
   // keeps atom_types and partial_charges; only the atoms are cloned).
   const work: TypedMolecule = {
-    ...molecule,
-    atoms: molecule.atoms.map(a => ({ ...a })),
+    ...prepared,
+    atoms: prepared.atoms.map(a => ({ ...a })),
   };
 
-  let state = calc_energy_gradient(work);
+  let state = oracle(work);
   let iterations = 0;
   let converged = max_gradient_norm(state.gradient) < gradient_tolerance;
 
@@ -99,7 +117,7 @@ export function optimize_steepest_descent(
           z: a.z - alpha * g[idx][2],
         })),
       };
-      const trial_state = calc_energy_gradient(trial);
+      const trial_state = oracle(trial);
       if (trial_state.energy.total <= state.energy.total - C1 * alpha * g2) {
         // Sufficient decrease: accept, commit the trial as the new
         // working geometry (its atoms are already fresh copies).

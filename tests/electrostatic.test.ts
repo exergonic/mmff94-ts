@@ -14,7 +14,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 import { parse_sdf } from '../src/sdf';
 import { assign_atom_types } from '../src/mmff94/atom-types';
-import { compute_bci_charges } from '../src/mmff94/charges';
+import { assign_bci_charges } from '../src/mmff94/charges';
 import { calc_electrostatic_energy } from '../src/mmff94/energy/electrostatic';
 import { calc_energy } from '../src/mmff94/energy/total';
 
@@ -81,7 +81,7 @@ describe('Electrostatic energy', () => {
     for (const [name, ref] of Object.entries(refs)) {
       const sdf = readFileSync(join(__dirname, 'fixtures', 'sdf', `${name}.sdf`), 'utf-8');
       const typed = assign_atom_types(parse_sdf(sdf));
-      const charged = compute_bci_charges(typed);
+      const charged = assign_bci_charges(typed);
       expect(Math.abs(calc_electrostatic_energy(charged) - ref)).toBeLessThan(0.001);
     }
   });
@@ -98,7 +98,7 @@ describe('Electrostatic energy', () => {
     for (const [name, ref] of Object.entries(refs)) {
       const sdf = readFileSync(join(__dirname, 'fixtures', 'sdf', `${name}.sdf`), 'utf-8');
       const typed = assign_atom_types(parse_sdf(sdf));
-      const charged = compute_bci_charges(typed);
+      const charged = assign_bci_charges(typed);
       expect(Math.abs(calc_energy(charged).total - ref)).toBeLessThan(0.001);
     }
   });

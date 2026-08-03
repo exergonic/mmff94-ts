@@ -24,7 +24,7 @@ import { join, parse } from 'path';
 import { parse_sdf } from '../src/sdf';
 import { parse_mmd } from '../src/utils/mmd-parser';
 import { assign_atom_types } from '../src/mmff94/atom-types';
-import { compute_bci_charges } from '../src/mmff94/charges';
+import { assign_bci_charges } from '../src/mmff94/charges';
 import type { TypedMolecule } from '../src/types';
 
 import { calc_bond_stretch_energy } from '../src/mmff94/energy/bond-stretch';
@@ -91,7 +91,7 @@ function check_term(
     // charged molecule shares the atoms, so the FD perturbations
     // below move the same geometry) so the electrostatic term (and
     // its gradient) stay consistent.
-    const charged = compute_bci_charges(molecule);
+    const charged = assign_bci_charges(molecule);
 
     const analytic = gradient_fn(charged);
     let worst = 0;
@@ -171,7 +171,7 @@ describe('gradient finite-difference checks', () => {
     // would silently vanish from the public API — pin the identity.
     const molecules = load_fixtures();
     for (const molecule of molecules) {
-      const charged = compute_bci_charges(molecule);
+      const charged = assign_bci_charges(molecule);
       const total = calc_gradient(charged);
       const sum = molecule.atoms.map(() => [0, 0, 0]);
       for (const term of [

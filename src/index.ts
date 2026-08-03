@@ -29,7 +29,7 @@ export { parse_sdf } from './sdf';
 // MMFF94 force field
 export {
   assign_atom_types,
-  compute_bci_charges,
+  assign_bci_charges,
   calc_energy,
   calc_gradient,
 } from './mmff94';

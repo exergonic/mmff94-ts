@@ -38,7 +38,7 @@ export interface Molecule {
  *
  * Every atom now has an MMFF94 type number, which is the key that
  * unlocks the right parameters for every energy term.
- * Partial charges are attached by compute_bci_charges() (which
+ * Partial charges are attached by assign_bci_charges() (which
  * returns the charged molecule); the energy terms fall back to
  * computing them on demand when the field is absent.
  */
@@ -64,7 +64,10 @@ export interface EnergyComponents {
 
 /** Result of geometry optimization. */
 export interface OptimizationResult {
-  molecule: Molecule;          // Optimized geometry, atoms in new positions
+  /** Optimized geometry — typed and charged (the optimizer works on a
+   *  prepared copy, so the result carries atom_types and
+   *  partial_charges for follow-up per-term work at the minimum). */
+  molecule: TypedMolecule;
   energy: EnergyComponents;     // Final energy after optimization
   iterations: number;           // Number of optimization cycles
   converged: boolean;           // True if max gradient fell below the threshold

@@ -35,7 +35,10 @@
  * is dE/dx, so the descent direction is −H·∇E.
  */
 
-import type { TypedMolecule, EnergyComponents, OptimizationResult } from '../types';
+import type { Molecule, TypedMolecule, EnergyComponents, OptimizationResult } from '../types';
+import { prepare_molecule } from '../mmff94/prepare';
+import { calc_energy } from '../mmff94/energy/total';
+import { calc_gradient } from '../mmff94/gradient/total';
 
 export interface LbfgsOptions {
   max_iterations?: number;
@@ -47,6 +50,10 @@ export interface LbfgsOptions {
  * The energy-and-gradient oracle the optimizer drives. Receives the
  * optimizer's working copy of the molecule (same atom types and
  * charges as the input; only coordinates move).
+ *
+ * Optional: when omitted, the optimizer uses its own built-in oracle
+ * (calc_energy + calc_gradient on the working copy) — the simple path
+ * is a single call: optimize_lbfgs(molecule).
  */
 export type EnergyGradientFn = (
   molecule: TypedMolecule,
@@ -75,20 +82,35 @@ interface EvalState {
  * @returns The optimized geometry, final energy, and convergence info.
  */
 export function optimize_lbfgs(
-  molecule: TypedMolecule,
-  calc_energy_gradient: EnergyGradientFn,
+  molecule: Molecule,
+  calc_energy_gradient_or_options?: EnergyGradientFn | LbfgsOptions,
   options?: LbfgsOptions,
 ): OptimizationResult {
-  const max_iterations = options?.max_iterations ?? 1000;
-  const gradient_tolerance = options?.gradient_tolerance ?? 0.05;
-  const history_size = Math.max(1, Math.min(50, options?.history_size ?? 10));
+  // The callback is optional, so the second slot accepts either the
+  // oracle or the options: optimize_lbfgs(mol), optimize_lbfgs(mol,
+  // { gradient_tolerance }), optimize_lbfgs(charged, fn), or
+  // optimize_lbfgs(charged, fn, options) all work.
+  const has_oracle = typeof calc_energy_gradient_or_options === 'function';
+  const calc_energy_gradient = has_oracle ? calc_energy_gradient_or_options : undefined;
+  const opts = has_oracle ? options : (calc_energy_gradient_or_options ?? options);
+  const max_iterations = opts?.max_iterations ?? 1000;
+  const gradient_tolerance = opts?.gradient_tolerance ?? 0.05;
+  const history_size = Math.max(1, Math.min(50, opts?.history_size ?? 10));
+
+  // Simple path: a bare Molecule is typed and charged on demand (an
+  // already-prepared TypedMolecule passes through untouched), and the
+  // energy-and-gradient oracle defaults to the built-in one.
+  const prepared = prepare_molecule(molecule);
+  const oracle =
+    calc_energy_gradient ??
+    ((m: TypedMolecule) => ({ energy: calc_energy(m), gradient: calc_gradient(m) }));
 
   // Working copy — the optimizer owns its coordinates and never
   // mutates the caller's molecule. The spread keeps atom_types and
   // partial_charges; only the atoms (positions) are cloned.
   const work: TypedMolecule = {
-    ...molecule,
-    atoms: molecule.atoms.map(a => ({ ...a })),
+    ...prepared,
+    atoms: prepared.atoms.map(a => ({ ...a })),
   };
 
   const n = 3 * work.atoms.length;
@@ -109,7 +131,7 @@ export function optimize_lbfgs(
       work.atoms[a].y = coords[3 * a + 1];
       work.atoms[a].z = coords[3 * a + 2];
     }
-    const { energy, gradient } = calc_energy_gradient(work);
+    const { energy, gradient } = oracle(work);
     const flat = new Array(n);
     for (let a = 0; a < work.atoms.length; a++) {
       flat[3 * a] = gradient[a][0];

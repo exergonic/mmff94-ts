@@ -81,7 +81,7 @@ const PRIMARY_FORMAL_CHARGES: Record<number, number> = {
  * molecule stays valid while an optimizer moves the atoms (the
  * optimizer clones only the atom positions and keeps this field).
  */
-export function compute_bci_charges(molecule: TypedMolecule): TypedMolecule {
+export function assign_bci_charges(molecule: TypedMolecule): TypedMolecule {
   // Adjacency + the shared class context (the BTij flag selects the
   // bci class for conjugated single bonds).
   const adj: number[][] = Array.from({ length: molecule.atoms.length }, () => []);

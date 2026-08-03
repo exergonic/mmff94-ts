@@ -10,7 +10,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 import { parse_sdf } from '../src/sdf';
 import { assign_atom_types } from '../src/mmff94/atom-types';
-import { compute_bci_charges } from '../src/mmff94/charges';
+import { assign_bci_charges } from '../src/mmff94/charges';
 
 const SDF_DIR = join(__dirname, 'fixtures', 'sdf');
 const REF_DIR = join(__dirname, 'references');
@@ -56,7 +56,7 @@ describe('BCI partial charges', () => {
       const typed = assign_atom_types(parse_sdf(sdf));
       // Pure step: the ORIGINAL molecule is untouched; the charges
       // arrive on the returned copy.
-      const charged = compute_bci_charges(typed);
+      const charged = assign_bci_charges(typed);
 
       expect(typed.partial_charges).toBeUndefined();
       expect(charged.partial_charges).toBeDefined();
@@ -71,7 +71,7 @@ describe('BCI partial charges', () => {
     for (const file of ['ammonia', 'water', 'benzene', 'pyridine', 'formaldehyde']) {
       const sdf = readFileSync(join(SDF_DIR, `${file}.sdf`), 'utf-8');
       const typed = assign_atom_types(parse_sdf(sdf));
-      const charged = compute_bci_charges(typed);
+      const charged = assign_bci_charges(typed);
       const ref = parse_reference_charges(join(REF_DIR, `${file}.mmff94.log`));
       expect(charged.partial_charges!.length).toBe(ref.length);
       charged.partial_charges!.forEach((q, i) => {

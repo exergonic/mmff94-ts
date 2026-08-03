@@ -114,17 +114,17 @@ questions, and how to update it — lives in
 ## Usage
 
 ```typescript
-import { parse_sdf, assign_atom_types, compute_bci_charges, calc_energy } from 'mmff94-ts';
+import { parse_sdf, calc_energy, optimize_lbfgs } from 'mmff94-ts';
 
+// The simple path: a parsed molecule is all you need — typing and
+// charges happen on demand, and the full per-term breakdown comes back.
 const mol = parse_sdf(sdfText);
-const typed = assign_atom_types(mol);
-const charged = compute_bci_charges(typed); // returns the molecule with
-                                            // partial charges attached
-const energy = calc_energy(charged);
+const energy = calc_energy(mol);     // every term, plus the total
+console.log(energy.total, energy.bond_stretch, energy.torsion);
 
-console.log(energy.total);           // kcal/mol
-console.log(energy.bond_stretch);    // per-component breakdown
-console.log(energy.torsion);
+// Geometry optimization in one call — no preparation, no callback.
+const result = optimize_lbfgs(mol);  // typed/charged molecule at the
+                                     // minimum rides along in result.molecule
 ```
 
 See [`examples/quickstart.ts`](examples/quickstart.ts) for a complete

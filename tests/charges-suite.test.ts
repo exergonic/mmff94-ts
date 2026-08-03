@@ -19,7 +19,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 import { parse_mmd } from '../src/utils/mmd-parser';
 import { assign_atom_types } from '../src/mmff94/atom-types';
-import { compute_bci_charges } from '../src/mmff94/charges';
+import { assign_bci_charges } from '../src/mmff94/charges';
 
 const suiteDir = join(__dirname, 'fixtures', 'validation-suite');
 
@@ -61,7 +61,7 @@ describe('partial charges vs the validation-suite reference (pchg)', () => {
       if (!typed.atom_types.every((t, i) => t === refTypes[i])) continue;
       if (DATIVE_EXCLUDED.has(mol.name)) continue;
 
-      const charged = compute_bci_charges(typed);
+      const charged = assign_bci_charges(typed);
       const ref = reference_charges(mmdText, mol.name, mol.atoms.length);
       checked++;
       for (let i = 0; i < typed.atoms.length; i++) {

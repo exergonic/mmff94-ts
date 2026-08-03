@@ -20,7 +20,7 @@ import { join } from 'path';
 import { Molecule as OCLMolecule, ForceFieldMMFF94, Resources } from 'openchemlib';
 import { parse_mmd } from '../src/utils/mmd-parser';
 import { assign_atom_types } from '../src/mmff94/atom-types';
-import { compute_bci_charges } from '../src/mmff94/charges';
+import { assign_bci_charges } from '../src/mmff94/charges';
 import { calc_energy } from '../src/mmff94/energy/total';
 import type { Molecule } from '../src/types';
 
@@ -73,7 +73,7 @@ function to_molfile(mol: Molecule): string {
 
 function our_total(mol: Molecule): number {
   const typed = assign_atom_types(mol);
-  return calc_energy(compute_bci_charges(typed)).total;
+  return calc_energy(assign_bci_charges(typed)).total;
 }
 
 function ocl_total(mol: Molecule): number | string {

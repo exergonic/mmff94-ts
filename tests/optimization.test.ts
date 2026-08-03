@@ -17,7 +17,7 @@ import { readFileSync, readdirSync } from 'fs';
 import { join, parse } from 'path';
 import { parse_sdf } from '../src/sdf';
 import { assign_atom_types } from '../src/mmff94/atom-types';
-import { compute_bci_charges } from '../src/mmff94/charges';
+import { assign_bci_charges } from '../src/mmff94/charges';
 import { calc_energy } from '../src/mmff94/energy/total';
 import { calc_gradient } from '../src/mmff94/gradient/total';
 import { optimize_lbfgs, type EnergyGradientFn } from '../src/optimize/l-bfgs';
@@ -74,7 +74,7 @@ describe('L-BFGS optimization', () => {
     // The charged copy flows into the optimizer (and into perturb()
     // below, whose spread keeps the charges — valid because they are
     // geometry-independent).
-    const charged = compute_bci_charges(typed);
+    const charged = assign_bci_charges(typed);
 
     const starting_gradient = max_gradient(calc_gradient(charged));
     const starting_energy = calc_energy(charged).total;
@@ -129,7 +129,7 @@ describe('L-BFGS optimization', () => {
   it('respects a tighter gradient tolerance', () => {
     const raw = parse_sdf(readFileSync(join(SDF_DIR, 'butane.sdf'), 'utf-8'));
     const typed = assign_atom_types(raw);
-    const charged = compute_bci_charges(typed);
+    const charged = assign_bci_charges(typed);
     const result = optimize_lbfgs(charged, energy_gradient_fn(), {
       gradient_tolerance: 0.005,
     });
@@ -140,7 +140,7 @@ describe('L-BFGS optimization', () => {
   it('does not mutate the input molecule', () => {
     const raw = parse_sdf(readFileSync(join(SDF_DIR, 'propane.sdf'), 'utf-8'));
     const typed = assign_atom_types(raw);
-    const charged = compute_bci_charges(typed);
+    const charged = assign_bci_charges(typed);
     const before = typed.atoms.map(a => [a.x, a.y, a.z]);
     optimize_lbfgs(charged, energy_gradient_fn());
     expect(typed.atoms.map(a => [a.x, a.y, a.z])).toEqual(before);
@@ -194,7 +194,7 @@ describe('Steepest descent fallback', () => {
     const name = parse(file).name;
     const raw = parse_sdf(readFileSync(join(SDF_DIR, file), 'utf-8'));
     raw.name = name;
-    const charged = compute_bci_charges(assign_atom_types(raw));
+    const charged = assign_bci_charges(assign_atom_types(raw));
     const starting_energy = calc_energy(charged).total;
 
     it(`${name}: descends and converges at the spec from both starts`, () => {
@@ -222,7 +222,7 @@ describe('Steepest descent fallback', () => {
   it('does not mutate the input molecule', () => {
     const raw = parse_sdf(readFileSync(join(SDF_DIR, 'propane.sdf'), 'utf-8'));
     const typed = assign_atom_types(raw);
-    const charged = compute_bci_charges(typed);
+    const charged = assign_bci_charges(typed);
     const before = typed.atoms.map(a => [a.x, a.y, a.z]);
     optimize_steepest_descent(charged, energy_gradient_fn());
     expect(typed.atoms.map(a => [a.x, a.y, a.z])).toEqual(before);

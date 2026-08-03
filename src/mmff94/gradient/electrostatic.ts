@@ -20,12 +20,12 @@
  *     same BFS the energy uses). A pair the energy scales at 0.75
  *     contributes 0.75× its unscaled gradient here.
  *   - The charges: the same BCI partial charges (computed on demand
- *     if the caller did not call compute_bci_charges()).
+ *     if the caller did not call assign_bci_charges()).
  */
 
 import type { TypedMolecule } from '../../types';
 import { Vec3 } from '../../utils/vector';
-import { compute_bci_charges } from '../charges';
+import { assign_bci_charges } from '../charges';
 import { is_1_4_pair } from '../energy/electrostatic';
 import { bond_length_derivatives } from './derivatives';
 
@@ -42,7 +42,7 @@ export function calc_electrostatic_gradient(molecule: TypedMolecule): number[][]
 
   // Partial charges from the BCI model — same as the energy term.
   const charges =
-    molecule.partial_charges ?? compute_bci_charges(molecule).partial_charges!;
+    molecule.partial_charges ?? assign_bci_charges(molecule).partial_charges!;
 
   // Adjacency: for the 1-2/1-3 exclusion and the 1-4 classification.
   const adj: number[][] = Array.from({ length: molecule.atoms.length }, () => []);

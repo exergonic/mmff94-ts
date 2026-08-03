@@ -59,13 +59,19 @@ the key that unlocks the right parameters for every energy term. Getting it wron
 means every subsequent calculation is wrong — which is why atom typing is the single
 hardest piece.
 
-Partial charges (`partial_charges[]`) are attached by `compute_bci_charges()`,
+Partial charges (`partial_charges[]`) are attached by `assign_bci_charges()`,
 which returns a copy of the molecule with the charges on it — pure like the rest
 of the pipeline (the input is untouched). They are reused by the gradient
 calculation and stay valid through geometry optimization because MMFF94 charges
 are geometry-independent. The energy terms also compute the charges on demand if
 given a bare typed molecule, so you can skip the BCI step entirely if you only
 need vdW + bonds + angles.
+
+The top-level functions take this further: `calc_energy()`, `calc_gradient()`,
+and the optimizers accept a bare `Molecule` straight from `parse_sdf()` and run
+typing + charging on demand (`prepare.ts`). The simple path returns exactly what
+the explicit path returns — the same full per-term breakdown, and for the
+optimizers the same result with the typed/charged molecule at the minimum.
 
 ---
 
@@ -170,7 +176,7 @@ pyrrole's N, furan's O, thiophene's S); V2000 aromatic bonds (order 4) settle
 the ring directly. Fused rings, chorded cage rings, and saturated rings
 (triazines, γ-pyrones) are rejected by the pattern.
 
-`compute_bci_charges()` lives in its own module, `src/mmff94/charges.ts` — it is
+`assign_bci_charges()` lives in its own module, `src/mmff94/charges.ts` — it is
 the electrostatics model, not atom typing. The Bond Charge Increment model: each
 bond contributes a fixed increment to both of its atoms; the partial charge on an
 atom is the sum of all its bond contributions, plus the formal-charge correction
@@ -458,7 +464,7 @@ MMFF94 never evaluates the bare 1/r form.
   scaling lives inside this term because the term functions return
   totals, not pair lists.
 
-Consumes the `partial_charges[]` attached by `compute_bci_charges()` (the term
+Consumes the `partial_charges[]` attached by `assign_bci_charges()` (the term
 also computes them on demand if they are absent).
 
 Validated against the reference logs (per-atom charges AND energies) and
@@ -702,7 +708,7 @@ SDF string (.mol/.sdf)
           │                                 │
           ▼                                 ▼
 ┌───────────────────┐           ┌──────────────────────┐
-│compute_bci_charges│           │calc_energy()         │
+│assign_bci_charges│           │calc_energy()         │
 │ (optional)        │           │  bond-stretch        │
 └─────────┬─────────┘           │  angle-bend          │
           │                     │  stretch-bend        │
@@ -793,10 +799,10 @@ src/index.ts  (public barrel)
   ├── src/utils/vector.ts        ← no deps
   │
   └── src/optimize/
-        ├── l-bfgs.ts            ← types only (energy + gradient arrive
-        │                          via the callback argument)
-        └── steepest-descent.ts  ← types (energy + gradient via
-                                  the callback argument)
+        ├── l-bfgs.ts            ← the oracle callback is optional: the
+        │                          built-in default is calc_energy +
+        │                          calc_gradient on the working copy
+        └── steepest-descent.ts  ← same convention as L-BFGS
 ```
 
 ---
@@ -836,4 +842,4 @@ Every energy term is tested **in isolation** before it is tested in combination.
 | L-BFGS | ✅ Implemented (Nocedal & Wright Alg. 7.5 + strong-Wolfe) | 19 tests (16/16 fixtures at max\|g\| < 0.05) |
 | Steepest descent | ❌ Stub | 0 tests |
 | MMD parser (Halgren suite) | ✅ Complete | 4 tests |
-| **All tests** | **183 passing** | **19 files** |
+| **All tests** | **187 passing** | **20 files** |

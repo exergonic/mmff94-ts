@@ -15,7 +15,8 @@
  * energy term applies it — the term functions are the only place
  * that scaling can live, since they return full arrays, not pairs.
  */
-import type { TypedMolecule } from '../../types';
+import type { Molecule } from '../../types';
+import { prepare_molecule } from '../prepare';
 import { calc_bond_stretch_gradient } from './bond-stretch';
 import { calc_angle_bend_gradient } from './angle-bend';
 import { calc_stretch_bend_gradient } from './stretch-bend';
@@ -27,25 +28,30 @@ import { calc_oop_gradient } from './out-of-plane';
 /**
  * Compute the full gradient of the MMFF94 energy.
  *
+ * Accepts a bare Molecule straight from parse_sdf() — atom typing and
+ * BCI charges are assigned on demand (prepare_molecule). An
+ * already-prepared TypedMolecule passes through untouched.
+ *
  * Returns an array parallel to molecule.atoms[]:
  *   result[i] = [dE/dx_i, dE/dy_i, dE/dz_i]
  * with units of kcal/mol/Å.
  */
-export function calc_gradient(molecule: TypedMolecule): number[][] {
-  const gradient: number[][] = molecule.atoms.map(() => [0, 0, 0]);
+export function calc_gradient(molecule: Molecule): number[][] {
+  const prepared = prepare_molecule(molecule);
+  const gradient: number[][] = prepared.atoms.map(() => [0, 0, 0]);
 
   const terms = [
-    calc_bond_stretch_gradient(molecule),
-    calc_angle_bend_gradient(molecule),
-    calc_stretch_bend_gradient(molecule),
-    calc_torsion_gradient(molecule),
-    calc_vdw_gradient(molecule),
-    calc_electrostatic_gradient(molecule),
-    calc_oop_gradient(molecule),
+    calc_bond_stretch_gradient(prepared),
+    calc_angle_bend_gradient(prepared),
+    calc_stretch_bend_gradient(prepared),
+    calc_torsion_gradient(prepared),
+    calc_vdw_gradient(prepared),
+    calc_electrostatic_gradient(prepared),
+    calc_oop_gradient(prepared),
   ];
 
   for (const term of terms) {
-    for (let a = 0; a < molecule.atoms.length; a++) {
+    for (let a = 0; a < prepared.atoms.length; a++) {
       gradient[a][0] += term[a][0];
       gradient[a][1] += term[a][1];
       gradient[a][2] += term[a][2];

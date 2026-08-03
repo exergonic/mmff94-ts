@@ -8,7 +8,7 @@
  * where:
  *   q_i, q_j = partial charges (e⁻, from the BCI model — see
  *              src/mmff94/charges.ts; the caller attaches them via
- *              compute_bci_charges(), or the term computes them on
+ *              assign_bci_charges(), or the term computes them on
  *              the fly)
  *   R_ij     = interatomic distance (Å)
  *   S        = 0.05 Å — the ELECTROSTATIC BUFFERING CONSTANT, added
@@ -32,7 +32,7 @@
 
 import type { TypedMolecule } from '../../types';
 import { distance, Vec3 } from '../../utils/vector';
-import { compute_bci_charges } from '../charges';
+import { assign_bci_charges } from '../charges';
 
 const S = 0.05; // the electrostatic buffering constant (Å)
 
@@ -41,10 +41,10 @@ const S = 0.05; // the electrostatic buffering constant (Å)
  */
 export function calc_electrostatic_energy(molecule: TypedMolecule): number {
   // Partial charges from the BCI model — attached by the caller's
-  // compute_bci_charges step (the value flowing down the pipeline), or
+  // assign_bci_charges step (the value flowing down the pipeline), or
   // computed here if the term is called alone.
   const charges =
-    molecule.partial_charges ?? compute_bci_charges(molecule).partial_charges!;
+    molecule.partial_charges ?? assign_bci_charges(molecule).partial_charges!;
 
   // Adjacency: for the 1-2/1-3 exclusion and the 1-4 classification.
   const adj: number[][] = Array.from({ length: molecule.atoms.length }, () => []);

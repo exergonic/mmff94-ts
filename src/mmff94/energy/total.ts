@@ -20,7 +20,8 @@
  * stays testable in isolation.
  */
 
-import type { TypedMolecule, EnergyComponents } from '../../types';
+import type { Molecule, EnergyComponents } from '../../types';
+import { prepare_molecule } from '../prepare';
 import { calc_bond_stretch_energy } from './bond-stretch';
 import { calc_angle_bend_energy } from './angle-bend';
 import { calc_stretch_bend_energy } from './stretch-bend';
@@ -30,19 +31,25 @@ import { calc_electrostatic_energy } from './electrostatic';
 import { calc_oop_energy } from './out-of-plane';
 
 /**
- * Compute the full MMFF94 energy for a typed molecule.
+ * Compute the full MMFF94 energy.
+ *
+ * Accepts a bare Molecule straight from parse_sdf() — atom typing and
+ * BCI charges are assigned on demand (prepare_molecule). An
+ * already-prepared TypedMolecule passes through untouched.
  *
  * Returns an EnergyComponents object with every term broken out
- * separately plus the total.
+ * separately plus the total — the same full breakdown whether the
+ * caller prepared the molecule explicitly or not.
  */
-export function calc_energy(molecule: TypedMolecule): EnergyComponents {
-  const bond_stretch  = calc_bond_stretch_energy(molecule);
-  const angle_bend    = calc_angle_bend_energy(molecule);
-  const stretch_bend  = calc_stretch_bend_energy(molecule);
-  const torsion       = calc_torsion_energy(molecule);
-  const van_der_waals = calc_vdw_energy(molecule);
-  const electrostatic = calc_electrostatic_energy(molecule);
-  const out_of_plane  = calc_oop_energy(molecule);
+export function calc_energy(molecule: Molecule): EnergyComponents {
+  const prepared = prepare_molecule(molecule);
+  const bond_stretch  = calc_bond_stretch_energy(prepared);
+  const angle_bend    = calc_angle_bend_energy(prepared);
+  const stretch_bend  = calc_stretch_bend_energy(prepared);
+  const torsion       = calc_torsion_energy(prepared);
+  const van_der_waals = calc_vdw_energy(prepared);
+  const electrostatic = calc_electrostatic_energy(prepared);
+  const out_of_plane  = calc_oop_energy(prepared);
 
   // 1-4 scaling is applied inside the electrostatic term (×0.75 for
   // atoms exactly three bonds apart) — it is the only scaled term,
