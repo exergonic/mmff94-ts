@@ -35,8 +35,29 @@ entirely on the client side.
 | Out-of-plane bending | ✅ |
 | 1-4 scaling | ✅ |
 | Analytical gradients | ✅ |
-| Geometry optimization (L-BFGS) | ✅ |
-| Geometry optimization (SD fallback) | ✅ (15/16; nicotine exception) |
+| Optimization (L-BFGS + steepest descent) | ✅ |
+
+Typing and energies are validated against the full Halgren suite
+(753 molecules): 695/753 type-exact vs OpenBabel's canonical types
+(735 ≥ 90% atoms), and all seven energy terms match the BatchMin
+references on the 550-molecule pinned set (see
+[Validation](#validation)).
+
+### Stretch goals
+
+- **Per-interaction energy breakdowns.** Expose every component of
+  every energy term — each bond stretch, angle bend, torsion,
+  out-of-plane bend, stretch-bend cross term, van der Waals pair and
+  electrostatic pair, with its atoms, types, parameters and energy
+  contribution — as first-class queryable data, not just the seven
+  term totals. The debugging value is proven: every per-term
+  mismatch found in this project's development was diagnosed through
+  OpenBabel's HIGH-verbosity interaction log (`probe-ob-log.py`,
+  `tests/scripts/ob_energy_breakdown.py --verbose TERM`). The goal is
+  to make that data simpler to access than OpenBabel's, where the
+  per-interaction listing is only reachable through a verbose log
+  capture hack (buffered `std::cout`, space-separated section
+  headers, fd redirects).
 
 ## Validation
 
