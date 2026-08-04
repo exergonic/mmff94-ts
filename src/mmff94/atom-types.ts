@@ -426,6 +426,15 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
           const target = molecule.atoms[neighbors[0].nbr];
           if (target.element === 'P') {
             atom_types[i] = 32; // P=O — phosphine oxide, phosphate
+          } else if (target.element === 'N') {
+            // =O on N: 32 on the nitro/nitrate group (≥ 2 terminal
+            // O's on the N — FUCTIG01's nitrate ion) and on a
+            // 3-coordinate N-oxide N (pyridine N-oxide drawn with a
+            // formal double); 7 on the 2-coordinate nitroso N=O
+            // (nitroso compounds, nitrosamines).
+            const n_atom = neighbors[0].nbr;
+            const n_has_two_O = count_terminal_oxygens(n_atom, adj, molecule) >= 2;
+            atom_types[i] = n_has_two_O || adj[n_atom].length === 3 ? 32 : 7;
           } else if (target.element === 'S') {
             // S=O: 32 on the sulfone family (≥ 2 terminal O's on the
             // S — sulfone, sulfonate, sulfate, sulfite/sulfinate

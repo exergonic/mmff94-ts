@@ -26,12 +26,20 @@ import type { Molecule, Atom, Bond } from '../types';
 // never make it into the reference.
 const MMD_ELEMENT: Record<number, string> = {
   1: 'C', 2: 'C', 3: 'C', 10: 'C', 11: 'C', 12: 'C',
-  15: 'O', 16: 'O', 18: 'O', 20: 'O', 23: 'O',
-  24: 'N', 25: 'N', 26: 'N', 29: 'N', 32: 'N', 35: 'N', 36: 'N',
+  15: 'O', 16: 'O', 18: 'O', 20: 'O', 21: 'O', 23: 'O',
+  24: 'N', 25: 'N', 26: 'N', 29: 'N', 31: 'N', 32: 'N', 35: 'N', 36: 'N',
   41: 'H', 42: 'H', 43: 'H', 44: 'H', 45: 'H', 48: 'H',
-  49: 'S', 52: 'S',
+  49: 'S', 51: 'S', 52: 'S',
   53: 'P', 54: 'B', 55: 'B', 56: 'F', 57: 'Cl', 58: 'Br', 59: 'I',
   60: 'Si',
+  // The 203-skipped recovery (types.txt amendment, 2026-08-04): the mmd
+  // uses a wider MacroModel code set than OB's table covered. 201/204 are
+  // the N-oxide/nitro N's (2-coordinate with =O, e.g. "201 12 2"), 206 a
+  // special C, 65-67/70 the alkali/alkaline-earth block, 207-212 the
+  // NAPW-type metal codes (Zn/Mg/Cu/Fe per the atom names).
+  65: 'Li', 66: 'Na', 67: 'K', 70: 'Ca',
+  201: 'N', 204: 'N', 206: 'C',
+  207: 'Zn', 208: 'Mg', 209: 'Cu', 210: 'Cu', 211: 'Fe', 212: 'Fe',
 };
 
 /**

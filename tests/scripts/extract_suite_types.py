@@ -25,6 +25,38 @@ from openbabel import openbabel as ob
 os.environ["BABEL_DATADIR"] = os.path.join(
     os.path.dirname(ob.__file__), "bin", "data")
 
+# The suite's mmd files use a wider MacroModel code set than OpenBabel's
+# types.txt covers (codes 21 O, 31 N, 51 S, 201/204 N-oxide/nitro N, 206 C,
+# 65-67/70 alkali/alkaline-earth, 207-212 metal). Without these rows the mmd
+# reader cannot translate the atoms and the force-field setup fails (the
+# pre-2026-08-04 reference covered only 550/753). Patch the table in place
+# (idempotent) so a fresh venv reproduces the full reference.
+TYPES_TXT = os.path.join(os.environ["BABEL_DATADIR"], "types.txt")
+TYPES_EXTRA = [
+    ("O", 8, "21"), ("N3", 7, "31"), ("S3", 16, "51"),
+    ("N2", 7, "201"), ("Npl", 7, "204"), ("C3", 6, "206"),
+    ("Li", 3, "65"), ("Na", 11, "66"), ("K", 19, "67"), ("Ca", 20, "70"),
+    ("Zn", 30, "207"), ("Mg", 12, "208"), ("Cu", 29, "209"),
+    ("Cu", 29, "210"), ("Fe", 26, "211"), ("Fe", 26, "212"),
+]
+with open(TYPES_TXT, encoding="utf-8") as f:
+    table = f.read()
+present = {line.split("\t")[3] for line in table.splitlines()
+           if "\t" in line and len(line.split("\t")) >= 4}
+extra = []
+for int_name, atn, mmd in TYPES_EXTRA:
+    if mmd not in present:
+        extra.append("\t".join([int_name, str(atn), "0", mmd, "0", int_name,
+                                int_name, "0", int_name, "0", int_name, "0",
+                                int_name, int_name, "0", "0", int_name, "0", "0"]))
+if extra:
+    with open(TYPES_TXT, "a", encoding="utf-8") as f:
+        f.write("\n" + "\n".join(extra))
+    print(f"types.txt: appended {len(extra)} rows "
+          f"({', '.join(r.split(chr(9))[3] for r in extra)})")
+else:
+    print("types.txt: already complete")
+
 SUITE_MMD = os.path.join(os.path.dirname(__file__), "..", "fixtures",
                          "validation-suite", "MMFF94.mmd")
 OUT_JSON = os.path.join(os.path.dirname(__file__), "..", "fixtures",
