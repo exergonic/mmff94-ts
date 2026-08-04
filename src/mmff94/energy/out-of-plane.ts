@@ -43,7 +43,7 @@
  */
 
 import type { TypedMolecule } from '../../types';
-import { OOP_PARAMS, lookup_param } from '../parameters';
+import { OOP_PARAMS, lookup_param, ATOM_TYPE_PROPERTIES } from '../parameters';
 import { wilson_oop_angle, Vec3 } from '../../utils/vector';
 
 const OOP_UNIT = 0.043844; // (mdyn·Å/rad²)·deg² → kcal/mol, same as angle bending
@@ -74,9 +74,29 @@ export function oop_force_constant(
   ].sort((x, y) => x - y);
   let params = lookup_param(OOP_PARAMS, [sorted[0], tj, sorted[1], sorted[2]]);
 
+  // The step-down chain (part I p. 513): exact types, then the
+  // EqLvl3 equivalence levels of the substituent types, one at a
+  // time, re-sorting after each substitution. The BatchMin reference
+  // resolves COYVIV's delocalized N(40) with [28,28,63] to the
+  // 2-40-28-28 entry through EqLvl3(63) = 2 (k = −0.007), not the
+  // −0.005 wildcard — while FUDPOJ's cyclopropenone centers keep
+  // their wildcards (the level-4 equivalents of the alkene/carbonyl
+  // C's would wrongly resolve 1-3-2-7 / 2-2-3-5).
+  if (!params) {
+    for (let p = 0; p < 3; p++) {
+      const t = [...sorted];
+      t[p] = ATOM_TYPE_PROPERTIES[t[p]]?.lvl3 ?? t[p];
+      t.sort((x, y) => x - y);
+      params = lookup_param(OOP_PARAMS, [t[0], tj, t[1], t[2]]);
+      if (params) break;
+    }
+  }
+
   // No specific entry: fall back to the per-central-type wildcard
-  // ("0-j-0-0"). This is what applies amine N's explicit zero and
-  // amide N's negative constant to every substituent combination.
+  // ("0-j-0-0" — the priority prefix makes it "p-0-j-0-0"). This is
+  // what applies amine N's explicit zero, the amide N's negative
+  // constant, the delocalized N's −0.005 and the nitro N's 0.15 to
+  // every substituent combination.
   if (!params) {
     params = lookup_param(OOP_PARAMS, [0, tj, 0, 0]);
   }

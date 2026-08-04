@@ -88,7 +88,12 @@ export function stretch_bend_angle_terms(
       if (sb_params) break;
     }
   } else {
-    sb_params = lookup_param(STRETCH_BEND_PARAMS, [t_min, tj, t_max]);
+    // Class 0 only — the priority scan would otherwise fall through
+    // to entries of other classes (VIYPAU's O–C(20)–C(3) angle was
+    // picking up the class-4 four-ring entry 4-6-3-20 (k = 1.179)
+    // instead of the element-row default; the ref evaluates every
+    // angle with its own class and falls back to the defaults).
+    sb_params = lookup_param(STRETCH_BEND_PARAMS, [t_min, tj, t_max], 0);
   }
   // No stretch-bend entry: use the default F(I_J,K)/F(K_J,I)
   // from the element-row table (mmffdfsb.par) — BatchMin

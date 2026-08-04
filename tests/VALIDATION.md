@@ -23,14 +23,28 @@ condensed public version of this ledger.
   imidazolium C 80 via the N-type gate (CUDREY's 2-aminoimidazolium),
   and the hydroxide O 35 (OHMW1).
 - **Energy terms** vs BatchMin on all 550 typing-exact molecules:
-  stretch/torsion/vdw/elec **550/550** exact; bend 549/550 (worst
-  0.07, GESNIB), strbnd 541/550 (worst 0.40, VIYPAU), oop 542/550
-  (worst 0.20, COYVIV). The 18 mismatches are parameter-table corners
-  — missing class entries for the newly-unlocked types — tracked as
-  the parameter-gap workstream: oop
-  BODKOU/CEFMEN/COYVIV/DESWUT/DUWKUB/FORJUR/JIGCIL/SONZIE, strbnd
-  CIVLAU02/COMKAQ/CONBAI/DAJXER/DIVTUX/DULTIN/FINPEX/FORJIF/VIYPAU,
-  bend GESNIB.
+  **all 7 terms 550/550 exact** (within 0.05 kcal/mol; worst |Δ| 0.018,
+  GEHBOK oop). The 18 "parameter-gap" molecules from the evening
+  session were diagnosed one by one against the BatchMin per-component
+  log, OpenBabel's per-interaction HIGH-verbosity log
+  (`tests/scripts/probe-ob-log.py`) and Tinker's independent mmff94.prm
+  transcription (`temp_tinker/`) — **every one was a lookup or
+  constant bug in our code, not a missing table entry**:
+  - oop (8 molecules): the term lacked the part-I p. 513 step-down
+    chain — the EqLvl3 equivalence of the substituent types, one at a
+    time, re-sorted (COYVIV's delocalized N(40) with [28,28,63]
+    resolves to the 2-40-28-28 entry via EqLvl3(63) = 2, k = −0.007,
+    not the −0.005 wildcard). Level 4/5 must NOT be tried (FUDPOJ's
+    cyclopropenone centers would wrongly resolve 1-3-2-7 / 2-2-3-5).
+  - strbnd (9 molecules): the class-0 lookup scanned priorities 0–5
+    and grabbed entries of other classes — VIYPAU's O–C(20)–C(3)
+    angle resolved the class-4 ring entry 4-6-3-20 (k = 1.179)
+    instead of the element-row default. The lookup is now locked to
+    the computed class (`max_priority = 0`).
+  - bend (GESNIB): the cubic-bend constant was the rounded −0.007
+    deg⁻¹; BatchMin uses the paper's "more precise" −0.4 rad⁻¹
+    (i.e. −0.4·π/180). GESNIB's near-linear C(37)–C(37)–C(22) angles
+    (Δ ≈ 47°) differ by 0.035 kcal/mol each between the forms.
 - **Partial charges** vs the suite's reference values: **550/550** to
   < 10⁻³ e⁻ per atom. The default-BCI sign convention is part V
   eq. 14 (the unparametrized pair's increment flows TO the smaller

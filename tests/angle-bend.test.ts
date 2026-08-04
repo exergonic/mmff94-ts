@@ -20,11 +20,11 @@ describe('Angle Bend Energy', () => {
 
     const energy = calc_angle_bend_energy(mol);
     // θ = 90°, θ₀ = 109.608°, Δθ = −19.608°
-    // k_a = 0.851, half_k_a = 0.4255, cb = −0.007
+    // k_a = 0.851, half_k_a = 0.4255, cb = −0.4 rad⁻¹ = −0.0069813 deg⁻¹
     // Harmonic:  0.043844 * 0.4255 * (−19.608)² = 7.1726
-    // Anharmonic: 1 + (−0.007)(−19.608) = 1.1373
-    // E = 7.1726 * 1.1373 = 8.1571
-    expect(energy).toBeCloseTo(8.1571, 3);
+    // Anharmonic: 1 + (−0.0069813)(−19.608) = 1.1369
+    // E = 7.1726 * 1.1369 = 8.1544
+    expect(energy).toBeCloseTo(8.1544, 3);
   });
 
   it('uses cosine form for near-linear angles (eq. 4)', () => {

@@ -58,17 +58,20 @@ Per-component agreement with BatchMin on those 550 molecules:
 | Term | Exact | Max abs(Δ) (kcal/mol) |
 |-------|---|---|
 | Bond stretch | 550/550 | 0.00 |
-| Angle bend | 549/550 | 0.07 |
-| Stretch-bend | 541/550 | 0.40 |
+| Angle bend | 550/550 | 0.00 |
+| Stretch-bend | 550/550 | 0.00 |
 | Torsion | 550/550 | 0.00 |
 | Van der Waals | 550/550 | 0.00 |
-| Out-of-plane | 542/550 | 0.20 |
+| Out-of-plane | 550/550 | 0.02 |
 | Electrostatic | 550/550 | 0.00 |
 
- The 18 remaining per-term mismatches are parameter-table corners
- (missing class entries, e.g. the oop of the delocalized N 40 and
- strbnd of acetal centers) — the current parameter-gap workstream,
- tracked in `tests/VALIDATION.md`.
+ All 550 suite molecules are type-exact (100%) and every energy term
+ matches the BatchMin references on all of them (within 0.05 kcal/mol).
+ The "parameter-gap" workstream closed itself: the 18 remaining
+ mismatches were all lookup or constant bugs in our transcription —
+ the oop term's missing EqLvl3 step-down chain, the stretch-bend
+ class-0 lookup scanning other classes, and the rounded cubic-bend
+ constant (−0.007 vs BatchMin's precise −0.4·π/180).
 
  More details in [`tests/VALIDATION.md`](tests/VALIDATION.md).
 

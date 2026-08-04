@@ -26,7 +26,12 @@ import type { TypedMolecule } from '../../types';
 import { angle_in_radians, Vec3 } from '../../utils/vector';
 import { make_class_context, angle_parameters } from '../parameters/parameter-classes';
 
-const CB = -0.007; // cubic bend constant, deg⁻¹
+// Cubic bend constant. The paper gives cb = −0.007 deg⁻¹ "(or, more
+// precisely, −0.4 rad⁻¹)" — BatchMin uses the precise radian value
+// converted to degrees. The rounding matters for large deviations:
+// GESNIB's near-linear C(37)–C(37)–C(22) angles (Δ ≈ 47°) differ by
+// 0.035 kcal/mol each between the two forms.
+const CB = -0.4 * (Math.PI / 180); // −0.0069813… deg⁻¹
 
 /**
  * Calculate the total angle bending energy for all bond angles in a molecule.

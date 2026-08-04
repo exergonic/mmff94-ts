@@ -34,3 +34,5 @@ tests/scripts/.venv/
 
 # temporary ob runs (legacy)
 ob_runs
+temp_tinker/
+temp_tinker/

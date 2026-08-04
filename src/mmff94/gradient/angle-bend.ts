@@ -28,7 +28,9 @@ import { angle_derivatives, RAD_PER_DEG } from './derivatives';
 
 const ANGLE_UNIT = 0.043844; // (mdyn·Å/rad²) → (kcal/mol)/deg²
 const LINEAR_UNIT = 143.9325; // eq. (4) unit — same as bond stretch
-const CB = -0.007; // cubic bend constant, deg⁻¹
+// Cubic bend constant — must match the energy term's precise value
+// (−0.4 rad⁻¹ converted to degrees, not the rounded −0.007).
+const CB = -0.4 * (Math.PI / 180);
 
 /**
  * Gradient of the angle bending energy, dE/dx per atom.
