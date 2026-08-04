@@ -8,9 +8,11 @@ condensed public version of this ledger.
 
 ## Current status (2026-08-03, night)
 
-- **Atom typing**: **550/550 suite molecules type-exact vs OpenBabel
-  (100%)**, pinned as `KNOWN_GOOD` in `atom-types-suite.test.ts`.
-  Three jumps today: the phosphate/sulfonate oxygen cluster (140 →
+- **Atom typing**: **753/753 suite molecules type-exact vs OpenBabel
+  (100%)** — the full Halgren suite. The 550 exact codes from the
+  pre-recovery plateau are pinned as `KNOWN_GOOD` in
+  `atom-types-suite.test.ts`. Three jumps today: the phosphate/sulfonate
+  oxygen cluster (140 →
   241, morning), the amidine/sp-N cluster (241 → 512, evening), and
   the aromatic-perception cluster (512 → 550, night): the π-count
   Kekulé rule with the fused-aromatic exocyclic-double allowance

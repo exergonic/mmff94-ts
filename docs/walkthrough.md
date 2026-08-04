@@ -842,7 +842,7 @@ Every energy term is tested **in isolation** before it is tested in combination.
 | Data types | ✅ Complete | — |
 | SDF parser | ✅ Complete | 5 tests |
 | Vector math | ✅ Complete | 13 tests |
-| Atom typing | ✅ Implemented | 3 tests (suite scoreboard: 550/550 type-exact) |
+| Atom typing | ✅ Implemented | 3 tests (suite scoreboard: 753/753 type-exact — the full Halgren suite) |
 | BCI charges | ✅ Implemented (charges.ts) | 6 tests (reference-log pins) |
 | Bond stretch | ✅ Implemented | 2 tests |
 | Angle bend | ✅ Implemented | 2 tests |

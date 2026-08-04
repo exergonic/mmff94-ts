@@ -38,9 +38,9 @@ entirely on the client side.
 | Optimization (L-BFGS + steepest descent) | ✅ |
 
 Typing and energies are validated against the full Halgren suite
-(753 molecules): 695/753 type-exact vs OpenBabel's canonical types
-(735 ≥ 90% atoms), and all seven energy terms match the BatchMin
-references on the 550-molecule pinned set (see
+(753 molecules): **753/753 type-exact** vs OpenBabel's canonical types
+(100%), and all seven energy terms match the BatchMin references on
+the 550-molecule pinned set (see
 [Validation](#validation)).
 
 ### Stretch goals

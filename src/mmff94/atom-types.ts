@@ -118,7 +118,17 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
         b => !(b.order >= 4) && b.order === 2 && ['O', 'S'].includes(molecule.atoms[b.nbr].element),
       );
     });
-    if (bonded_to_carbonyl) amide_nitrogens.add(i);
+    // The amidinium beats the amide: an N bonded to both a carbonyl C
+    // and an amidinium C (whose =N is 3-coordinate — the charged
+    // NCN+ core) is the 55/56 amidinium N, not NC=O (10) —
+    // FAXFUF10's N on the 57-carbon, DIVVEJ's guanidinium N. A
+    // 2-coordinate =N (a neutral imine — DOCWUN's C=N) does NOT
+    // displace the amide.
+    const bonded_to_amidinium_C = adj[i].some(nb => {
+      if (molecule.atoms[nb.nbr].element !== 'C') return false;
+      return adj[nb.nbr].some(b => b.order === 2 && molecule.atoms[b.nbr].element === 'N' && adj[b.nbr].length === 3);
+    });
+    if (bonded_to_carbonyl && !bonded_to_amidinium_C) amide_nitrogens.add(i);
   }
 
   // Nitrogen typing pass: the N branch is self-contained (connectivity,
@@ -153,6 +163,17 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
             ? type_aromatic_5ring_carbon(i, adj, molecule, aromatic, n_types)
             : 37;
           break;
+        }
+
+        // Isonitrile carbon (C%, 60): the terminal C≡N of R–N≡C —
+        // the triple goes to a 2-coordinate N (ZZZIZA01's C≡N–C).
+        // The nitrile's C≡N (the N terminal, degree 1) stays sp (4).
+        if (has_triple && n_neighbors === 1) {
+          const nbr = molecule.atoms[neighbors[0].nbr];
+          if (nbr.element === 'N' && adj[neighbors[0].nbr].length === 2) {
+            atom_types[i] = 60;
+            break;
+          }
         }
 
         // Acetylenic: 2 neighbors, triple bond → type 4 (CSP). The
@@ -312,6 +333,11 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
             // enol/phenol H on an aromatic or vinylic C is 29 (HOCC);
             // the generic alcohol H is 21 (HOR).
             const o = neighbors[0].nbr;
+            if (adj[o].length === 3) {
+              // H on an oxonium O (the hydronium H3O+) → 50 (HO+)
+              atom_types[i] = 50;
+              break;
+            }
             if (water_oxygens.has(o)) {
               atom_types[i] = 31; // H-OH
               break;
@@ -364,7 +390,11 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
 
       // ── Oxygen ──────────────────────────────────────────────────────
       case 'O': {
-        if (water_oxygens.has(i)) {
+        if (adj[i].length === 3) {
+          // Oxonium O+ (49) — the hydronium H3O+ and the trialkyl
+          // oxoniums. The OB keys it on the explicit degree alone.
+          atom_types[i] = 49;
+        } else if (water_oxygens.has(i)) {
           // Water oxygen → type 70 (OXYGEN IN WATER)
           atom_types[i] = 70;
         } else if ((aromatic.rings_of.get(i) ?? []).some(r => r.path.length === 5)) {
@@ -571,8 +601,17 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
         break;
       }
 
-      default:
-        atom_types[i] = 1; // fallback: generic sp³ C
+      default: {
+        // Metal cations and the bromide anion (types 88, 91-99 — the
+        // suite's inorganic salts: LIPW1 LiOH, KPW1 KOH, NAPW,
+        // CU1PW1 CuSO4·H2O...). The type is a pure element map; the
+        // formal charge is not needed for the suite's cases (Cu is
+        // always +2 here — type 98, never 97).
+        const METAL_TYPE: Record<string, number> = {
+          Li: 92, Na: 93, K: 94, Zn: 95, Ca: 96, Cu: 98, Mg: 99, Fe: 88,
+        };
+        atom_types[i] = METAL_TYPE[atom.element] ?? 1; // fallback: generic sp³ C
+      }
     }
   }
 
@@ -691,7 +730,11 @@ function find_aromatic_rings(
     const has_terminal_O = adj[a].some(nb => {
       return molecule.atoms[nb.nbr].element === 'O' && adj[nb.nbr].length === 1;
     });
-    if (el === 'N') return !has_terminal_O;
+    // An N with a double bond (the pyridine-type ring =N, or the
+    // iminium N with an exocyclic double — SOHXOC's =N13) has no lone
+    // pair to donate; the iminium double also breaks the ring's
+    // conjugation, keeping the 4π ring non-aromatic.
+    if (el === 'N') return !has_terminal_O && !adj[a].some(nb => nb.order === 2);
     if (el === 'O') return adj[a].length === 2;
     if (el === 'S') return adj[a].length === 2 && !has_terminal_O;
     return false;
@@ -866,7 +909,17 @@ function type_aromatic_5ring_carbon(
   const n3_nbrs = adj[i].filter(nb => {
     return molecule.atoms[nb.nbr].element === 'N' && adj[nb.nbr].length === 3;
   });
-  if (n3_nbrs.length >= 2 && n3_nbrs.some(nb => n_types[nb.nbr] === 81)) {
+  // The imidazolium carbon: the ring C whose N3 neighbors are all of
+  // the charged set (81/55/56) with at least one 81 — COJFIQ's C8
+  // between two 81's, DEFPUZ's C6 81+55, CUDREY's 2-aminoimidazolium.
+  // A second N3 of the delocalized 40 (an aniline-type amino —
+  // DEFPUZ's C5) or a nitro N (45 — JIYREO's C4) does NOT make the C
+  // an imidazolium carbon; it stays the general 5-ring type.
+  if (
+    n3_nbrs.length >= 2
+    && n3_nbrs.some(nb => n_types[nb.nbr] === 81)
+    && n3_nbrs.every(nb => [81, 55, 56].includes(n_types[nb.nbr]))
+  ) {
     return 80; // CIM+
   }
   if (alpha.length === 0 && beta.length === 0) return 78; // C5
@@ -961,6 +1014,16 @@ function type_nitrogen(
   // follow the same positions (part II).
   if (aromatic.atoms.has(i)) {
     const in_5ring = (aromatic.rings_of.get(i) ?? []).some(r => r.path.length === 5);
+    // The N-oxide: the ring N carrying a terminal oxygen (pyridine
+    // N-oxide's N–O⁻, drawn single in the mmd — COTRIM) → 69 (NPOX,
+    // 6-ring) / 82 (N5AX, 5-ring) instead of the pyridinium 58 /
+    // imidazolium 81. Its ring C's then read the general 5-ring
+    // types (78/64) once the 81-gate of the C80 rule stops firing.
+    const has_terminal_O = neighbors.some(nb => {
+      const t = molecule.atoms[nb.nbr];
+      return t.element === 'O' && adj[nb.nbr].length === 1;
+    });
+    if (has_terminal_O) return in_5ring ? 82 : 69;
     return in_5ring
       ? type_aromatic_5ring_nitrogen(i, adj, molecule, aromatic)
       : adj[i].length === 3 ? 58 : 38;
@@ -1018,8 +1081,11 @@ function type_nitrogen(
       const nbr = molecule.atoms[nb.nbr];
       if (nbr.element === 'N') {
         // The triazene N–N=N: the lone pair conjugates with the azo
-        // group — the reference types it like an amide (10).
-        if (adj[nb.nbr].some(b => b.order === 2 && (molecule.atoms[b.nbr].element === 'N' || molecule.atoms[b.nbr].element === 'O'))) {
+        // group — the reference types it like an amide (10). The
+        // double must go to an N (the azo), not an O (an N–N=O
+        // nitroso-amine stays a plain amine 8 — DUMPAC's
+        // nitraminoethyl).
+        if (adj[nb.nbr].some(b => b.order === 2 && molecule.atoms[b.nbr].element === 'N')) {
           azo_amide = true;
         }
       }
@@ -1040,7 +1106,11 @@ function type_nitrogen(
       let dbl_to_P = false;
       for (const b of adj[nb.nbr]) {
         const bn = molecule.atoms[b.nbr];
-        if (bn.element === 'N' && adj[b.nbr].length === 3) n3++;
+        // The OB's N3count excludes N's with two oxygen neighbors
+        // (nitro/nitrate — KIRCAP's C(N)(NO2)2): they are not
+        // guanidinium partners.
+        if (bn.element === 'N' && adj[b.nbr].length === 3
+            && count_terminal_oxygens(b.nbr, adj, molecule) < 2) n3++;
         if (b.order === 2 && bn.element === 'N') dbl_N = b.nbr;
         if (b.order === 2 && bn.element === 'C') dbl_to_C = true;
         if (b.order === 2 && bn.element === 'P') dbl_to_P = true;
@@ -1051,9 +1121,16 @@ function type_nitrogen(
         // acyclic amidinium, CUDREY's 5-ring imidazolium). A 6-ring
         // aromatic =N (the pyridinium-type ring N of a protonated
         // adenine, COJFIQ) is not an amidinium — its amino N stays
-        // the delocalized 40.
+        // the delocalized 40. Neither is an N-oxide ring N (GAVKOD's
+        // 82): its third bond is the ring, not a charge.
         const dblN_in_6ring = (aromatic.rings_of.get(dbl_N) ?? []).some(r => r.path.length === 6);
-        if (adj[dbl_N].length === 3 && !dblN_in_6ring) {
+        // The N-oxide ring N (82/69) is not an amidinium =N either —
+        // its third bond is the ring, not a charge (GAVKOD).
+        const dblN_is_oxide = adj[dbl_N].some(b => {
+          const bn = molecule.atoms[b.nbr];
+          return bn.element === 'O' && adj[b.nbr].length === 1;
+        });
+        if (adj[dbl_N].length === 3 && !dblN_in_6ring && !dblN_is_oxide) {
           charged = 55;
         } else {
           delocalized = true; // neutral amidine NC=N
