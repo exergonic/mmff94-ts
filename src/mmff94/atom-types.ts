@@ -92,6 +92,11 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
     const atom = molecule.atoms[i];
     if (atom.element !== 'N') continue;
     if (adj[i].some(nb => nb.order >= 2)) continue; // an N=double is imine/N-oxide, not amide
+    // The amide N is 3-coordinate (C=O + H + R). A 2-coordinate N on
+    // a carbonyl carbon is the deprotonated imide/amide anion
+    // (DEKRUG's R–CO–N–CO–R′, SEYWUO) — the reference types those 62
+    // (NM), not 10.
+    if (adj[i].length !== 3) continue;
     // Sulfonamide N (NSO₂, type 43 — a roadmap item) takes precedence
     // over amide: an N on a sulfonyl S is never NC=O. Without this,
     // DIKGAF's N (bonded to both SO₂ and an ester carbonyl C) was
@@ -967,7 +972,21 @@ function type_nitrogen(
   if (amide_nitrogens.has(i)) return 10;
 
   // Terminal nitrile N (C≡N) → 42 (NSP). The sp carbon itself is 4.
-  if (n_neighbors === 1 && neighbors[0].order === 3) return 42;
+  // The azide terminal is 47 (NAZT): the =N− or N≡N+ bonded to the
+  // azide's middle =N= (a degree-2 N whose other neighbor is also an
+  // N — R–N=N+=N−). A C–N≡N (the middle has a carbon neighbor,
+  // GETFOA's diazonitrile) stays the nitrile 42.
+  if (n_neighbors === 1) {
+    const partner = molecule.atoms[neighbors[0].nbr];
+    const order = neighbors[0].order;
+    if (order === 3 && partner.element === 'C') return 42;
+    if (partner.element === 'N' && adj[neighbors[0].nbr].length === 2) {
+      const other = adj[neighbors[0].nbr].find(b => b.nbr !== i);
+      if (order === 3 && other && molecule.atoms[other.nbr].element === 'C') return 42;
+      return 47;
+    }
+    if (order === 3) return 42;
+  }
 
   if (n_neighbors === 4) {
     // Quaternary N: 4 single bonds → type 34 (NR+). A terminal
@@ -1054,6 +1073,17 @@ function type_nitrogen(
   }
 
   if (n_neighbors === 2 && has_double) {
+    // The azide middle =N= (two double bonds — valence 4) → 53; the
+    // isonitrile N (any carbon neighbor + a triple — R–N≡C, or
+    // GETFOA's C–N≡N diazonitrile N) → 61 (NR%). Checked first: the
+    // OB keys these on the valence, before the valence-3
+    // nitroso/imine/N=S rules below.
+    const valence = neighbors.reduce((s, nb) => s + nb.order, 0);
+    if (valence >= 4) {
+      const has_triple = neighbors.some(nb => nb.order === 3);
+      const has_C = neighbors.some(nb => molecule.atoms[nb.nbr].element === 'C');
+      return has_triple && has_C ? 61 : 53;
+    }
     // The nitroso N=O (46, NNO) — nitrosomethane, the dinitroso
     // ring N's.
     if (double_nbrs[0].nbr !== undefined && molecule.atoms[double_nbrs[0].nbr].element === 'O') {
@@ -1120,6 +1150,32 @@ function type_nitrogen(
       if (bn.element === 'N' && adj[b.nbr].length === 3) n3++;
     }
     return n3 === 3 ? 56 : n3 === 2 ? 55 : 54;
+  }
+
+  if (n_neighbors === 2) {
+    // The no-double 2-coordinate cases. Valence ≥ 4 first: the
+    // isonitrile N (R–N≡C — a triple plus a carbon neighbor) → 61,
+    // anything else (N≡N−) → 53 — these must NOT fall into the 62
+    // below (the earlier 61/53 check lives in the has_double branch;
+    // a triple+single has no double bond).
+    const valence = neighbors.reduce((s, nb) => s + nb.order, 0);
+    if (valence >= 4) {
+      const has_triple = neighbors.some(nb => nb.order === 3);
+      const has_C = neighbors.some(nb => molecule.atoms[nb.nbr].element === 'C');
+      return has_triple && has_C ? 61 : 53;
+    }
+    // 2-coordinate N with two single bonds → 62 (NM — the anionic
+    // divalent nitrogen): the deprotonated sulfonamide N⁻ (GIJMOB01's
+    // N–SO2), the vinylamide anion (AN12A's C=C–NH⁻), the imide N
+    // (DEKRUG's R–CO–N–CO–R′). The OB keys it on the explicit degree
+    // and valence, not the formal charge. An N single-bonded to a
+    // sulfinyl S (exactly one terminal O) is the divalent sulfinamide
+    // NSO → 48.
+    for (const nb of neighbors) {
+      const t = molecule.atoms[nb.nbr];
+      if (t.element === 'S' && count_terminal_oxygens(nb.nbr, adj, molecule) === 1) return 48;
+    }
+    return 62;
   }
 
   return 8; // fallback: amine N
