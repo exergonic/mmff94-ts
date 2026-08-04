@@ -35,6 +35,20 @@ os.environ["BABEL_DATADIR"] = os.path.join(os.path.dirname(ob.__file__), "bin", 
 
 SUITE_MMD = "tests/fixtures/validation-suite/MMFF94.mmd"
 
+# The log's section headers are printed space-separated ("E L E C T R O
+# S T A T I C   I N T E R A C T I O N S"), so a --verbose term must be
+# matched against the de-spaced header. Common abbreviations resolve
+# here; exact names ("electrostatic", "out-of-plane", ...) work too.
+TERM_ALIASES = {
+    "strbnd": "stretch bend",
+    "oop": "out-of-plane",
+    "vdw": "van der waals",
+    "elec": "electrostatic",
+    "torsion": "torsional",
+    "bend": "angle bend",
+    "stretch": "bond stretch",
+}
+
 
 def load_suite_molecule(code):
     """Read one molecule's block from the suite mmd and parse it with OB.
@@ -112,9 +126,23 @@ def compute_energy(ff, verbose=False, term=""):
             components[m.group(1).strip()] = float(m.group(2))
 
     if verbose:
-        for line in log.splitlines():
-            if not term or term.lower() in line.lower():
+        lines = log.splitlines()
+        if not term:
+            for line in lines:
                 print(line)
+        else:
+            # Isolate one term's section: everything from its header
+            # (matched de-spaced) through its TOTAL line — i.e. every
+            # individual interaction that contributes to that term.
+            want = TERM_ALIASES.get(term.lower(), term.lower()).replace(" ", "")
+            for i, line in enumerate(lines):
+                if line.strip() and line.strip()[0].isalpha() and \
+                        want in line.replace(" ", "").lower():
+                    for l in lines[i:]:
+                        print(l)
+                        if "TOTAL" in l and "ENERGY =" in l:
+                            break
+                    break
     return total, components
 
 
