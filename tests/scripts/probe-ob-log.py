@@ -30,12 +30,15 @@ ff = ob.OBForceField.FindForceField('MMFF94')
 ff.Setup(mol)
 
 fd, path = tempfile.mkstemp(suffix='.log')
-saved_out = os.dup(1)
-os.dup2(fd, 1)
-ff.SetLogToStdOut()
+saved_err = os.dup(2)
+os.dup2(fd, 2)
+# stderr, not stdout: std::cerr is unbuffered so every write lands in
+# the file immediately; std::cout is buffered and the whole log would
+# leak to the terminal when the buffer flushes at exit.
+ff.SetLogToStdErr()
 ff.SetLogLevel(ob.OBFF_LOGLVL_HIGH)
 e = ff.Energy()
-os.dup2(saved_out, 1)
+os.dup2(saved_err, 2)
 os.close(fd)
 data = open(path, encoding='utf-8', errors='replace').read()
 os.unlink(path)
