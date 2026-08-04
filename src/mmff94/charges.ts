@@ -56,14 +56,29 @@ import { make_class_context, bond_type_flag } from './parameters/parameter-class
 const PRIMARY_FORMAL_CHARGES: Record<number, number> = {
   34: 1,     // NR+ — quaternary N
   35: -1,    // OM — oxide O on sp3/sp2 C
+  49: 1,     // O+ — oxonium O (the hydronium H3O+; H3OPW1)
   51: 1,     // O=+ — oxenium O (pyrylium)
   54: 1,     // N+=C — iminium N
   55: 0.5,   // NCN+ — N in N+=C-N (fractional)
   56: 1 / 3, // NGD+ — guanidinium N (fractional, part V)
   58: 1,     // NPD+ — pyridinium N
+  61: 1,     // NR% — isonitrile N+ (the R-N+≡C− ylide; GETFOA)
+  62: -1,    // NM — anionic divalent N (the sulfonamide N⁻, the
+             // imide N⁻; the α·crd sharing leaves −0.5, DEKRUG)
+  72: -0.5,  // S2CM — the dithiocarboxylate thiolate S (C(=S)-S⁻,
+             // CORWUB10; α·crd sharing leaves −0.25)
+  88: 3,     // FE+3
   89: -1,    // F⁻
   90: -1,    // Cl⁻
   91: -1,    // Br⁻
+  92: 1,     // LI+
+  93: 1,     // NA+
+  94: 1,     // K+
+  95: 2,     // ZN+2
+  96: 2,     // CA+2
+  97: 1,     // CU+1
+  98: 2,     // CU+2
+  99: 2,     // MG+2
   // 32 is environment-dependent: −0.5 for a carboxylate oxygen
   // (CO₂⁻), 0 for sulfone/nitro/nitrate oxygens — see below.
 };
@@ -168,18 +183,57 @@ export function assign_bci_charges(molecule: TypedMolecule): TypedMolecule {
     }
     if (t === 81) {
       // NIM+ — imidazolium N: the +1 of the imidazolium core is
-      // shared over the 3-coordinate N's on the central C(80) — 1/2
-      // in a plain imidazolium (CUBTUO), 1/3 when the C also carries
-      // an amino/guanidinium group (2-aminoimidazolium, DIPDIP10).
+      // shared over the 3-coordinate N's on the central C — 1/2 in a
+      // plain imidazolium (CUBTUO), 1/3 when the C also carries an
+      // amino/guanidinium group (2-aminoimidazolium, DIPDIP10), 1/1
+      // when only one N3 reaches the C (FIXPIL's amidinium-
+      // benzimidazolium). The MAX n3 over the C neighbors: the
+      // central imidazolium C carries the most N3's — a neighbor
+      // ring C sees only one.
+      let best = 0;
       for (const nb of adj[i]) {
         if (molecule.atoms[nb].element !== 'C') continue;
         let n3 = 0;
         for (const b of adj[nb]) {
           if (molecule.atoms[b].element === 'N' && adj[b].length === 3) n3++;
         }
-        if (n3 >= 2) return 1 / n3;
+        if (n3 > best) best = n3;
       }
+      if (best >= 1) return 1 / best;
       return 0.5;
+    }
+    if (t === 61) {
+      // The isonitrile N+ ylide charge appears only when the triple
+      // goes to ANOTHER N (GETFOA's C–N≡N diazonitrile: +1); the true
+      // isonitrile R–N≡C carries no primary charge (ZZZIZA01, KINTUW).
+      for (const nb of adj[i]) {
+        const nbr = molecule.atoms[nb];
+        if (molecule.atom_types[nb] === 61 || nbr.element === 'N') return 1;
+      }
+      return 0;
+    }
+    if (t === 72) {
+      // S2CM — the dithiocarboxylate thiolate S: −0.5 on a carbon
+      // center (C(=S)–S⁻, CORWUB10 — the α·crd sharing leaves −0.25
+      // on the S and −0.25 per S on the central C). An S⁻ on
+      // phosphorus (GESCIQ's P–S⁻) carries no primary charge.
+      for (const nb of adj[i]) {
+        if (molecule.atoms[nb].element === 'P') return 0;
+      }
+      return -0.5;
+    }
+    if (t === 76) {
+      // N- — the anionic 5-ring N (the deprotonated pyrrole-type
+      // ring): −0.5 with the par's fcadj 0.25 (crd 2 leaves −0.25 on
+      // the N and −0.125 on each ring C — DOZNIP's triazolide, the
+      // JILWUW dianion where an N-N neighbor shares a second −0.125).
+      return -0.5;
+    }
+    if (t === 88 || (t >= 92 && t <= 99)) {
+      // The metal cations: the primary charge IS the formal charge
+      // (FE3PW3's Fe+3 vs FE2PW3's Fe+2, CU1PW1's Cu+1 — same atom
+      // type, different charges).
+      return molecule.atoms[i].formal_charge ?? PRIMARY_FORMAL_CHARGES[t] ?? 0;
     }
     return PRIMARY_FORMAL_CHARGES[t] ?? 0;
   };

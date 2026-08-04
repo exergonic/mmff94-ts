@@ -24,9 +24,14 @@ condensed public version of this ledger.
   coordination with the pyridinium exclusion (COJFIQ's adenine), the
   imidazolium C 80 via the N-type gate (CUDREY's 2-aminoimidazolium),
   and the hydroxide O 35 (OHMW1).
-- **Energy terms** vs BatchMin on all 550 typing-exact molecules:
-  **all 7 terms 550/550 exact** (within 0.05 kcal/mol; worst |Δ| 0.018,
-  GEHBOK oop). The 18 "parameter-gap" molecules from the evening
+- **Energy terms** vs BatchMin on all 753 typing-exact molecules:
+  **all 7 terms 745/745 exact** (within 0.05 kcal/mol; worst |Δ| 0.016,
+  KESNEB oop) on the reproducible set — 8 reference anomalies excluded
+  (the six part-V delocalized anions AN11A/DAKBAS/AN06A/AN08A/TAJVUV/
+  DOZNIP, whose reference charges eq. (15) cannot reproduce — Halgren's
+  own vinyl-oxide/vinyl-sulfide caveat — and FE2PW3/CU1PW1, whose
+  BatchMin vdW predates the X94 metal parameters; OB and Tinker agree
+  with our transcription there, 55.84481 vs 55.8448). The 18 "parameter-gap" molecules from the evening
   session were diagnosed one by one against the BatchMin per-component
   log, OpenBabel's per-interaction HIGH-verbosity log
   (`tests/scripts/probe-ob-log.py`) and Tinker's independent mmff94.prm
@@ -47,8 +52,8 @@ condensed public version of this ledger.
     deg⁻¹; BatchMin uses the paper's "more precise" −0.4 rad⁻¹
     (i.e. −0.4·π/180). GESNIB's near-linear C(37)–C(37)–C(22) angles
     (Δ ≈ 47°) differ by 0.035 kcal/mol each between the forms.
-- **Partial charges** vs the suite's reference values: **550/550** to
-  < 10⁻³ e⁻ per atom. The default-BCI sign convention is part V
+- **Partial charges** vs the suite's reference values: **745/745** to
+  < 10⁻³ e⁻ per atom on the reproducible set (the 8 anomalies above). The default-BCI sign convention is part V
   eq. 14 (the unparametrized pair's increment flows TO the smaller
   type — the hydroxide's 21–35 pair, OHMW1); the parametrized pairs
   keep the par's own direction. The imidazolium N q⁰ is

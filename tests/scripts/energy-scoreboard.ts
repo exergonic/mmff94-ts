@@ -44,6 +44,21 @@ function parse_bmin_log(text: string): Map<string, Record<string, number>> {
 const bmin = parse_bmin_log(readFileSync(`${suiteDir}/MMFF94_bmin.log`, 'utf-8'));
 const mols = parse_mmd(readFileSync(`${suiteDir}/MMFF94.mmd`, 'utf-8'));
 
+// Reference anomalies, excluded from the coverage counts (each is
+// documented in tests/charges-suite.test.ts and VALIDATION.md):
+// - the six part-V delocalized-anion cases (AN11A, DAKBAS, AN06A,
+//   AN08A, TAJVUV, DOZNIP): their reference partial charges — and
+//   hence their electrostatic energies — are not reproducible from
+//   eq. (15) (Halgren's own caveat: "unsymmetrical but strongly
+//   delocalized anions such as vinyl oxide and vinyl sulfide");
+// - FE2PW3 and CU1PW1: BatchMin's van der Waals for the hydrated
+//   metal cations predates the X94 metal parameters (the OB — which
+//   matches this transcription exactly, 55.84481 vs 55.8448 — and
+//   Tinker both use the X94 rows).
+const ANOMALY_EXCLUDED = new Set([
+  'AN11A', 'DAKBAS', 'AN06A', 'AN08A', 'TAJVUV', 'DOZNIP', 'FE2PW3', 'CU1PW1',
+]);
+
 const terms = ['stretch', 'bend', 'strbnd', 'torsion', 'oop', 'vdw', 'elec'] as const;
 const totals = { exact: 0, n: 0, worst: 0, worstMol: '' };
 const perTerm = Object.fromEntries(terms.map(t => [t, { exact: 0, n: 0, worst: 0, worstMol: '' }])) as Record<
@@ -51,6 +66,7 @@ const perTerm = Object.fromEntries(terms.map(t => [t, { exact: 0, n: 0, worst: 0
 >;
 
 for (const mol of mols) {
+  if (ANOMALY_EXCLUDED.has(mol.name)) continue;
   const refTypes = reference.molecules[mol.name];
   if (!refTypes || refTypes.length !== mol.atoms.length) continue;
   const typed = assign_atom_types(mol);

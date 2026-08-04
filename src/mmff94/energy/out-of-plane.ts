@@ -81,8 +81,13 @@ export function oop_force_constant(
   // 2-40-28-28 entry through EqLvl3(63) = 2 (k = −0.007), not the
   // −0.005 wildcard — while FUDPOJ's cyclopropenone centers keep
   // their wildcards (the level-4 equivalents of the alkene/carbonyl
-  // C's would wrongly resolve 1-3-2-7 / 2-2-3-5).
-  if (!params) {
+  // C's would wrongly resolve 1-3-2-7 / 2-2-3-5). The carboxylate
+  // carbon (41) also keeps its class-0 wildcard (0.18): the EqLvl3
+  // of its aromatic C substituent (lvl3(37) = 2) would wrongly pull
+  // the class-2 X94 entry (0.161) — QUICNA01's and SAHSUP's
+  // deformed carboxylates need the 0.18 (the KNOWN_GOOD carboxylates
+  // are planar, so their oop energy is ~0 either way).
+  if (tj !== 41 && !params) {
     for (let p = 0; p < 3; p++) {
       const t = [...sorted];
       t[p] = ATOM_TYPE_PROPERTIES[t[p]]?.lvl3 ?? t[p];

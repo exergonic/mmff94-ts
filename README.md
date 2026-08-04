@@ -40,8 +40,9 @@ entirely on the client side.
 Typing and energies are validated against the full Halgren suite
 (753 molecules): **753/753 type-exact** vs OpenBabel's canonical types
 (100%), and all seven energy terms match the BatchMin references on
-the 550-molecule pinned set (see
-[Validation](#validation)).
+the 745-molecule reproducible set (100%; 8 reference anomalies
+documented in [Validation](#validation)). See
+[Validation](#validation).
 
 ### Stretch goals
 
@@ -69,30 +70,32 @@ analytical gradient against finite differences.
    decimals. Will continue to expand molecular coverage.
 2. **Halgren's 753-molecule MMFF94 validation suite** — per-component
    energies and per-atom partial charges vs the
-   suite's reference values. The comparison runs on all 550
-   suite molecules OpenBabel can set up — **our atom typing now
-   reproduces the reference types exactly for every one of them
-   (550/550)**.
+   suite's reference values. The comparison runs on all 753
+   suite molecules — **our atom typing reproduces the reference
+   types exactly for every one of them (753/753)**.
 
-Per-component agreement with BatchMin on those 550 molecules:
+Per-component agreement with BatchMin on the reproducible set
+(745 molecules — 8 reference anomalies are excluded, each documented
+in [`tests/VALIDATION.md`](tests/VALIDATION.md)):
 
 | Term | Exact | Max abs(Δ) (kcal/mol) |
 |-------|---|---|
-| Bond stretch | 550/550 | 0.00 |
-| Angle bend | 550/550 | 0.00 |
-| Stretch-bend | 550/550 | 0.00 |
-| Torsion | 550/550 | 0.00 |
-| Van der Waals | 550/550 | 0.00 |
-| Out-of-plane | 550/550 | 0.02 |
-| Electrostatic | 550/550 | 0.00 |
+| Bond stretch | 745/745 | 0.00 |
+| Angle bend | 745/745 | 0.00 |
+| Stretch-bend | 745/745 | 0.00 |
+| Torsion | 745/745 | 0.00 |
+| Van der Waals | 745/745 | 0.00 |
+| Out-of-plane | 745/745 | 0.02 |
+| Electrostatic | 745/745 | 0.00 |
 
- All 550 suite molecules are type-exact (100%) and every energy term
- matches the BatchMin references on all of them (within 0.05 kcal/mol).
- The "parameter-gap" workstream closed itself: the 18 remaining
- mismatches were all lookup or constant bugs in our transcription —
- the oop term's missing EqLvl3 step-down chain, the stretch-bend
- class-0 lookup scanning other classes, and the rounded cubic-bend
- constant (−0.007 vs BatchMin's precise −0.4·π/180).
+ All 745 reproducible suite molecules are type-exact (100%) and every
+ energy term matches the BatchMin references on all of them (within
+ 0.05 kcal/mol; the partial charges match to < 1e-3 e⁻ per atom on the
+ same set). The "parameter-gap" workstream closed itself: the 18
+ remaining mismatches were all lookup or constant bugs in our
+ transcription — the oop term's missing EqLvl3 step-down chain, the
+ stretch-bend class-0 lookup scanning other classes, and the rounded
+ cubic-bend constant (−0.007 vs BatchMin's precise −0.4·π/180).
 
  More details in [`tests/VALIDATION.md`](tests/VALIDATION.md).
 

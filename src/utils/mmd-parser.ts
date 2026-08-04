@@ -103,7 +103,10 @@ export function parse_mmd(mmd_text: string): Molecule[] {
       // Skip label, charge index
       cursor += 2;
 
-      // Formal charge (not stored, just consume)
+      // Formal charge (electrons) — stored: the metal cations'
+      // primary charges follow it (FE2PW3's Fe+2 vs FE3PW3's Fe+3,
+      // CU1PW1's Cu+1) even though their atom types are fixed.
+      const formal_charge = parseFloat(parts[cursor]);
       cursor++;
 
       // Partial charge (not stored, just consume)
@@ -130,7 +133,7 @@ export function parse_mmd(mmd_text: string): Molecule[] {
         }
       }
 
-      atoms.push({ index: a, element, x, y, z });
+      atoms.push({ index: a, element, x, y, z, formal_charge });
     }
 
     if (atoms.length === 0) continue;
