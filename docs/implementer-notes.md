@@ -191,7 +191,7 @@ the pair re-entered the energy census on 2026-08-05.
 
 The original program's own per-atom types (`MMFF94_opti.log` `# ty`
 sections) agree with our assignments on **749/753** atoms
-byte-for-byte (`probe-opti-typing.ts`). The four remaining atoms,
+byte-for-byte (a throwaway probe, since deleted). The four remaining atoms,
 coordinate-aligned (the dative representation can reorder atoms):
 
 | molecule | atom | original program | OpenBabel canonical (ours) |
