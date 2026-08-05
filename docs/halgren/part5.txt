@@ -1,0 +1,1971 @@
+Merck Molecular Force Field. V.
+Extension of MMFF94 Using
+Experimental Data, Additional
+Computational Data, and
+Empirical Rules*
+
+THOMAS A. HALGREN
+
+Depavtment of Molecular Design and Diversity, Merck Research Laboratories, P.O. Box 2000,
+Rahway, New Jersey 07065
+
+Received 20 March 1995; accepted 31 August 1995
+
+               ABSTRACT
+
+                 This article describes the extension of the Merck Molecular Force Field (MMFF94)
+                 to a much broader range of organic systems. It also describes a preliminary
+                 parameterization of MMFF94 for the hydronium and hydroxide ions and for
+                 various halide, alkalai, and alkalai earth ions as well as for such "protein"
+                 metals as Zn2+,Ca2+,Cu2+,Cu+, Fe2+,and Fe3+.The extension employed
+                 computational data on charge distributions, molecular geometries, and
+                 conformational energies for a series of oxysulfur (particularly sulfonamide) and
+                 oxyphosphorous compounds and for a diverse set of small molecules and ions
+                 not covered in the core parameterization. It also employed experimental data for
+                 approximately 2800 good-quality structures extracted from the Cambridge
+                 Structural Database (CSD). Some of the additional computational data were
+                 used to extend the explicit parameterization of electrostatic interactions and to
+                 more widely define a useful additive approximation for the "bond polarity"
+                 parameters (bond charge increments) used in MMFF94. Both the experimental
+                 and computational data served to define reference bond lengths and angles that
+                 the extended force field uses in conjunction with force constants obtained from
+                 carefully calibrated empirical rules. The extended torsion parameters consist
+                 partly of explicit parameters derived to reproduce MP2/6-31G* conformational
+                 energies and partly of "default parameters" provided by empirical rules
+                 patterned after those used in DREIDING and UFF but calibrated, where possible,
+
+    *This article refers to Supplementary Material available
+
+from the author upon request or via the Internet at
+
+ftp.wiley.corn/public/journals/jcc/suppmat/l7/490 or
+http://journals.wiley.com/jcc
+
+Journal of Computational Chemistry, Vol. 17, Nos. 5 & 6, 616-641 (1996)  CCC 0192-8651 I 9 6I050616-26
+0 1996 by John Wiley & Sons, Inc.
+                                                                    MERCK MOLECULAR FORCE FIELD. V
+
+against computationally derived MMFF94 torsion parameters. Comparisons to
+experimental data show that MMFF94 reproduces crystallographicbond lengths
+and bo$d angles with relatively modest root mean square (rms) deviations of
+N 0.02 A and 2", respectively. 0 1996 by John Wiley & Sons, Inc.
+
+   Introduction                                        (CSDX5 We began by extracting 139 organic
+                                                       neutron-diffractionstructures that had R factors of
+T his is the fifth and concluding article in a         0.075 of less and that had at most 60 atoms. To this
+      series introducing MMFF94, the initial pub-      small initial set, we added X-ray structures of
+lished version of the Merck Molecular Force            similar size in groups, first asking for those having
+Field.'-4 This article describes (i) the extension of  R factors of 0.05 or lower; to obtain sufficient data,
+MMFF94's core parameterization to a much               we ultimately allowed structures having R factors
+broader range of organic and bio-organic struc-        up to 0.075. Selection screens also required, for
+tures, and (ii) the preliminary parameterization of    example, that the entry be "organic," that a residue
+MMFF94 for a series of ions commonly encoun-           contain from 1 to 12 carbon atoms, that neither
+tered in bio-organic modeling.                         disorder nor bond discrepancies be present, an!
+                                                       that the rms deviation for C-C bonds be 0.010 A
+   The experimental data used in extending             or better. Also, we accepted only structures con-
+MMFF94's parameterization are described in the
+next section. The third section summarizes the         taining H, C, N, 0, F, Si, P, s, C1, Br, and I. This
+MMFF94's functional form, and the fourth section
+defines a variety of "properties" associated with      procedure yielded 3777 CSD structures.
+the MMFF atom types. These atom-type proper-              We prepared the extracted structures for input
+ties are employed in various empirical-rule and
+parameter-assignment procedures. Next, the fifth       to OPTIMOL,' the host molecular-mechanics plat-
+through tenth sections describe the use of experi-     form for MMFF, by using MAX-MOL6 to assign
+mental data, empirical rules, and additional com-      single and multiple bonds using a distance crite-
+putational data in assigning parameters not de-        rion. We then used a program derived from OPTI-
+fined in the core portion of MMFF94.2-4 The            MOL to partition the resultant structures into sets
+eleventh section extends the parameterization in a     according to whether or not MMFF, as then consti-
+preliminary way to "protein" metals such as Zn2+,      tuted, could properly deal with them. We exam-
+Ca2+,Mg2+,Cu2+,Cu+,Fe2+,and Fe3+,as well as            ined all rejected structures graphically, and usu-
+to the hydronium and hydroxide ions and to vari-       ally discarded those for which no hydrogen atoms
+ous halide, alkalai, and alkalai earth ions. The       were present. For some having "interesting"
+twelfth section then characterizes the performance     chemistry, however, we added missing hydrogens
+of the extended force field against the crystallo-     using the standard rules incorporated into the
+graphic structures used in its derivation and          IDEALIZE module of AMF.7 We also used AMF to
+against a smaller set of structures previously used    repair structures for which bond orders had been
+in other assessments of molecular force fields. The    assigned erroneously. Other structures that could
+final section summarizes this work and offers          not be handled by OPTIMOL embodied chemistry
+conclusions.                                           not covered by the existing MMFF atom-typing
+                                                       procedure. We discarded some such cases-for
+  Experimental Data Used in                            example, those involving phosphonium or sulfo-
+  Extending MMFF94                                     nium salts or containing carbon-based or very
+                                                       highly delocalized anionic centers-but accommo-
+   The experimental data used in the extension of      dated other by defining additional atom types and
+MMFF94 were obtained from Version 5.04 (Oc-            by corresponding enhancing OPTIMOL's atom-
+tober 1992) of the Cambridge Structural Database       typing capabilities. Ultimately, we retained 2861
+                                                       CSD structures for use in extending MMFF94's
+                                                       parameterization. Some replicate structures (chem-
+                                                       ically identical structures determined under differ-
+                                                       ing experimental conditions) were inadvertently
+                                                       included, but most represent distinct chemical
+                                                       entities.
+
+JOURNAL OF COMPUTATIONAL CHEMISTRY                     617
+HALGREN
+
+  Form of the Merck Molecular                                         Throughout this study, we adopt the conven-
+  Force Field                                                      tion that a specific atom involved in a force-field
+
+   The MMFF94 energy expression can be written                     interaction is designated by i, j , k, ... and that the
+as:
+                                                                   corresponding MMFF numeric atom type (or
+E M M F F = CEB,, + CEA,,, f CEBA,,, + ~EoOP,,k,,                  sometimes, as noted, the atomic species) is desig-
+
+              + ZETllkl+ CEvdW,, + CEQ,, (1)                       nated by I , I , K , . .. . This notation makes explicit,
+
+The seven constituent terms described bond                         for example, that the force constant kb,, and the
+stretching, angle bending, stretch-bend, out-of-
+plane bending, torsion, van der Waals, and electro-                reference bond length r: for the i-j bond in Ar,,
+static interactions, respectively, and are defined as
+summarized below. Each is obtained in kilocalo-                    - - r , , - r:, [eq. (211 depend on the associated
+ries per mole when distances and angles are given
+in angstroms and degrees, re~pectivelyl-~:                         MMFF atom types I and I , whereas the bond
+
+                     kbl,                                          distance r , , depends on the atomic coordinates.
+EBij = 143.9325-
+                                                                     MMFF94 Atom Types and
+                      2                                              Associated Properties
+
+          xAr:(l + csAr,, + 7/12cs2Art) (2)                           The previously published set of MMFF atom
+                                                                   types' has been extended to accommodate finer
+      EA,,, = 0.043844kaI,, Afi,$(I Cb Afi,,,) (3)                 distinctions needed for MMFF94's core parameteri-
+                                                                   zation and to cover the broader range of chemistry
+                                  kallK                            represented in the CSD data. A full list of the
+                                                                   current MMFF symbolic atom types and corre-
+EA,,, = 143.9325- (1 + cos f i , , k )                             sponding numeric atom types is given in Table I11
+                                                                   of Part I.'
+                         2
+                            (for linear bond angles) (4)              Table I defines atomic properties associated with
+                                                                   the MMFF numeric atom types. These quantities
+EBA,,, = 2.51210(kbal1, Ar,, + kba,,, Arkl)AfiIlk                  are used in setting up the MMFF94 energy expres-
+                                                                   sion and in determining values for missing param-
+                                                              (5)  eters from defined empirical rules. The first two
+                                                                   columns list the MMFF numeric atom type and the
+                                                                   associated atomic number. Column 3, labeled
+                                                                   "crd," specifies the mandatory number of bonded
+                                                                   neighbors, and column 4, labeled "Val", gives the
+                                                                   total number of bonds made to that atom type.
+                                                                   Where an entry shows a two-digit number, such as
+                                                                   "34" for atom types 54 and 55, the formal valency
+                                                                   may be either of the two cojoined values-for
+                                                                   example, either "3" or "4." Entries of "1" in col-
+                                                                   umn 5 ("pilp") define those atom types that have
+                                                                   a "pi lone pair" capable of participating in reso-
+                                                                   nance interactions with, say, an adjacent multiple
+                                                                   bond. Column 6, headed "mltb," specifies cases in
+                                                                   which double (''2") or triple (''3") bonds are ex-
+                                                                   pected to be made to an atom having the listed
+                                                                   atom type. Entries of "1" in this column designate
+                                                                   cases in which "intermediate" bond shortenings
+                                                                   are employed in the empirical rule for bond lengths
+                                                                   discussed later. These entries roughly correspond
+                                                                   to cases in which strong delocalization to a neigh-
+                                                                   boring atom can be expected. Column 7 then speci-
+                                                                   fies, through an entry of "1," the set of "aromatic"
+                                                                   atom types, and column 8 ("lin") similarly delin-
+                                                                   eates dicoordinate atom types that give rise to
+                                                            MERCK MOLECULAR FORCE FIELD. V
+
+TABLE 1.
+
+Properties Associated With the MMFF94 Atom Types.
+
+atype" at.no.b crdC Vald pilpe mltb' aromg linh sbmb' atype" at.no.b crdC Vald pilpe mltb' aromQ linh sbmb'
+
+1   6   4400    000                                  49  8  330 0   0 0 0
+
+2   63402001                                         50  1 1100000
+
+3   63402001                                         51  8 2 30 2   0 0 0
+
+4   62403011                                         52  1 1100000
+
+5   1 110000053                                          7  2 40 2  0 10
+
+6   8221000054                                           7  3 40 2  0 0 1
+
+7   8120200055                                           7 3340 1 0 0 0
+
+8   7331000056                                           7 3340 1 0 0 0
+
+9   72302001                                         57  6  3 40 2  0 0 1
+
+10  7   331 1   00058                                    7  340 1   101
+
+11  9111000059                                           8  221 1   100
+
+12 17 1 1 1 0   0 0 0                                60  61303000
+
+13 35   11 1 0 0 0 0                                 61  7 2403     0 10
+
+14 53   11 1 0 0 0 0                                 62  72210000
+
+1516221000063                                            6 3402     101
+
+16 16 1 2 0 2   0 0 0                                64  6 3402     101
+
+1716340200065                                            7 2302     100
+
+18 16 4 4 0 0   000                                  66  7 230 2    1 00
+
+19 14 4 4 0 0   000                                  67  7 340 2    0 0 1
+
+20  6440000068                                           7  4 40 0  0 0 0
+
+21  1 110000069                                          7 340 1    100
+
+22  6 4400      000                                  70  8  221 0   0 0 0
+
+23  1 110000071                                          1  1100000
+
+24  1   110 0   0 0 0                                72 16  1 11 1  000
+
+2515440000073163300000
+
+26  15 3 3 1 0  0 0 0                                74 16  2 40 2  0 0 0
+
+27  1   110000075152302001
+
+28  1 110000076                                          72210000
+
+29  1 110000077174400000
+
+30  6 3402      001                                  78  6  3402    101
+
+31  1 110000079                                          7  230 2   1 00
+
+32  8   1121 1  00080                                    6  340 2   0 0 1
+
+33  1 110000081                                          7 340 1    101
+
+34  7440000082                                           7 340 1    100
+
+35  8   1111    0 0 0                                87 26  0 00 0  0 0 0
+
+36  1 110000088260000000
+
+37  6 3402      101                                  89  90000000
+
+38  7   230 2   1 0 0                                90 17  0 00 0  0 0 0
+
+39  7   331 1   101                                  91 35  000 0   0 0 0
+
+40  7331000092                                           3  0 00 0  0 0 0
+
+41  6   3401    0 0 0                                93 11  0000000
+
+42  7130300094190000000
+
+43  7   33 1 0  0 0 0                                95 30  0 00 0  0 0 0
+
+44  16  221 1   1 0 0                                96 20  0 00 0  0 0 0
+
+45  7340200097290000000
+
+46  7   230 2   0 0 0                                98 29  0 00 0  0 0 0
+
+47  7120200099120000000
+
+48  7   2200    000
+
+'MMFF atom type.                                     'Multiple bond designator (see text).
+bAtomic number.                                      g A value of 1 indicatesan "aromatic" atom type.
+'Number of bonded neighbors.                         'A value of 1 indicates a dicoordinateatom type that as a central
+dValency(see text for an explanationof entries such  atom gives rise to linear bond angles.
+as "34").                                            hSingle-bond-multiple-bond designator (see text).
+eA value of 1 indicatespresence of one or more pi
+lone pairs.
+
+JOURNAL OF COMPUTATIONAL CHEMISTRY                                  619
+HALGREN                                                low. Because the extended parameterization in-
+                                                       creases the number of distinct types of chemical
+linear ideal bond angles 1-J-K. An entry of "1"in      bonds recognized by MMFF94 by nearly a factor of
+the final column, headed "sbmb" for "single-           five (i.e., from 107 to 480), a full, explicit determi-
+bond-multiple-bond," designates atom types that        nation of all required bond charge increments
+can form either a multiple bond or a delocalized       would have been prohibitively costly. Fortunately,
+single bond with an sp2- or sp-hybridized neigh-       however, we found that the core MMFF94 bond
+bor. An example of such a single bond is the bond      charge increments w K I could be represented with
+connecting the two central carbons of butadiene,       quite reasonable accuracy as wK =: p I - p K , where
+each of which has a numeric atom type 2. These         p, and pK are "partial bond charge increments"
+"mbsb" entries are used in assigning the "bond-        that mainly reflect the relative electronegativities
+type" index BT,, defined in part II13; a nonstan-      of atoms of types I and K. As described below,
+dard bond-type index of "1" is assigned whenever       the availability of this approximation meant that
+a single bond (formal bond order 1) is found:          we only needed to determine explicit parameters
+(a) between atoms i and j of types that are not        for enough additional bond charge increments to
+both aromatic and for which "sbmb" entries of          allow a partial bond charge increment to be as-
+"1" appear in Table I; or (b) between pairs of         signed for each of the MMFF94 atom types.
+atoms belonging to different aromatic rings (as in
+the case of the connecting C-C bond in                    The derivation of the additional parameterized
+biphenyl).                                             bond charge increments and the determination of
+                                                       the partial bond charge increments is described in
+   Extension of Parameterizationfor                    the following two subsections. Also addressed is a
+   Electrostatic Interactions                          complication that arises in systems for which nega-
+                                                       tive values for fractional formal atomic charges
+   In undertaking this extension of MMFF94`s pa-       need to be assigned.
+rameterization, we realized that the performance
+of the resultant force field would depend critically      P.ARAWIETERIZATION OF ADDITIONAL BOND
+on the quality of the partial atomic charges used in      CHARGE INCREMENTS AND ASSIGNMENT OF
+eq. (13). We shall first consider how such charges        FORIClAI, AND PARTIAL ATOMIC CHARGES
+are assigned in the extended parameterization.
+                                                          We used GAUSSIAN 92' to determine opti-
+   The partial atomic charges q, used in MMFF94        mized HF/6-31G* geometries for the additional
+are constructed from initial full or fractional "for-  set of 63 small molecules and molecular ions listed
+                                                       in Table 11. To assist in the parameterization of
+mal atomic charges" (usually zero, but, e.g., + 1/3    bond charge increments, we then used CHELPG"
+                                                       as implemented in GAUSSIAN 92 to obtain elec-
+for guanidinium nitrogens) by adding contribu-         trostatic potential fit charges for these systems.
+tions from "bond charge increments" wKI that           This set of compounds focuses on anionic systems
+describe the polarity of the bonds to atom i from      and on compounds containing sulfur and phos-
+attached atoms k. Specifically, wKI gives the con-     phorus, particularly in oxygenated forms.
+tribution to the final partial charge on an atom i of
+atom type 1 accumulated from, and at the expense          Much as was done in the core MMFF94 parame-
+of, its bonded neighbor k of atom type K. Thus,        terization, we derived the bond charge increments
+MMFF94 computes q1 as:                                 for 62 new types of chemical bonds encountered in
+                                                       this set of molecules by fitting to the ab initio
+where w K I= - w I K .                                 dipole moments. To make the fit determinate, we
+   While new vdW parameters can probably be            fixed 27 of the w K i ,most of which involved termi-
+                                                       nal atoms, at values consistent with the CHELPG-
+estimated with reasonable accuracy from data for       derived charges, and then used PROBE" to fit the
+similar atom types, we doubted that sufficiently       remaining bond charge increments to the HF/6-
+accurate bond charge increments could be ob-           31G* dipole moments (enhanced by lo%).' We
+tained in this way. Accordingly, we determined a       also fixed all core MMFF94 bond charge incre-
+number of additional bond charge increments from       ments at their previously determined values. The
+suitable quantum-mechanical data as described be-      least-squares fit generated the 35 optimized bond-
+                                                       charge-increment parameters labeled "X94" in the
+                                                       parameter file. That file also contains 39 con-
+
+620                                                    VOL. 17, NOS. 5 & 6
+strained or otherwise assigned" bond charge in-                  MERCK MOLECULAR FORCE FIELD. V
+crements labeled "#X94".
+                                                     gens in these systems necessarily vary to the same
+   A complication arises when an atom of a given     extent as do the initial 4: values. The CHELPG
+type, such as a type 32 terminal oxygen, carries a   calculations, in contrast, assign the terminal oxy-
+variable partial formal change, for example, of
+-3/4 in the phosphate ion, of -2/3 in HPOi2          gens a net partial atomic charge of - 1.17 in POT3
+(where three terminal oxygens share a net ionic      and of - 0.75 in H,PO,. This variation amounts to
+charge of -2), of - 1/2 in H,POi, and of 0 in        0.42 electrons and seems chemically reasonable,
+phosphoric acid. Because MMFF94 treats the           both in sense and in magnitude. A straightforward
+P-0 bond as having the same polarity (i.e., the
+same bond charge increment) in each of these         application of eq. (14), on the other hand, would
+                                                     yield a much larger variation of 0.75 electrons in
+cases, the final charges, qi, for the terminal oxy-  the terminal oxygen charge-too large, we thought.
+
+                                                        To resolve this impass, we could have assigned
+                                                     different phosphorus or oxygen atom types (and
+
+TABLE It.
+Moleculesand Ions Used to Extendthe Parameterizationof Electrostatic interactions.
+
+Conf.   Structure                                    Conf.   Structure
+Indexa                                               Indexa
+
+AN05a   Methoxide anion                              P006j   Me-OP0,-Me             anion, cpoc = 180"
+ANO6a                                                P007a
+AN07a   Methyl sulfide anion                         P008a   Phosphoric acid
+AN08a                                                P009a
+ANO9a   Vinyl oxide anion                            PO1Oa   Dihydrogen phosphate anion
+AN1 Oa                                               PR02a
+ANlla   Vinyl sulfide anion                          PR03a   Hydrogen phosphate dianion
+AN12a                                                PR04a
+HL1l a  Thioacetate anbn                             PSOl a  Phosphate trianion
+HL12a                                                S101 a
+HL13a   Perchlorate anion                            S102a   Methylphosphine
+HL14a                                                S103a
+NO01a   Tetrazole anion                              S104a   Methylchlorophosphine
+N002a                                                S005a
+N003a   Deprotonatedvinyl amine anion                S005b   (CH,),C=PH
+N004a                                                S005j
+NXO1 a  Cyclopropyl fluoride                         S008a   Trimethylphosphine sulfide
+NX02a                                                S008b
+NX03a   Cyclopropyl chloride                         S008c   Silane
+NX04a                                                S008j
+OC02a   Vinyl fluoride                               S009a   Methylsilane
+PO01a                                                SO1 Oa
+        Vinyl chloride                               SOlla   Methylhydroxysilane
+PO01 b                                               SO13a
+        Nitromethane                                 SO14a   Methylchlorosilane
+P002a
+P003a   Methyl nitrite                               SO15a   Me-NHS0,-Me,           cnsc gauche, hnso anti
+P004a                                                SO16a
+P004j   Nitrosomethane                               SO17a   Me-NHS0,-Me, cnsc gauche, hnso cis
+P005a                                                SO18a
+P005b   Nitroethylene                                SO19a   Me-NHS0,-Me, cnso = 180"
+P005j                                                S020a
+P006a   Methyl isocyanate                            SR13a   Me-C(=O) -NHSO,-            Me, csnc gauche
+                                                                                         Me, csnc anti
+        Dimethyldiazomethane                                 Me-C( =0) -NHS0,-
+
+        Methyl azide                                         Me-C(=O) -NHSO,-Me,         hnco cis
+
+        Acetonitrile                                         Me-C(=O)-NHS0,-Me,          csnc = 0"
+
+        Protonated acetone                                   Methanesulfonamide,MeSONH,
+
+        Methyldihydrogenphosphate,                           Methanesulfonicacid, hosc skew
+
+        o(t) -p -0 -c gauche                                 Sulfamide, C2v
+
+        Methyldihydrogenphosphate,                           Dimethyl sulfoxide
+
+        o(t) -p -0 -c trans                                  (CH,),S(-O)NH, NH analog of
+
+        Phosphine oxide                                      dimethylsulfone
+
+        Trimethylphosphine oxide                             Me- SO,-NH(-) -Me anion
+
+        Me-CH,PO,-Me          anion, ccpc gauche             (CH,),C= S= 0
+
+        Me-CH,PO,-Me          anion, ccpc = 180"             Methylsulfinateanion, CH,SO; '
+                                                             Methylthiosulfinateanion, CH,S(-0)s - '
+        Me-NHP0,-Me anion, cpnh gauche
+                                                             Methylsulfonateanion, CH,SO;
+        Me-NHP0,-Me           anion, cpnh skew
+
+        Me-NHP0,-Me           anion, cnpc = 180"             Sulfate ion, SO;
+
+        Me-OP0,-Me           anion, cpoc gauche              Thioacetone
+
+aAs described in ref. 1, the first two letters of the conformational index define the compound class, while the following two digits
+
+specify the member number for that class. The fifth character identifies the conformation, where a, b , c, ... denote equilibrium
+conformers, j , k , I, .. . denote conformationsdefined using one or more torsion angle constraints, and t (and sometimes s) denote
+
+transition state structures.
+
+JOURNAL OF COMPUTATIONAL CHEMISTRY                                                                      621
+HALGREN                                               result in half of each primary formal atomic change
+                                                      being shifted to directly bonded neighbors for cases
+different atom types for various oxysulfur com-       in which the formal atomic charge is negative; no
+pounds, etc.) for each discrete environment. This     charge sharing is currently invoked when the for-
+                                                      mal charge is positive.
+approach would allow different P -0 bond
+charge increments to be used, but would lead a           We should note that MMFF94's mechanism for
+                                                      assigning partial atomic charges does not accu-
+proliferation of atom types. Instead, we decided to   rately represent charge distributions in unsymmet-
+retain a minimal set of atom types but to allow an    rical but strongly delocalized anions such as vinyl
+initially affixed formal atomic charge to be shared
+with neighboring atoms. To implement this ap-         oxide ( H 2C=CH -0 - ) and vinyl sulfide
+proach, we rewrite eq. (14) as
+                                                      (H,C=CH-S- ). To properly model such reso-
+where the sums on the right-hand side run over        nant charge distributions, MMFF94 might need to
+the M , = crd(I) atoms k of MMFF atom type K          begin with an appropriately distributed formal
+directly attached to atom i. In eq. (15), 4: and 9;   atomic charge or to include explicit three-body
+remain the formal atomic charges assigned in the      adjustment terms akin to those used by Abraham
+primary atom-typing procedure (e.g., those cited
+above for the oxyphosphorus series). The sum of       and coworker^.'^ No comparable problem arises in
+the first two terms can then be understood to give
+the "effective" formal atomic charges that would      symmetrical systems such as carboxylate anions,
+                                                      however, because MMFF94 recognizes that the two
+need to be used as the q: in the simpler eq. (14).    terminal oxygens are equivalent and assigns a pri-
+                                                      mary fractional formal atomic charge of -0.5 to
+(We shall use the terms "primary" and "effective"     each.
+to denote this distinction.) For the oxyphosphorus
+series, we take 0,= 0.5 for the terminal oxygens of      EMPIKICAL RULE FOR BOND
+MMFF type 32. For such an oxygen, M I is unity           CHARGE INCREMENTS
+and the attached phosphorus carries no primary
+formal atomic charge. Hence, the effective formal        Originally, MMFF and MM2X, its predecessor,'
+atomic charge on a terminal oxygen is half of the     estimated missing bond charge increments using
+primary value, or -0.375 in POL3, -0.333 in           the simple formula:
+HPO;', -0.25 in H,PO,, and 0.0 in H,PO,. The
+variation between the two limiting cases is thus      w K I = 0.25( X K - X I )  (16)
+reduced to 0.375 electrons, satisfactorily close to
+the variation of 0.42 electrons found from the        where xI and xK are the Pauling electronegativi-
+CHELPG calculations. For the central phosphorus
+atom, no primary formal atomic charge is assigned     tiesI4 for the atomic species to which the atom
+but the 4, 3, 2, or 1 attached terminal oxygens,
+which bear primary formal atomic charges of           types I and K correspond, and 0.25 is a scale
+-0.75, -0.666, -0.50, and 0.00, generate effective
+formal atomic charges on phosphorus of -1.50,         factor. During the course of this work, we found
+-1.00, -0.50, and 0.00, respectively.                 that much better estimates for parameterized
+                                                      MMFF94 bond charge increments could be ob-
+   Similarly, for a carboxylate oxygen, the primary   tained from a similar formula:
+value for qp used in eq. (15) is -0.5, but the
+                                                                                   WK1 = PI - P K
+effective [eq. (14)] value obtained using a,,= 0.5
+                                                      where p l and pK now depend fully on the MMFF
+and MS2 = 1 is -0.25. For the carboxylate carbon      atom type and not just on the atomic species.
+the primary [eq. (15)] value for q: is 0, but the     Because of the additive decomposition they give of
+effective [eq. (1411 value is -0.5 because each of    the bond charge increments w K I ,we refer to the pI
+two attached terminal oxygens transfers half of its   as "partial bond charge increments." Comparison
+primary formal charge of - 0.5. While charge shar-    to eq. (16) indicates that in essence they reflect the
+ing is not strictly required in this last case, we    effective electronegativities of the MMFF atom
+found that it was needed to allow a consistent set    types.
+of electronegativity-related "partial bond charge
+increments" to be defined for use in eq. (17) below.     We used an iterative procedure to derive the p,
+                                                      from known bond charge increments wK,.To make
+The full set of formal charge adjustment factors aI   the fit determinate, we defined saturated carbon
+is given in Table 111. The values chosen for the aI   (MMFF atom type 1) as having p, identically
+                                                      equal to 0. We then calculated initial values of P,
+                                                      for atom types bonded to atom type 1 from the
+
+622                                                   VOL. 17, NOS. 5 & 6
+                                                         MERCK MOLECULAR FORCE FIELD. V
+
+TABLE 111.
+MMFF94 Partial Bond Charge Increments(P)and Formal-ChameAdiustment Factors (61.
+
+MMFF      P      6                                       MMFF                                     P                                6
+
+type    0.000  0.00                                       type                                                               ~~               ~
+      -0.135   0.00
+   1  - 0.095  0.00                                        42                                 - 0.757                            0.00
+   2  - 0.200  0.00                                        43                                 - 0.326                            0.00
+   3  - 0.023  0.00                                        44                                 - 0.237                            0.00
+   4  - 0.243  0.00                                        45                                 - 0.260                            0.00
+   5  - 0.687  0.00                                        46                                 - 0.429                            0.00
+   6  - 0.253  0.00                                        47                                 -0.418                             0.00
+   7  - 0.306  0.00                                        48                                 - 0.525                            0.00
+   8  - 0.244  0.00                                        49                                 - 0.283                            0.00
+   9  - 0.317  0.00                                        50                                                                    0.00
+  10  - 0.304  0.00                                        51                                   0.284                            0.00
+  11  - 0.238  0.00                                        52                                 - 1.046                            0.00
+  12  - 0.208  0.00                                        53                                 - 0.546                            0.00
+  13  - 0.236  0.00                                        54                                 - 0.048                            0.00
+  14  - 0.475  0.00                                        55                                 - 0.424                            0.00
+  15  -0.191   0.00                                        56                                 - 0.476                            0.00
+  16  -0.118   0.00                                        57                                 - 0.438                            0.00
+  17           0.00                                        58                                 -0.105                             0.00
+  18    0.094  0.00                                        59                                 - 0.488                            0.00
+  19  - 0.019  0.00                                        60                                 - 0.337                            0.00
+  20           0.00                                        61                                 - 0.635                            0.00
+  21    0.157  0.00                                        62                                 - 0.265                            0.25
+  22  - 0.095  0.00                                        63                                 -0.125                             0.00
+  23                                                       64                                 -0.180                             0.00
+  24    0.193  0.00                                        65                                 -0.181                             0.00
+  25    0.257  0.00                                        66                                 - 0.475                            0.00
+  26    0.012                                              67                                 - 0.467                            0.00
+  27  -0.142   0.00                                        68                                 - 0.09ga                           0.00
+  28    0.094  0.00                                        69                                 -0.135                             0.00
+  29    0.058  0.00                                        70                                 - 0.099                            0.00
+  30    0.207  0.00                                        71                                 - 0.269                            0.00
+  31  -0.166   0.00                                        72                                 - 0.071                            0.50
+  32    0.161  0.50                                        73                                 - 0.580                            0.00
+  33  - 0.732  0.00                                        74                                 - 0.200                            0.00
+  34    0.257  0.00                                        75                                 - 0.301                            0.00
+  35  - 0.491  0.50                                        76                                 - 0.255                            0.25
+  36  - 0.456  0.00                                        77                                 - 0.568                            0.00
+  37  - 0.031  0.00                                        78                                 - 0.282                            0.00
+  38  -0.127   0.00                                        79                                 -0.168                             0.00
+  39  - 0.437                                              80                                 -0.471b                            0.00
+  40  -0.104   0.00                                        81                                 -0.144                             0.00
+  41  - 0.264  0.00                                        82                                 -0.514                             0.00
+        0.052  0.00                                                                           - 0.099a
+
+aAssumedequal to the partial bond charge increment for atom type 69.
+bAssumedequal to the average of the partial bond charge increments for atom types 65 and 66.
+
+associated bond charge increments. When applied          rms value of 0.30 electrons for these bond charge
+to the full set of 195 parameterized bond charge         increments. Much of the error is concentrated in a
+increments, including those developed for the            relative handful of highly polar bonds; for eight
+extended parameterization described in the pre-          such cases, errors of 0.15-0.37 electrons were
+ceding subsection, the final set of pr values repro-     found. Given that explicit bond charge increments
+duced the parameterized w K I with a rms devia-          are available for these cases, the performance of
+tion of 0.06 electrons. This rms error is one fifth the  eq. (17) for cases to which it will need to be
+
+JOURNAL OF COMPUTATIONAL CHEMISTRY                                                                                               623
+HALGREN
+
+applied may be somewhat better than the cited             TABLE IV.
+rms error of 0.06 electrons would suggest.                Additional Molecules Used to Extend the
+                                                          Parameterizationof Bond and
+   To complete the extension of the parameteriza-
+tion for electrostatic interactions, we utilized the      Angle Interactions.
+derived partial bond charge increments to com-
+pute explicit bond charge increments from eq. (17)        Conf.                        Structure
+for the additional types of chemical bonds encoun-        Indexa
+tered in the CSD data. We then stored these com-
+puted bond charge increments in the associated            PRO1 a  Phosphine
+parameter file as parameters identified by the label      RYO1a   Acetylene
+"E94." New bond types encountered in subse-               RY02a   Propyne
+quent MMFF94 calculations, however, would use             SO01a   Phenyl- NHS0,-phenyl,
+eq. (17) directly-or eq. (16), should one or both         SO01 b
+MMFF atom types lack a defined partial bond               S002a      cnsc gauche, hnso anti
+charge increment.                                         S002b   Phenyl- NHS0,-phenyl,
+                                                          s002c
+  Extension of the Parameterization for                   S003a      cnsc gauche, hnso cis
+   Bond Stretching                                        S003b   Phenyl- NHS02- methyl,
+                                                          S003c
+   PARAMETERIZATION OF ADDITIONAL                         S004a      cnsc gauche
+   REFERENCE BOND LENGTHS                                 S007a   Phenyl- NHS0,-methyl,
+
+   This parameterization closely followed the pro-        S007b      cnsc skew, hncc cis
+cedure used in defining reference bond lengths for        S007c   Phenyl- NHS0,-methyl,
+the core, computationally derived portion of
+MMFF94.3 It was carried out in two stages. In the         S007d      cnsc skew, hncc gauche
+fit, MP2/6-31G*-optimized geometries were ob-             SO12a   Methyl- NHS0,-phenyl,
+tained for the 58 equilibrium conformers shown in
+Table I1 (those for which the five-character confor-                 cnsc gauche, hnsc gauche
+mational index' ends in "a," "b," or "c") and for                 Methyl- NHS0,-phenyl,
+the 17 additional conformers listed in Table IV.
+Starting from reference values equivalenced to the                   cnsc gauche, hnsc skew
+average MP2/6-31G* bond lengths, refined values                   Methyl- NHS0,-phenyl,
+were obtained for these reference bond lengths
+and, as described in the next section, for the associ-               cnsc anti
+ated reference angles. At each cycle in the iterative             Pyrrole- SO,-phenyl
+process, force constants calculated from an empiri-               Phenyl- C(= 0 )-NHS0,- methyl,
+cal rule (described later) were used. As b e f ~ r e , ~
+iterative determinations of the reference bond                       csnc gauche
+lengths and angles were interleaved. For bonds                    Phenyl- C(= 0 )-NHSO,- methyl,
+types not encountered in the core parameteriza-
+tion, the newly determined bond parameters were                      csnc anti
+then added to the core set. The core MMFF94 and                   Ph -C(=O) -NHSO,- methyl,
+these additional MP2/6-31G* based parameters
+are labeled "C94" and "X94," respectively, in the                    o = cnh cis, csnc gauche
+distributed parameter set.I5                                      Ph-C(=O) -NHS0,- methyl,
+
+   In the second stage, the reference geometries                     o = cnh cis, csnc skew
+were obtained from the CSD data. In the fit to this               Sulfuric acid, C2
+data, the initial reference bond lengths were set to
+the average observed CSD bond lengths, and em-            aSee footnote a in Table I.
+pirical-rule force constants were computed and
+updated after each iterative cycle. Upon conver-          tion were also added to the MMFF94 parameter
+gence, parameters for bonds types included nei-           set, labeled "E94" for identification. For previ-
+ther in the "C94" nor in the "X94" parameteriza-          ously encountered bond types, we chose to retain
+                                                          the quantum-mechanically based "C94" or "X94"
+                                                          values in most cases. We noted, however, 36 in-
+                                                          stances, including 6 involving core MMFF94 bond
+
+                                                          length^,^ in which the reference value derived from
+
+                                                          the crystallographic data differed from that de-
+                                                          rived by fitting to the MP2/6-31G* structures by
+
+                                                          0.03 A or more. In these cases, we substituted an
+
+                                                          intermediate value representing roughly the aver-
+                                                          age of the two determinations. The sets of 6 and 30
+                                                          parameters modified in this way are labeled
+                                                          "#C94" and "#X94," respectively. In addition, we
+                                                          replaced the two CSD-derived reference values for
+                                                          bonds to hydrogen atoms with empirical-rule val-
+                                                          ues; it is well known that X-ray determinations
+
+624                                                                                    VOL. 17, NOS. 5 & 6
+- typically yield leng$s for H-X bonds that are                    MERCK MOLECULAR FORCE FIELD. V
+
+too short by 0.1 A. These empirical-rule param-        to sp3 hybridization) in most cases, but the value
+eters are identified by the label "#E94" in the        "2" if the "mltb" entry for the associated atom
+distributed parameter set.15                           type in Table I is "1" or "2," or the value "1" if
+                                                       the "mltb" entry is "3." Next, a bond-order-
+   EMPIRICAL RULE FOR REFERENCE                        related index, BO,,, is assigned from the connectiv-
+   BOND LENGTHS                                        ity and the atom-type properties given in Table I.
+                                                       BO,, is initialized to the formal i-j bond order of
+   As noted in part I,' atom-type equivalencies are    "1," "2," or "3," but is rest to "4" if mltb(1) and
+not invoked in assigning bond-stretching parame-       mltb(J) are both "1," and to "5" if one of these
+ters. Rather, empirical rules for reference bond       values is "1" and the other is "2." Last, when i
+lengths and for bond stretching force constants        and j are aromatic atoms belonging to the same
+are employed when no fully qualified value is          aromatic ring, BO,, is set to "4" if pilp(1) and
+available.                                             pilp(J) are both "0" (i.e., if neither has a pi lone
+                                                       pair), and otherwise to "5"; this distinction allows
+   Reference bond lengths are assigned using a         an appropriately smaller resonance-related short-
+modified version of the Schomaker-Stevenson            ening to be applied when BO,, = 5 than is applied
+rule16 based on the form described by Blom and         when BO,, = 4.
+Haaland.17Specifically, we take":
+                                                          The assigned H I , H,, and BO,, values are then
+where rp and r; represent covalent radii for atom      used as follows. First, rp and ry are set to the
+                                                       tabulated single-bond radii for the correspondjng
+types I and J, x, and x, are Pauling-scale elec-
+                                                       atomic species. Thenbeach is reduced by 0.04 ,A if
+tronegativities defined by Allred and Rochow and
+depend only on the atomic species:' c is a propor-     BO,, = 5, by 0.075 A if BO,, = 4, by 0.17 A if
+tionality constant, n is the power dependence of
+the electronegativity term, and S is a "shrinkage"     BO,, = 3 (triple bond), and by 0.10 A if BO,, = 2
+factor that takes account of the fact that force-
+field-optimized bond lengths tend to be somewhat       (full double bond). Finally, when BO,, 71 (single
+longer than the associated reference bond lengths.
+The proportionality constant, c, is taken to be 0.050  bond), the hybridization indices come lnto ptay.
+if either i or j is hydrogen, and to be 0.085 other-   Specifically, r," for x = I, J is reduced by 0.08 A if
+wise. As in Blom and Haaland's work, the power
+dependence, n, is taken as 1.4. The 2hrinkage fac-     H , = 1 and by 0.03 A if H , = 2. The values of rp
+tor, 6, is given the value 0.008 A. This value
+represents the amount by which reference bond          and r; which result from these adjustments are
+lengths defined in the core, computationally de-       then used in eq. (18). These adjustment factors
+rived portion of MMFF94 on average underlie the        represent empirical corrections determined by ex-
+observed MP2/6-31G*-optimized bond lengths.            amining patterns in experimentally observed and
+                                                       in optimized core MMFF94 bond lengths. The listed
+   With two exceptions, covalent radii rp for sin-     corrections for full double and triple bonds, it
+gle bonds are taken from Blom and Haaland, where       might be noted, are consistent with results cited by
+available, or from a standard collection." For hy-     Pauling."
+drogen and for caorbon, single-bond covalent ra+i
+of 0.33 and 0.77 A (rather than 0.34 and 0.79 A)          EMPIRICAL RULE FOR BOND-STRETCHING
+were assigned by requiring that the empirical rule        FORCE CONSTANTS
+predict the core MMFF94 reference bond lengths
+as closely as possible. Note that these single-bond       Of the many empirical rules for bond-stretching
+radii depend only on the atomic species and not on     force constants that have been proposed;2 Badger's
+the full MMFF atom types. Covalent radii for mul-      ruleB is perhaps the best known. In this work,
+tiple bonds and for resonance-delocalized bonds        however, we use an inverse sixth-power depen-
+are assigned from the single-bond radii in the         dence to relate the desired force constants to tabu-
+following manner. First, "hybridization indices"       lated reference values. Such a sixth-power depen-
+H I and H I are specified for atoms i and j . These    dence was suggested some time ago by Roy?4
+quantities are given the value "3" (corresponding      More recently, Byler et al.25 have shown that a
+                                                       similar relationship using an exponent of 5.35 ac-
+                                                       curately relates force constants and bond lengths
+                                                       for C-N bonds. Here for simplicity we use an
+                                                       exponent of six and take
+
+                                                                                                                    (19)
+
+JOURNAL OF COMPUTATIONAL CHEMISTRY                     625
+HALGREN                                               quiring that the force constants kb,, given by eq.
+                                                      (19) predict the core MMFF94 force constants about
+where kb,,, and r,",, are the force constants and     as closely as possible when the associated refer-
+associated reference bond lengths given in Table      ence bond lengths ,:Y are used in the empirical
+V, and rp, is the reference bond length retrieved     rule. When these values of rp, are used, eq. (19)
+from the bond-stretch parameter file or calculated    reproduces the full set of 107 core MMFF94 force
+from eq. (18). Note that kb,,, and rfef depend on     constants wi!h a relatively modest rms deviation
+the atomic species for i and j rather than on their   of 0.75 md/A,27 about one eighth the rms value of
+full MMFF numeric atom types I and J. To sim-         5.81 md/A. The force constants kb,,, for the en-
+plify the notation, however, this dependence has      tries labeled "E94" in Table V could not be
+been suppressed in writing eq. (19).                  calibrated in a comparable manner because no
+                                                      explicitly parameterized values for k b,, had been
+   In Table V, most of the reference bond lengths     derived. Instead, these force constants were evalu-
+r,!ef are single-bond lengths taken from the "stan-   ated at the tabulated r:, bond lengths by using
+dard geometric model" of Peterson and                 the Herschbach and Lauriez8 parameterization of
+CsizmadiaZ6;only for the N-N, N - 0 , and             Badger's rule. Should a case arise for which the
+0-S bonds do the r:, values differ appreciably.
+For the entries labeled "C94," the associated refer-
+ence force constants kb,,, were determined by re-
+
+TABLE V.
+MMFF94 Parametersfor Empirical-RuleForce Constantsfor Bond Stretching Used in Eq. (19).
+
+   Atom                                                   Atom
+
+I        i     fieo f a  kbre,b  Source`              i         i     freot a  kbre,b    Source`
+- -
+
+H        C     1.084     5.15    c94                  0         0     1.48     3.6       E94
+
+H        N     1.001     7.35    c94                  0         F     1.42     4.6       E94
+
+H        0     0.947     9.10    c94                  0         Si    1.63     5.2       E94
+
+H        F     0.92      10.6    E94                  0         P     1.66     4.7       E94
+
+H        Si    1.48      2.3     E94                  0         S     1.470    9.90      c94
+
+H        P     1.41 5    2.95    c94                  0         CI    1.70     4.1       E94
+
+H        S     1.326     4.30    c94                  0         Br    1.85     3.4       E94
+
+H        CI    1.28      4.3     E94                  0            I  2.05     1.6       E94
+
+H        Br    1.41      4.2     E94                  F         Si    1.57     6.4       E94
+
+H           I  1.60      2.7     E94                  F         P     1.54     7.1       E94
+
+C        C     1.512     3.80    c94                  F         S     1.55     6.9       E94
+
+C        N     1.439     4.55    c94                  Si        Si    2.32     1.3       E94
+
+C        0     1.393     5.40    c94                  Si        P     2.25     1.5       E94
+
+C        F     1.353     6.20    c94                  Si        S     2.15     2.0       E94
+
+C        Si    1.86      2.6     E94                  Si        CI    2.02     3.1       E94
+
+C        P     1.84      2.7     E94                  Si        Br    2.1 9    2.1       E94
+
+C        S     1.812     2.80    c94                  Si           I  2.44     1.5       E94
+
+C        CI    1.781     2.75    c94                  P         P     2.21     1.7       E94
+
+C        Br    1.94      2.60    E94                  P         S     2.10     2.4       E94
+
+C           I  2.16      1.4     E94                  P         CI    2.03     3.0       E94
+
+N        N     1.283     6.00    c94                  P         Br    2.21     2.0       E94
+
+N        0     1.333     5.90    c94                  P            I  2.47     1.4       E94
+
+N        F     1.36      5.9     E94                  S         S     2.052    2.50      c94
+
+N        Si    1.74      3.7     E94                  S         CI    2.04     2.9       E94
+
+N        P     1.65      4.8     E94                  S         Br    2.24     1.9       E94
+
+N        S     1.674     3.50    c94                  S            I  2.40     1.7       E94
+
+N        CI    1.75      3.5     E94                  CI        CI    1.99     3.5       E94
+
+N        Br    1.90      2.9     E94                  Br        Br    2.28     2.4       E94
+
+N           I  2.10      1.6     E94                  I            I  2.67     1.6       E94
+
+   `Reference bond length (A).
+   bReferenceforce constant (md/A).
+
+   `The label "C94" denotes a parametercalibratedagainst core MMFF94 force constants; "E94" designates a parametercalculated
+   from Badger's rule (see text).
+
+626                                                                            VOL. 17, NOS. 5 & 6
+parameters required for eq. (19) are not contained                  MERCK MOLECULAR FORCE FIELD. V
+in the parameter file (cf. Table V), the empirical
+rule for k b,, would employ Herschbach and Lau-        drogens were first examined carefully. Ultimately,
+rie's implementation of Badger's rule directly, with   we retained the associated CSD-derived reference
+Y: given by eq. (18).                                  angles in 128 of 186 cases. In most of these cases,
+                                                       the CSD data afforded 20 or more determinations
+  Extension of Parameterization for                    for a given angle type and displayed relatively
+  Angle Bending                                        little variation in the experimentally measured
+                                                       bond angle. Reference angles for the remaining 58
+   PARAMETERIZATION OF ADDITIONAL                      cases involving hydrogen atoms were assigned by
+   REFERENCE ANGLES                                    analogy to values and trends found in related but
+                                                       better defined bond angles-such parameters are
+   This parameterization also took place in two        identified by the label "#94."
+stages. In the first, optimized reference angles 19:~
+were obtained by fitting to the MP2/6-31G* data        DEFAULT AND EMPIRICAL RULE VALUES
+previously cited. In this fit, the initial values for  FOR REFERENCE ANGLES
+the 19iKwere set to the average of the optimized
+                                                       MMFF94 invokes a fairly elaborate protocol in-
+MP2/6-3 1G* bond angles; the angle-bending force
+constants karIKwere calculated at each iterative       volving a series of atom-type equivalencies when-
+
+cycle from the empirical rule to be described later.   ever the specific, fully qualified parameter for a
+Derived parameters for angle types not encoun-
+tered in the core MMFF94 parameterization were         given i-j-k interaction is not found in the parame-
+than added to the core "C94" set. These additional
+MP2/6-31G *-derived parameters are labeled             ter table.' Normally, this process will find either a
+"X94" in the distributed set.15
+                                                       specific parameter or a wildcarded "0-J-0" pa-
+   In the second stage, the initial values for refer-
+ence angles not determined either in the core pa-      rameter in which the atom types l and K for
+rameterization or in the fit to MP2/6-31G* data
+just described were set equal to the average of the    peripheral atoms i and k have been successively
+observed CSD bond angles. Again, empirical-rule
+force constants were used and were updated after       equivalenced down to "0," which matches any
+each iterative cycle. As in the previous work?
+"noncompliant" reference angles in small rings         starting atom type. In MMFF94, the angle-bending
+were reset to their initial values periodically. In
+addition, the "C94" and "X94" reference angles         parameters are further qualified by an index M
+were reimposed after each iteration to insure that
+the final parameters would fit the CSD data as         that represents the angle-type index ATrIK.3 An
+well as possible while remaining consistent with
+the ab initio-derived parameters. In a small num-      extensive set of M:O-J-O default parameters, gen-
+ber of cases, individual parameters were observed
+to drift considerably from their starting values       erated by averaging all available "C94," "X94,"
+without substantially affecting the force-field-
+optimized geometry. Prior to the final two itera-      and "E94" M:l-J-K reference arigles over 1 and
+tive cycles, neither of which used "convergence
+a~celeration,"t~hese parameters were reset to what     K , is included in the parameter file.15
+we judged to be physically reasonable values. Fol-
+lowing "effective convergence," as signaled by the     When even a M:O-J-0 default value is unavail-
+lack of significant further improvement in the fit to
+the CSD data, most newly derived parameters            able, a simple empirical procedure is invoked to
+were added to the parameter set; these parameters
+are identified by the label "E94."15 However, be-      supply a reasonable reference angle. This proce-
+cause hydrogen atoms tend to be poorly located by
+X-ray data, all derived parameters involving hy-       dure assigns an initial value of 120" for  but
+
+                                                       substitutes a tetrahedral value of 109.45" if crd(J)
+
+                                                       = 4. For crd(J) = 2, 19;~.is set to 105"if the central
+
+                                                       atom is oxygen, to 95" if the central atom has an
+
+                                                       atomic number of greater than 10, or to 180"if the
+
+                                                       central atom is classified as linear [denoted by
+
+                                                       lin(J) = 1 in Table I]. If, however, crd(J) = 3,
+
+                                                       val(J) = 3, and mltb(J) = 0 (so that j is a tricoodi-
+
+                                                       nate atom is not expected to be made nearly planar
+
+                                                       by strong resonance interactions),         is set to
+
+                                                       107" if j is nitrogen and to 92" otherwise. Finally,
+
+                                                       19;K is set to 60" if the angle i-j-k occurs in a
+
+                                                       three-membered ring, and to 90" if i-j-k occurs in
+
+                                                       a four-membered ring.
+
+                                                          EMPIRICAL RULE FOR ANGLE-BENDING
+                                                          FORCE CONSTANTS
+
+                                                          When either a M:O-J-O default value or the
+                                                       procedure described immediately above is used to
+
+JOURNAL OF COMPUTATIONAL CHEMISTRY                                                                627
+HALGREN
+
+assign   a further procedure must then be                        and k belong; they represent averages of the ex-
+                                                                 plicitly derived MMFF94 stretch-bend parameters
+invoked to assign the associated angle-bending                   for row combinations covered in the parameteriza-
+                                                                 tion from second derivatives or, for new row com-
+forceoconstant. In MMFF94, the force constant (in                binations, reflect trends observed in the parameter-
+                                                                 ized force constants.
+md A/rad2) is obtained from the previously pub-
+                                                                   Extension of Parameterization
+lished rulez9:                                                     for Out-of-Plane Bending at
+                                                                   Trigonal Centers
+kuIJK= pZ,C,Z,(v~, + vpK)-li?:K-z exp(C2D)
+                                                                    For out-of-plane bending [eq. (6)], a request for
+                                                           (20)  a force constant not defined in the core parameteri-
+                                                                 zation is handled via a successive-equivalency
+where Z and C are atomic parameters that depend                  protocol' similar to that used for angle bending.
+                                                                 Unsatisfied requests for a specific parameter
+only on the atomic number, and D = (Y:, -                        koop,,, terminate with the location of a wild-
+                                                                 carded parameter "0-J-O:O" that depends only on
+Y ~ , ) ~ / ( Y ~ , + Y;,)~ is a quantity that measures the
+                                                                 the atom type J of the central atom j . For atom
+relative dissimilarity in the i-j and j - k bond
+lengths. The scale factor, p, normally taken to be               types covered in core MMFF94, these wildcarded
+1.75, is reduced to 85% of this value if i, j , and              parameters were generated by averaging all specif-
+k are members of a four-membered ring and to                     ically parameterized I-J-K: L force constants over
+5% of this value if these atoms form a three-                    I , K , and L. For newly encountered atom types
+membered ring (in the latter case, the three angle-              (i.e., 17, 26, 43, 45, 58, 67, 73, and 82), the wild-
+bending and the three bond-stretching interactions               carded default values were assigned by structural
+are redundant; hence, no angle-bending force con-                analogy to values derived for the core MMFF94
+stant is strictly needed). The atomic parameters Z               atom types.
+and C are listed in Table VI; they differ slightly
+from the previously published values,29 because                     Extension of Parameterization for
+the current values have been fully optimized                        Torsion Interactions
+against the data used in the original work.
+                                                                    EXPLICIT PARAhlETERtZATIOL\i
+  Extension of Parameterization for
+  Stretch-Bend Interactions                                         For this extension, we used conformational en-
+                                                                 ergy (CE) comparisons based on MP2/6-31G* en-
+   The form of the stretch-bend term used in                     ergies at MP2/6-31G*-optimized geometries and
+MMFF94 is given in eq. (5). The only stretch-bond
+parameters explicitly provided in MMFF94 are
+those derived from ub initio HF/6-31G* second
+derivatives, nearly all of which were obtained in
+its core parameterization? When such parameters
+are unavailable, default values are taken from
+Table VII. These values depend on the rows in the
+periodic table to which the constituent atoms i, j ,
+
+TABLE VI.
+MMFF94 Empirical-Rule Parameters for Angle-Bending Force Constants.
+
+Atom            Za      Ca                                       Atom  Za      Ca
+
+                1.395   -                                        Si    2.350'  0.81 1
+                                                                       2.350   1.068
+                    -   0.704                                    P     2.980   1.249
+                                                                       2.909   1.078
+                2.494'  1.016                                    S     3.01 7
+                2.71 1                                                            -
+                3.045   1.1 13                                   CI        -
+                2.847                                                          0.825
+                        1.337                                    Br    3.086
+                                                                                  -
+                        -                                        As
+
+                                                                 I
+
+aAtomic parameters used in eq. (20). The current version of MMFF94 does not use the parameters cited for boron and arsenic.
+bunlike the original formulation (ref. 29),the current formulation does not treat tetrahedral carbon as a special carbon type.
+'Assumed equal to the parameter for phosphorus.
+
+628                                                                        VOL. 17, NOS. 5 & 6
+"torsion profile" (TP) comparisons based on                                   MERCK MOLECULAR FORCE FIELD. V
+MP2/6-31G* energies for torsionally incremented
+structures generated as previously described: The                ally incremented structures was generated, yield-
+CE comparisons were based on 40 structures listed                ing 440 comparisons of relative conformational en-
+in Tables 11, IV, and VIII for the compound series               ergies. These compounds included a variety of
+P001, P005, S001, S002, S003, SOO4, $3005, S007,                 alkyl, acyl, and aryl sulfonamides and various
+5008, and SOO9. These structures yielded 30 com-                 oxyphosphorous compounds, systems for which
+parisons of relative energies. The TI' comparisons               we felt that good quality conformational energies
+covered both the foregoing and the following com-                would especially be needed for prospective phar-
+pound series: AN09, AN12, N001, N002, N003,                      maceutical and bio-organic applications of
+N004, NX02, NX03, OC02, P003, P004, P006,                        MMFF94.
+P007, P008, P009, PR02, PR03, PR04, S o l , SI02,
+SI03, SIO4, S010, SOll, SO12, S013, S014, S015,                     As in MMFF94`s core parameterization, the fit-
+sO16, S017, S018, and S019. A set of 493 torsion-                ting procedure employed the program TORFIT!
+                                                                 The conformational energies were found to de-
+TABLE VII.                                                       pend on 98 previously unparameterized sets of V,
+MMFF94 Default Stretch-Bend Parameters Used                      torsion parameters ( n = 1,2,3) as well as on 20
+                                                                 previously parameterized sets. The latter were in-
+in Eq. (5).                                                      cluded in the torsion fits but were fixed at their
+                                                                 core MMFF94 values. The former were given ini-
+        Row in                  Force                            tial values determined from the empirical rule
+    Periodic Table            Constant                           described later. The fit itself was carried out itera-
+                                                                 tively, as previously de~cribedA.~mong the 98 sets
+
+IR  JR              KR  kb%J,a      kb%Jla                       TABLE VIII.
+                                                                 Additional Molecules Used to Extend the
+0   1               0   0.15            0.15                     Parameterization of Torsion Interactions.
+
+0   1               1   0.10            0.30
+
+0   1               2   0.05            0.35                     Conf.
+                                                                 Indexa
+0   1               3   0.05            0.35                                            Structure
+                        0.05            0.35
+0   1               4   0.00            0.00
+                        0.00            0.15
+0   2               0   0.00            0.15                     SOOlj   Phenyl- NHS0,-phenyl, cnsc = 180"
+                        0.00            0.15                     SO01 k
+0   2               1   0.00            0.15                             Phenyl- NHS0,-phenyl, cnsc gauche,
+                        0.30            0.30                     S002j
+0   2               2   0.30            0.50                     S002k   nscc = 0"
+                        0.30            0.50                     S002s
+0   2               3   0.30            0.50                             Phenyl- NHS0,-methyl, cnsc = 180"
+                        0.50            0.50                     SO02
+0   2               4   0.50            0.50                             Phenyl- NHSO, -methyl, sncc = 0"
+                        0.50            0.50                     S002u
+1   1               1   0.50            0.50                             Phenyl- NHS0,-methyl, cnsc gauche,
+                        0.50            0.50                     S004j
+1   1               2   0.50            0.50                     S004k   n planar
+                        0.30            0.30                     S005s
+1   1               3   0.25            0.25                             Phenyl- NHS0,-methyl, hncc cis, n planar
+                        0.25            0.25                     S005t
+1   1               4   0.25            0.25                             Phenyl- NHS0,-methyl, cnsc sk, hncc g,
+                        0.25            0.25                     S007j
+2   1               2   0.25            0.25                     S007t   n planar
+                        0.25            0.25
+2   1               3   0.25            0.25                     S008t   Pyrrole- SO,-phenyl, cnsc = 0"
+                        0.25            0.25
+2   1               4   0.25            0.25                     S008t   Pyrrole- SO,-phenyl, nscc = 0"
+
+3   1               3                                            SO09    Methyl- NHS0,-methyl, cnsc g, hnso a,
+
+3   1               4                                            SO12a   n planar
+
+4   1               4                                                    Methyl- NHS0,-methyl, cnsc g, hnso cis,
+
+1   2               1                                                    n planar
+
+1   2               2                                                    Phenyl- C(=O)-NHS0,-methyl,        csnc = 0"
+
+1   2               3                                                    Phenyl- C(=O)-NHS0,-methyl,        ocnh c,
+
+1   2               4                                                    csnc sk, n planar
+
+2   2               2                                                    Me-C(=O) -NHSO,-me,          csnc gauche,
+
+2   2               3                                                    n planar
+
+2   2               4                                                    Me-C(=O)-NHS0,-me,           o = cnh cis,
+
+3   2               3                                                    n planar
+
+3   2               4                                                    Methanesulfonamide,n planar
+
+4   2               4                                                    Sulfuric acid
+
+                                ~~
+
+    aThe indices IR, JR, and KR represent the rows in the        aSee footnote a in Table I. The abbreviations "c" for cis,
+                                                                 "sk" for skew, "g" for gauche, and "a" for anti are used in
+    periodic table (with hydrogen's row denoted as o"O") to      some of the conformational descriptions.
+    which the atom types I , J, and K correspond (md A / rad`).
+
+JOURNAL OF COMPUTATIONAL CHEMISTRY                                                                                  629
+HALGREN                                                         kcal/mol found for CE and TP comparisons in
+                                                                MMFF94's core parameterization,', possibly be-
+TABLE IX.                                                       cause the present comparisons contain a higher
+Comparisonof MP2/ 6-31G* and MMFF94 Relative                    percentage of systems having two or more highly
+ConformationalEnergies (kcal / mol).                            polar bonds in close proximity. Such systems have
+                                                                been found to be described less accurately: per-
+Conf-Aa  Conf-B MP2 MMFF94            A                         haps because MMFF94, like all other contemporary
+                                                                force fields used in general molecular modeling,
+PO01a    PO01b            1.31  0.89  - 0.42                    too greatly simplifies the treatment of electrostatic
+P005a    P005b            1.44  1.37  - 0.07                    interactions. Nevertheless, apart from a few in-
+P005t    P005a            1.13  0.63  - 0.50                    stances in which the MMFF94 optimization failed
+SO01 b   SOOl a           1.64  1.92                            to maintain the starting MP2/6-31G* conforma-
+SO01j    SOOl a           3.51  3.97    0.28                    tion, the conformational energies are described
+SOOl k   SOOl a           4.77  4.61    0.46                    reasonably well. As a general measure of the qual-
+S002b    S002a            1.17  0.57  -0.16                     ity of the fit, we note that none of the 29 CE
+s002c    S002a            0.88  0.57  - 0.60                    comparisons has the wrong sign for the relative
+S002j    S002b            1.72  2.19  - 0.32                    conformational energy and that all but 9 of the 440
+S002k    S002a            1.52  1.05    0.48                    TI' comparisons have the correct sign. Of the latter
+s002s    S002a            1.28  1.04  - 0.46                    nine, only two involve errors in conformational
+S002t    S002b            2.22  0.47  - 0.24                    energy of 0.4 kcal/mol or greater, and none is in
+s002u    S002d            0.39  0.47  - 1.74                    error by more than 1 kcal/mol.
+S003a    S003b            0.30  0.37    0.08
+S003c    S003b            1.35  0.00    0.06                       The most egregious qualitative failure occurs
+S004j    S004a            4.73  4.76  - 1.35                    for conformer SOO7b, where the nitrogen flattens
+S004k    S004a            1.49  1.52    0.04
+S005a    S005b            1.74  1.17    0.04                    -considerably and the N-S bond rotates by
+S005s    S005a            0.53  0.23  - 0.57                       120"during the MMFF94 optimization. This case
+S005t    S005b            2.27  1.40  - 0.30                    is not reflected in the cited rms deviation, but
+S007c    S007a            3.19  2.74  - 0.87                    would raise it very considerably because the S007a
+S007d    S007a            3.30  3.90  - 0.45                    structure to which SOO7b collapses lies 7 kcal/mol
+S007j    S007a            5.38  4.65    0.60                    lower on the MI'2/6-31G* surface. A second quali-
+S007t    S007d            0.74  0.55  - 0.73                    tative failure-one that is reflected in the cited
+S008b    S008a            1.55  1.47  -0.18                     rms deviation-arises because conformer S003c
+S008j    S008a            5.51  4.94  - 0.08                    improperly optimizes to the S003b geometry on
+S008s    S008a            0.30  0.12  - 0.57                    the MMFF94 energy surface. A third occurs for
+S008t    S008b            0.17  0.01  -0.18                     S002b and S002c as well as for their N-planar
+S009t    S009b            3.16  3.56  -0.15                     analogs, S002s and S002t. For S002b and SOO~C,
+                                        0.40                    the two MP2/6-13G* conformers differ by just 0.3
+                          2.53  0.57                            kcal/mol on the MP2/6-31G* surface and can be
+rms conf. eliergy, error                                        interconverted by rotations of 41" about the
+                                                                C(ring1- N bond and of 24" about the N-S
+aSeeTable I1 in ref. 1 for a description of the conformations.  bond. Ordinarily, two equilibrium structures
+bMP216-31G* energies at MP2 16-31G* optimized georne            would not be found so close together in conforma-
+tries; MMFF94 energies at MMFF94-optimizedgeometries.           tional space. Nevertheless, both are minima on the
+                                                                MP2/6-31G* surface, as evidenced by the fact that
+of one-, two-, and three fold torsion parameters                intermediate structures reoptimize to one or the
+optimized, 102 individual components ultimately                 other. The MMFF94 optimization, in contrast,
+were fixed at zero values, and 8 V , components                 yields a common (intermediate) structure from
+for C =C double bonds and for bonds in aromatic                 either starting point.
+rings were fixed at nonzero values chosen to be
+consistent with core MMFF94 values. In all, 180                    Torsional geometries are reasonably well de-
+nonzero V, components were determined.                          scribed. When conformers S003c and SOO7b are
+                                                                excluded, the rms deviation in the MMFF94 ge-
+   The final parameters are identified by the label             ometries is found to be 6.53" for 1156 torsion an-
+"X94" in the distributed parameter set.I5 These                 gles in 61 equilibrium conformations. These con-
+parameters reproduce 29 CE (Table 1x1and 440 TI'                formers consist of those structures in Tables 11, IV,
+conformational comparisons with rms deviations
+of 0.57 and 0.73 kcal/mol, respectively, as against
+rms values of 2.53 and 4.90 kcal/mol. These rms
+deviations are higher than those of 0.31 and 0.50
+
+630                                                             VOL. 17, NOS. 5 & 6
+and VIII that have "a," "b," "c," or "d" as the                    MERCK MOLECULAR FORCE FIELD. V
+fifth character of the conformational index' and
+are large enough to possess torsion angles. The          EMPIRICAL RULE FOR
+rms deviation is only moderately higher than that        TORSION PARAMETERS
+found in MMFF94's core parameterization:
+                                                         The empirical rule used in MMFF94 was pat-
+   A few years ago, we used STO-3G* data to           terned after those used by Mayo et al. in their
+parameterize MM2X, MMFF's predecessor force           DREIDING force field3' and by Rapp6 and
+field, for a similar set of sulfonamides. When as-    coworkersin UFF?3 In MMFF94, the empirical-rule
+sessed against the higher quality MP2/6-31G* data     routine executes the following stepwise protocol
+used in this work. MM2X is found to perform           and terminates when a stated condition is satis-
+much less accurately than MMFF94. It gives a rms      fied.
+deviation of 1.23 kcal/mol for the 26 CE compar-
+isons based on SO-series conformers?' about dou-         (a) If either of the central atoms j and k in the
+ble MMFF94's rms deviation of 0.60 kcal/mol for              i-j-k-I torsion angle is designated as being
+the same set of comparisons. MM2X, however,                   linear [i.e., if lin(J) = 1 or lin(K) = 1 in
+describes the torsional geometries about as well as          Table I], zero torsion parameters are as-
+MMFF94.                                                       signed.
+
+   GENERATION OF USE OF WILDCARDED                       (b) If the atom types J and K are aromatic and
+   DEFAULT PARAMETERS
+                                                             the bond j-k lies in an aromatic ring, a
+   Requests for one-, two-, and threefold torsion             twofold potential is assigned. Independently
+parameters that cannot be resolved using the pri-            of the value of the torsion-type index M ,
+mary numeric MMFF atom types and the associ-                  V,( M :IJKL), in kilocaloriesper mole, is given
+                                                             by
+ated torsion-type index: TT,,,L, are first handled
+                                                          where `7r;k is related to the j - k pi-bond
+via the "step-down" equivalency procedure out-            order, and U, and U, are parameters that
+lined in part I.' Ultimately, a successively equiva-      depend on the atomic species (cf. Table XI.
+lenced request for V,, V 2 ,and V3 torsion parame-        The "pi-bond order" `7rjk is assigned as 0.5 if
+ters for an i-j-k-1 torsion angle may retrieve a          neither j nor k contributes a pi lone pair to
+fully wildcarded M :0-J-K-0 parameter (where M            the pi system [i.e., if pilp(J) and pilp(K), as
+denotes the torsion-type index TTlrKL)or, in a few        listed in Table I, are both "O"] and other-
+cases, may access a "half-wildcarded" M :0-J-K-L          wise as 0.3. The scale factor p is taken as 6
+or M :I-J-K-0 parameter. If not even a wildcarded         in most cases, but as 3 if one of the two
+parameter is available, the empirical rule de-            central atoms is trivalent and the other is
+scribed in the next subsection is invoked.                tetravalent, as determined from the associ-
+                                                          ated val(J) and Val( K ) values.
+   The wildcarded parameters supplied in the pa-
+rameter file were generated in one of two ways.       (c) When the j-k bond has a formal bond order
+For J-K bond types covered in the "C94" (core
+MMFF94) or "X94" parameterizations, wildcarded           of 2, eq. (21) is used with p = 6 and `7r;k = 1,
+parameters M:O-J-K-0, M:O-J-K-L, or
+M :I-J-K-0 were generated by averaging the ex-            provided that mltb(J) = 2 and mltb(K) = 2
+plicitly determined M :I-J-K-L parameters over I          (implying a full double bond). Otherwise,
+and L, over I, or over L, respectively. For the           %-jk is taken as 0.4. An example of the latter
+additional torsion interactions encountered in the
+extended CSD parameterization, in contrast, wild-     TABLE X.
+carded M :0-J-K-0 parameters were generated           MMFF94 EmDirical-Rule Parametersfor
+from the empirical rule described in the following
+subsection and were placed in the distributed pa-     Torsion Interactions.
+rameter file,I5 identified by the label "E94" or
+"#E94."31 These parameters depend only on the         Atom  Ua               Vb  Atom      Ua     Vb
+torsion type and the atom types of the central two
+atoms.                                                C     2.0 2.12 Si                    1.25  1.22
+                                                                                           1.25  2.40
+                                                      N     2.0 1.5              P         1.25  0.49
+
+                                                      0     2.0 0.2              S
+
+                                                      aUsed in eq. (21).
+                                                               in eq. (22).
+
+JOURNAL OF COMPUTATIONAL CHEMISTRY                                                               631
+HALGREN                                                           of 0.5 is assigned. Otherwise, rrIk = 0.3 is
+                                                                 assigned if j and k belong to carbon's row,
+        case would be the formal double bond be-                 and r,k= 0.15 is assigned if either j or k
+        tween a carbon of MMFF numeric type 57                   does not. (3) Similarly, if k has a pi lone pair
+        and a nitrogen of type 55 in a resonance                 and j can form multiple bonds, case (2)
+        structure for a guanidinium cation, where                 applies with the indices interchanged. (4) If
+        mltb(57) = 2 but mltb(55) = 1. The smaller               either j or k can form strongly delocalized
+       value for r l k recognizes that j - k is not a             "single" bonds [i.e., if either mltb(J1 = 1 or
+        double bond in all resonance structures.                 mltb(K) = 11 and if either j or k is not
+   (d) When both j and k are tetracoordinate [i.e.,
+        crd(J) = 4 and crd(K) = 41, a threefold po-             carbon, eq. (21) is used with /3 = 6 and
+        tential is assigned. V3(M:IJKLis) given by:
+                                                                  rIk= 0.4. This relatively large pi bond order
+        where V, and V, depend on the atomic                     recognizes that the j - k bond is probably a
+                                                                  delocalized partial double bond of resonant
+      species for j and k (cf. Table XI, and N,,,                 bond order 1/2 or 1/3, an example being a
+                                                                  C-N "single bond" in a resonance struc-
+        the number of torsion interactions about the              ture for a guanidinium cation [note that rule
+       j - k bond, is obtained as the product of                  (c) above ensures that the C = N "double
+        crd(J) - 1 and crd(K) - 1.                                bond" in the same resonance structure is
+   ( e ) When atom j is tetracoordinate but k is not,             treated in the same way]. (5) Finally, in all
+       a number of cases arise: (1) if k is tricoordi-            other cases, j - k is taken to be a "normal,"
+        nate but is tetravalent or is strongly delocal-           but weak, interaction between multiple
+        ized [strictly, if crd(K) is "3" and (i) if               bonds (an example being the central C-C
+        val(K) is "4" or "34" or (ii) if mltb(K) is               bond in butadiene or biphenyl). Then eq.
+        nonzero], zero torsion parameters are re-
+        turned, as this torsion bond represents a                (21) used with /3 = 6 and rrTT=lk0.15.
+       sp3-sp2 rotor. (2) If k is dicoordinate but
+        trivalent [i.e., if crd(K) = 2 and if either         (h) Finally, if none of the previous conditions
+                                                                 apply, j and k must both be saturated cen-
+       Val( K ) = 3 or mltb( K ) # 01, zero torsion               ters that at most are tricoordinate. In most
+                                                                  such instances, e.g., (22) is used with the V ,
+        parameters are also returned. (3) In all other           parameters listed in Table X. However, if
+       cases, eq. (22) is used and j - k is treated as a         both j and k are oxygen or sulfur, each
+        saturated bond.                                           atom has two lone pairs and the interaction
+                                                                 takes on a special nature. When j (or k ) is
+   (f) When atom k is tetracoordinate but j is not,               oxygen, W, (or W K )is set to 2.0, but when j
+        the provisions of the preceding paragraph
+        apply with the indices reversed.                        (or k ) is sulfur, W, (or W,)is set to 8.0. A
+
+   (g) The remaining cases involve central atoms j                twofold potential V,( I J K L ) is then assigned
+       and k that, at most, are tricoordinate. When               as:
+       the formal j - k bond order is 1 but mltb(J)
+        and mltb(K) are both nonzero, or when                To place the preceding formulation of the em-
+        mltb(J) and pilp(K) are both nonzero, or          pirical rule in context, we note that we have fol-
+
+      when pilp(J ) and mltb( K 1are both nonzero,        lowed Rapp6 et al.33 in allowing the U, and V ,
+
+       j - k in most cases is recognized as being a       parameters in eqs. (21) and (22) to depend on the
+        resonant interaction. A number of cases           atomic species; Mayo et al. had suppressed such
+        arise: (1) If both atoms are classified as hav-   dependence in DREIDING.32We differ from Rapp6
+       ing pi lone pairs [pilp(J) = 1 and pilp( K ) =     et al. in two basic ways. First, for aromatic and
+        11, the interaction is taken not to be reso-      resonant interactions we make finer distinctions in
+        nant, and zero torsion parameters are as-         the values assigned for twofold torsion constants.
+        signed. (2) If j has a pi lone pair and k can     These distinctions reflect patterns found in the
+        form multiple bonds [i.e., if pilp(J) and         explicitly determined "C94" and "X94" parame-
+        mltb(K) are both nonzero], eq. (21) is used       ters. Second, we have chosen the particular func-
+       with /3 = 6. If j can also form strongly delo-
+        calized "single" bonds [i.e., if mltb(J) = 1,     tional forms and the specific /3, T 1 k , u,,u,,and
+        an example being an amide nitrogen of
+        MMFF atom type 101, a "pi bond order" r l k
+
+632                                                       VOL. 17, NOS. 5 & 6
+                                                            MERCK MOLECULAR FORCE FIELD. V
+
+W, parameters by fitting the resultant                TABLE XI.
+M :0-J-K-0 parameters to the averaged default         MMFF94 Results for Hydrates of Singly
+values obtained from the explicitly determined
+parameters.                                           Charged Ions.
+
+   When needed, the composite procedure out-                       X(H2O)                    X(H2O);
+lined in this and the preceding subsection provides
+reasonable default or empirical-rule parameters. It         Ionic
+should be kept in mind, however, that many appli-
+cations will have no need for such default-level      X     Radiusb R,...oc AEd R, ...,.     AEd
+parameters, because the explicit "C94" and "X94"
+parameterizations cover an extensive range of         F-    1.36   2.65  -20.4  2.72e        -56.8
+chemical structure.                                   CI -  1.81   3.18  -14.3  3.25'        -40.9
+                                                      Br -  1.95   3.33  -13.1  3.41'        -37.8
+  Extension of Parameterization for                   OH -   -     2.64  -21.7  2.72h        -60.8
+  van der Waals Interactions                                0.60   1.83  -32.4  1.90         -85.0
+                                                      Li +  0.95   2.21  -24.1  2.26         -65.4
+   MMFF94 makes no use either of default param-             1.33   2.61  -18.3  2.66         -50.4
+eters or of empirical rules for generating "missing"  Na+          2.49  -28.3  2.52h        -78.5
+van der Waals (vdW) parameters. Atomic polariz-       K+      -
+abilities aI needed for the additional atom types                  2.59  -22.5  2.62h        -62.3
+introduced in the CSD parameterization were ob-       H30+   -     2.23  -23.9  2.28         -64.9
+tained by retaining the preliminary values pub-
+lished earlier* or were generated by analogy to       NH:   0.96
+"C94" (core MMFF94) parameters for similar            c u+
+chemical species. MMFF atom types 13, 14, 17-19,
+25, 26, 42, 43, 45-48, 51, 53, 60-62, 67, 72-79, and     'D, symmetry except as noted.
+82 were parameterized in this way. The parame-
+ters chosen by analogy are identified by the label       bFrom Pauling (ref. 36).
+"X94" in the distributed parameter file.I5
+                                                         'Distance to oxygen of water (A); in hydronium and amme
+   MMFF94 (but not MMFF933,4) also includes
+vdW parameters for "protein metals" such as              nium hydrates, from 0 and N atoms, respectively.
+Zn2+,Ca2+,Cu2+,Cu', and for high-spin Fez+               dlnteractionenergy (kcal/ mol); computed as energy relative
+and Fe3+,as well as for F-, C1-, Br-, OH-, Li',
+Na', Mg2+, and H30'.15 This parameterization             to hydrate species at infinite separation.
+involved atom types 35, 49, and 87-99. The scale
+parameters A , and G, and the effective-electron         eUnsymmetrical; F ... 0 distances are 2.67, 2.70, and 2.78
+
+numbers Nf were assigned by analogy to other             A.
+
+cases, but the polarizabilities, a[,which deter-         'Unsymmetrical; CI ...0 distances are 3.14, 3.22, and 3.39
+mined the vdW radii through eq. (91, were explic-
+itly parameterized. The polarizability of Zn" was        A,
+obtained by considering the coordination geome-
+tries for a number of ligands bound to thermolysin       :Unsymmetrical; Br ...0 distances are 3.28, 3.36, and 3.58
+for which crystallographic structures were avail-
+able from the protein data bank at Brookhaven            A,
+National Laboratory.N Parameters for the remain-         h ~ ,symmetry.
+ing ions were then obtained by suitably adjusting
+the MMFF energies and structures of mono- and         experimentally in the gas p h a ~ e . 3E~xcept for OH-
+trihydrates for singly charged ions (Table XI) and    and H 3 0 + ,calculated interatomic distances could
+of tri- and hexahydrates for multiply charged ions    also be compared to assigned ionic radii, taken
+(Table XII). For most of the singly charged ions,     from P a ~ l i n gor~f~rom Day and Selbin.37We also
+the computed association energies could be com-       compared MMFF results for the monohydrates of
+pared with enthalpies of association determined       Li', Na', F-, and C1- to the TIP4P energies and
+                                                      geometries reported by Jorgensenand coworkers?8
+                                                      For each ionic species, we adjusted the associated
+                                                      polarizability aIto make the distances R , - cor-
+                                                      relate with the ionic radius of "X" in a uniform
+                                                      fashion (see Tables XI and X I 0 and, where data
+                                                      were available, to bring the association energies
+                                                      for the hydrates roughly into line with experiment.
+                                                      These parameters are also labeled "X94."15
+
+                                                         As can be seen from Tables XI and XII, the
+
+                                                      Cx- distances typically lengthened by 0.05 to 0.1
+
+                                                      A on going from less to more highly hydrated
+                                                      complexes, much as might be expected. For the
+                                                      trihydrates, the MMFF94 distances usually exceed
+                                                      the listed ionic radius by about 1.$0-1.45 A for the
+                                                      negative ions and by about 1.30 A for the positive
+
+                                                      ions, though the calculated R ,I distances for F-
+
+                                                      and Mg2+,the 5mallest ions of their charge types,
+                                                      are about 0.05 A shorter than would be expected
+
+JOURNAL OF COMPUTATIONAL CHEMISTRY                                                                    633
+HALG R EN
+
+TABLE XII.                                                   question (1.00 A3)had already been widely used in
+MMFF94 Resultsfor Hydratesof Multiply
+Charged Ions.                                                portions of the MMFF94 parameterization that had
+                                                             been completed before the present parameteriza-
+                                                             tion for ionic species was undertaken. It may be
+                                                             that the ammonium ion is too strongly hydrated
+                                                             and that its parameterization will need to be
+                                                             modified.
+
+Mg2+  0.65   1.90  -177.3  2.08        -288.1                  Performance of the Extended
+Ca2+  0.99   2.30  -129.3  2.40        -225.6                  Parameterization for MMFF94
+Cu2+  0.72'  2.02  -162.2  2.16        -271.2
+Fe2+  0.76   2.06  -156.8  2.19        -264.5                   In this section we examine the ability of the
+      0.64   1.94  -262.8  2.06        -456.0                extended force field to reproduce structural and
+Fe3+  0.74   2.04  -158.9  2.18        -267.1                energetic data obtained from the Cambridge Struc-
+                                                             tural Database. The fit to the ab initio data on
+Zn2+                                                         conformational energies was described previously.
+
+aD3 symmetry.
+b ~ s, ymmetry.
+'From Pauling (ref. 36).
+
+dDistanceto oxygen of water (A).
+
+dlnteractionenergy (kcal/ mol); computed as energy relative
+to hydrate species at infinite separation.
+'From ref. 37.
+
+                                                             FIT TO CSD DATA USED IN THE
+
+from these relationships. The calculated R _. dis-           PARAMETERIZATION
+
+tances thus appear to be reasonable.                         As previously noted, the parameterization data
+
+Kebarle35has reported experimentally observed consisted of 2861 sets of X-ray and neutron-diffrac-
+
+gas-phase enthalpies of association for all the singly tion structures. To assess MMFF94's ability to re-
+
+charged ions except Cu'. In order of their appear- produce this structural data, we compared the
+
+ance in Table XI, Kebarle's values are -23.3, - 13.1, MMFF94-optimized and experimental geometries
+
+-12.6, -25, -23, -22, -19.9, -24.4, and -20                  for these structures. Because hydrogen atoms are
+
+kcal/mol, respectively, for the monohydrates, and not reliably placed by fits to X-ray data, we exam-
+
+-53.6, -37.5, -36.4, -56.4, -81, -60, -45.9,                 ined only bond lengths and bond angles that did
+
+-69, and -45.3 kcal/mol for the t r i h y d r a t e ~ . ~ ~not involve hydrogen atoms. In addition, because
+
+Comparison shows that the MMFF94 values usu- crystal packing considerations can easily distort
+
+ally are moderately more negative, as we assume the molecular conformation, we did not consider
+
+should be the case for fully solvated versus gas- torsion (see, however, the following subsection).
+
+phase c0mplexes.3~Exceptions arise in a few cases. As bond angles sometimes depend significantly on
+
+For F-, for example, the MMFF94 monohydrate the molecular conformation:' we applied weak
+
+energy of - 20.4 kcal/mol is less negative than the penalty-function restraints to keep the torsion an-
+
+experimental value of - 23.3 kcal/mol, though the gles from deviating too greatly from the experi-
+
+MMFF94 association energy for the trihydrate of mental values. These restraints added a penalty of
+
+-56.8 kcal/mol is more negative than experimen- 1.5 X l o p 4 kcal/mol for each squared degree of
+
+tal value of -53.6 kcal/mol. As MMFF94 is in-                deviation in a given torsion angle. They raise the
+tended for use in condensed-phase simulations,
+we thought it more important to match the proper-            - energy by 0.3 kcal/mol for a rigid rotation of
+ties of the trihydrate. A second exception arises for
+                                                             - 15" about a C,p?-Csp'bond and by 5 kcal/mol
+
+                                                             for a 60" rotation. Before applying these restraints,
+
+NH:, where the MMFF94 mono- and trihydrate however, we first optimized the hydrogen atom
+
+energies of -22.5 and -62.3 kcal/mol, respec- positions to ensure that no restraints involved un-
+
+tively, are substantially more negative than the realistic torsion angles.
+
+experimental values of - 17.2and -45.3 kcal/mol.             The resultan: comparisons yielded rms devia-
+
+We could have reduced the magnitudes of the tions of 0.023 A for 40,562 bond lengths and of
+
+calculated values by increasing the polarizability 1.96" for 58,087 bond angles. These deviations are
+
+for quaternary nitrogen (MMFF atom type 34), rFspectable, though smaller rms deviations of 0.014
+
+thereby increasing the vdW radius and lengthen- A and 1.2" were found in comparing MMFF94 to
+
+ing the calculated N + .-.0 distances. We elected experiment for 30 small $olecules3 and still smaller
+
+not to do so, however, because the polarizability in rms deviations of 0.006 A and 1.16" were found in
+
+634                                                                            VOL. 17, NOS. 5&6
+                                                         MERCK MOLECULAR FORCE FIELD. V
+
+comparisons to MP2/6-31G*-optimized geome-               hydrogen atoms, and we compare MMFF94 to
+tries.' Especially for bond lengths, the larger devi-
+ations may partly reflect cases in which MMFF94          CSD atomic positions after rigid least-squares su-
+is unable to fully represent a real chemical varia-
+tion present in the CSD data. One such case arose,       perposition of the heavy atoms. In their studies,
+
+for example, for aliphatic C-F bonds, where              the Tripos group used a conjugate-gradient algo-
+
+- lengths of about 1.32 A, in trifluoromethyl groups     rithm and refined each structure until a rmsogradi-
+
+rise sharply to 1.40 A when the carbon atom is           ent over all atoms of 0.1 kcal/mol. A was
+singly fluorinated. As previously d i s c ~ s s e d , ~
+MMFF94 gives an intermediate value as a result of        reached?l Mayo et al. employed the same conver-
+an intentionally chosen compromise.Other, similar
+cases undoubtedly arise.                                 gence criterion but used a variable-metric algo-
+
+   Not all of the discrepancy between the MMFF94         rithm.44Momany and Rone, in contrast, employed
+and CSD geometries necessarily represents defi-
+ciencies in the MMFF94 model. Part can be at-            a powerful Newton-Raphson procedure and used
+tributed to the use of averaged atomic positions in
+defining X-ray values for bond lengths and angles.       a, much lower rms gradient of 1 X  kcal/mol.
+In this connection, Clark et a1.4' assert that X-Zay
+bond lengths can be too short by 0.005-0.015 A if        A as the convergence criterion. Our optimizations
+the structure is not corrected for rigid body mo-
+tions. In agreement with their assessment, we find       also used a variable-metric algorithm' but we5e
+that the MMFF94 bond lengths (most of which are
+principally determined by MP2/6-31G*-based ref-          carried to a rms gradient of 1 X   kcal/mol. A.
+erence ovalues) exceed the CSD bond lengths by
+0.010 A on average. Second, part of the larger           Thus, the MMFF94 structures, like those of Mo-
+apparent errors encountered in reproducing the
+CSD geometries may be attributed to uncertainties        many and Rone, rigorously represent stationary
+in the experimental values themselves. There ap-
+pears to be substantial variation in the quality of      points (and almost certainly are energy minima).
+crystallographic structures, even when determined
+at low R f a ~ t o r s > ~ , ~ ~                         Detailed MMFF94 results are presented in Table
+
+                                                         XI11 for 75 of the 76 CSD structures; one, the
+
+                                                         structure with the CSD refcode of "AFMSCY,"
+
+                                                         was a sulfonium salt (R3S+) that could not be
+
+                                                         handled by MMFF. As noted earlier in this study,
+
+                                                         we had decided at the outset not to include such
+
+                                                         species in the extended parameterization, though
+
+                                                         it would not have been difficult to do so. Chemical
+
+                                                         names for the CSD structures may be found in the
+
+                                                         article by Clark and coworker^^^; the structures are
+
+                                                         depicted there and by Mayo et al.32The numbers
+
+                                                         of atoms, bonds, angles, and torsions in each struc-
+
+                                                         ture are the same as those listed by Mayo et al.
+
+                                                         In examining Table XIII, we, note, first of all,
+
+                                                         that the rms deviation of 0.021 A for bond lengths
+
+FIT TO CSD DATA PREVIOUSLY USED IN                       is virtually the same as that found in the previous
+ASSESSING MOLECULAR FORCE FIELDS
+                                                         subsection for the larger set of CSD structures, as
+
+                                                         is the rms deviation of 1.97" for bond angles. These
+
+For use in characterizing the Tripos 5.2 force           rms deoviations are about 60% as large as those of
+
+field, Clark et al.41a few years ago extracted from      0.035 A and 3.224" reported for the DREIDING
+
+the then-current version of the CSD the first 76         force field.32Thus, the more specifically parame-
+
+structures having R factors below 0.05. More re-         terized MMFF94 force field indeed describes these
+
+cently, Mayo et al. used the same structures to          aspects of the molecular geometry more accu-
+
+benchmark their DREIDING force      and                  rately. For compari%on,Clark et al. report rms
+
+Momany and R ~ n eem~plo~yed 49 of them to help          deviations of 0.025 A for bond lengths and 2.50"
+
+assess their QUANTA 3.2 parameterization for             for bond angles for the Tripos 5.2 force field;
+
+CHARMm. To test MMFF94, we extracted the same            Momany and Rone do not report results for bond
+
+structures and prepared them in the manner previ-        and angle deviations. We consider the MMFF94
+
+ously described. Interestingly, only 5 structures        deviations to be quite respectable and note that
+
+appear in the larger set of 2861 structures used in      perfect agreement with the CSD geometries would
+
+extending MMFF94's parameterization. As had              not be expected.
+
+other investigators, we removed counterions and          When deviations in torsion angles and in atomic
+
+coordinating water molecules; when two chemi-            positions are considered, a different, and more
+
+cally identical molecules occupied the unit cell, we     complex, picture emerges. Thus, oMMFF94's rms
+
+arbitrarily deleted one. Like the groups just cited,     deviations are 16.46" and 0.474 A, respectively,
+
+we report deviations only for bonds, angles, tor-        while those reported for DREIDING are 8.948" and
+
+sions, and atomic positions that do not involve          0.235 A, only about half as large. Similarly, Clark
+
+JOURNAL OF COMPUTATIONAL CHEMISTRY                                                          635
+HALGREN
+
+TABLE XIII.
+Comparisonof MMFF94 and CrystallographicStructuresa
+
+System     Natm Ratm Matm Rbnd Abnd                  Mbnd     Rang   Mang      Rtor    Mtor
+
+Total      75b 0.474 3.657 0.021 0.009               -0.106   1.97   -11.77    16.46   159.25
+AAXTHP                                                 0.045  2.79    - 6.89   53.29   131.57
+ABAXES     26  1.317 3.657 0.024 0.013                        1.57    - 3.59           - 12.88
+ABBUMOlO                                             - 0.043  1.07              4.17    - 5.65
+ABINOR02   25  0.156 0.389 0.021 0.003                 0.024  1.89      2.21    2.12
+ABlNOSOl                                               0.030  2.17    - 3.65    4.68       8.15
+ABTOET     22  0.053 0.097 0.012 0.008                 0.025  1.95              3.69       5.61
+ABZTCX                                                 0.046  3.30      4.31   14.41   - 50.86
+ACADOS     10  0.062 0.1 17 0.015 0.006                0.075  1.13      4.12   36.65    124.31
+ACAFLR                                                 0.052  1.73   - 11.77    5.01   -16.13
+ACANILO1   10  0.070 0.1 11 0.014 0.012                       1.60      3.54   10.20   - 43.88
+ACARAP                                               - 0.081  1.87      4.07    7.29   - 16.99
+ACBNZAO 1  27  0.400 0.935 0.020 0.009                 0.028  2.44      4.05   16.49     59.09
+ACBUOL                                                 0.037  2.73      3.85   10.04     20.34
+ACCITR10   20  0.766 2.242 0.022 0.008                 0.042  1.71       5.29  55.26    139.10
+ACDXUR                                                 0.042  1.69    - 8.03    5.91   - 20.87
+ACENAP03   22  0.160 0.325 0.017 0.008                        1.34       3.90   8.13     19.97
+ACFPCH                                               - 0.037  1.40    -4.10     0.48       0.99
+ACFUCN     17  0.305 0.921 0.024 0.003               - 0.049  2.03    - 3.05   21.60     52.88
+ACGLSP                                               - 0.048  1.75    - 3.46    7.85   - 12.78
+ACGLUAl 1  10  0.127 0.231 0.011 0.005                        2.1 1   - 4.88   12.99     41.23
+ACHGAL                                                 0.040  1.70       3.12   7.42     22.1 6
+ACHIST20   22  0.561 1.708 0.021 0.018                 0.058  3.03       4.28   6.94   - 23.69
+ACHNAPlO                                               0.052  1.82       4.48  41.76   - 88.77
+ACHTARlO   13  0.194 0.431 0.025 0.015                 0.035   1.33      8.65   2.10       4.51
+ACIMDC                                                 0.033   1.82      5.50   7.97     19.87
+ACINDN     24  1.173 2.706 0.017 0.009                 0.095   1.54   -3.30
+ACINST                                                 0.040   1.88      2.55     -         -
+ACKYNU     22  0.143 0.537 0.019 0.006                 0.040   1.94      2.78
+ACMBPN                                                 0.010   1.98   - 5.87     1.84      4.84
+ACMEBZ     19  0.291 0.860 0.021 0.001                 0.039  2.34    - 4.23    9.34     31.01
+ACMTDE                                                 0.042             4.71  15.24     28.83
+ACNORT     12  0.027 0.049 0.024 - 0.007               0.066  1 .oo   - 5.04   11.41     40.58
+ACNPAClO                                               0.048          -3.08     8.73     17.90
+ACNPEC     17  0.475 0.910 0.019 0.011                 0.055  2.18    - 5.43    6.51   - 10.83
+ACONTNlO                                               0.054   1.87      5.42   5.85   - 13.24
+ACPENClO   14  0.163 0.261 0.027 0.016                 0.034  2.20    - 4.84     1.76
+ACPPCA                                                 0.049   1.42      4.01  28.74       5.06
+ACPRET03   25  0.475 1.350 0.027 0.022                 0.055  2.38    - 7.48    3.98     68.64
+ACPYNS                                                 0.057  2.1 7   - 4.36   12.18     21.17
+ACRAMS     15  0.221 0.630 0.016 0.008               - 0.045   1.31   - 4.44   10.04   - 40.88
+ACSALAOl                                               0.057   1.53   - 4.06    5.25   - 18.04
+ACSESOlO   17  0.236 0.736 0.017 0.011                 0.051   1.72   - 5.42   12.51   - 12.53
+ACTAND                                                 0.054  2.42       5.61  16.51     21.72
+ACTHBZ     14  1.205 2.035 0.030 0.013                 0.077   1.25      2.93   2.49   - 72.42
+ACTHCP                                                 0.055   1.18   - 3.30    8.22
+ACTOLD     15  0.060 0.094 0.024 0.021                 0.037   1.74      4.60   3.33       5.39
+ACTYSN                                                 0.034   1.56      3.27  18.58     20.53
+ACURID     10  0.197 0.369 0.026 0.023                 0.039   1.50      3.77   6.52     15.96
+ACVCHO                                               - 0.037   1.88   - 5.07     7.33    57.72
+ACXMOL     4   0.018 0.024 0.007 0.006                 0.042   1.89   - 4.26   13.97     11.21
+ACXMPR                                                 0.048   1.29   - 3.05   14.00      19.94
+           14  0.050 0.082 0.021 0.009               - 0.032  2.32       5.79    1.92  - 32.99
+                                                       0.033  3.72    - 9.93   13.05   - 34.30
+           26  0.352 1.070 0.022 0.019                 0.050                   66.61
+                                                       0.035                               3.29
+           18  0.487 1.176 0.025 0.012                                                 - 44.33
+                                                                                        159.25
+           24  0.230 0.704 0.021 0.015
+
+           14  0.217 0.506 0.024 0.015
+
+           16  0.158 0.255 0.021 0.010
+
+           31  0.195 0.440 0.018 0.011
+
+           15  0.057 0.144 0.025 0.002
+
+           21  0.832 2.163 0.027 0.022
+
+           32  0.175 0.783 0.017 0.004
+
+           15  0.449 1.136 0.022 0.003
+
+           12  0.178 0.396 0.027 0.020
+
+           29  0.292 0.695 0.021 0.009
+
+           18  0.370 0.603 0.024 0.017
+
+           26  1.071 1.810 0.028 0.010
+
+           13  0.075 0.171 0.024 0.015
+
+           23  0.171 0.526 0.019 0.012
+
+           24  0.174 0.502 0.015 0.010
+
+           22  0.560 1.662 0.015 0.007
+
+           10  0.085 0.158 0.019 -0.006
+
+           11  0.140 0.299 0.019 0.014
+
+           16  0.381 0.895 0.018 0.005
+
+           19  0.414 0.792 0.014 0.000
+
+           12  0.048 0.096 0.015 0,009
+
+           22  0.532 1.255 0.021 0.010
+
+           14  0.972 2.609 0.020 0.008
+
+                                                                     (Continueson next page)
+
+636                                                                  VOL. 17,NOS. 5 & 6
+et al. report rms deviations of 9.65" for torsion                 MERCK MOLECULAR FORCE FIELD. V
+
+angles and of 0.25 A for atomic positions for the    trostatically stabilizing influences in the crystal
+                                                     lattice. They also suggested that the relatively weak
+Tripos 5.2 force field, again in much better agree-  convergence criteria used by Clark et al. and by
+ment with the CSD data. On the other hand,           Mayo et al. might have yielded partially refined
+Momany and Rone iound a rms deviation in atomic      structures in which the torsion angles had not yet
+positions of 0.438 A for their CHARMm parame-        approached their equilibrium values.
+terization, only slightly better than that for
+MMFF94; they did not report torsion angles. In          To test their hypotheses, Momany and Rone
+assessing such differences in apparent accuracy,     reoptimized 14 of the most troublesome CSD
+Momany and Rone pointed out that crystal geome-      structures in the context of the crystallographic
+tries often display torsion angles that differ       environment. They found that the rms deviation in
+markedly from those that would be found for an       atomic positions for othese 14 structures fell by half,
+isolated molecule in vacuum, the conditions under    from 0.802 to 0.399 A. yoreover, they found a rms
+which the force-field optimizations were carried     deviation of just 0.376 A for the same set of struc-
+out. They further noted that the Tripos 5.2 and      tures when they omitted electrostatic interactions
+DREIDING studies omitted electrostatic interac-      and refined the structures in vacuum to a gradient
+tions, precisely the ones most likely to induce a
+change in conformation when a structure is re-       of 0.1 kcal/mol* A rms. In a similar fashion, we
+moved from geometrically confining and/or elec-
+                                                     find that MMFF94's rms deviation for torsion an-
+                                                     gles falls from 16.46" to 13.64"when the conver-
+
+                                                     gence cutoff is raised to 0.1 kcal/mol* A, and then
+
+TABLE XIII.
+(continued)
+
+System       Natm Ratm Matm Rbnd Abnd Mbnd Rang Mang Rtor                      Mtor
+
+ACYGLYll     8   0.071 0.119 0.027 0.019             0.044 2.33  - 3.69  2.54  - 3.53
+ACYTID
+ADELOX1 0    17 0.171 0.304 0.025 0.010              0.057 1.79  4.03    4.97  13.68
+ADENOSlO
+ADFGLP       28  0.168 0.507 0.014 0.009 -0.034 1.56 -4.82               5.27  21.92
+ADGSMH
+ADHELA10     19 0.201 0.517 0.018 0.007              0.057 1.29 - 2.85 6.03 - 15.51
+ADMANN
+ADMHEP       11 0.679 1.454 0.024 0.003              0.004 1.82  3.75 43.27    73.72
+ADMINA
+ADMOPM       29 0.440 1.158 0.021 0.017              0.043 2.05  4.36 11.97    40.33
+ADRTAR
+ADYPNL       14  0.098 0.200 0.013 0.003 -0.022 2.40             4.24    5.23  - 9.96
+AEBDODlO
+AENLANlO     12 0.170 0.339 0.017 0.014              0.028 2.47  4.88    6.57  10.91
+AFCYDP
+AFURP010     14 0.083 0.162 0.01 2 0.004             0.027 1.97  3.82 3.97     - 9.94
+AFUTDZlO
+AFUTHU       16 0.054 0.116 0.022 0.002              0.042 1.66 -3.84    1.98  6.09
+AGALAM10
+AGLUAM10     24  0.989 2.148 0.028 0.01 2            0.078 3.09 - 6.98 29.22 112.49
+AHARFU
+AHCDLA       13 0.747 1.601 0.015 0.004              0.026 1.72  3.30 38.92    86.95
+AHDITX
+             33  0.499 1.087 0.014 0.009 -0.026 1.36 -3.84 13.45 -46.82
+
+             22  0.173 0.501 0.010 0.003 -0.023 1.28 -3.63               7.47  16.98
+
+             35  0.531 1.898 0.032 0.008 -0.106      2.07        10.22 7.97 - 42.08
+
+             24  0.319 0.686 0.041 0.009             0.105 2.86  7.73 8.18 -20.18
+
+             13 0.095 0.182 0.016 0.004 - 0.024 3.24 -8.12               5.52 - 13.96
+
+             12 0.052 0.090 0.027 0.013              0.055 2.30 -4.52    3.59  7.76
+
+             16 0.353 0.655 0.020 0.002 - 0.038 2.17 - 4.36 12.35 -29.10
+
+             15 0.216 0.647 0.023 0.016              0.057 1.74 -3.14    6.85 - 22.23
+
+             13 0.334 0.746 0.024 0.013              0.048 2.1 1 -4.11 12.88 -29.10
+
+             16 0.215 0.583 0.020 - 0.005 - 0.035 2.15           6.49    7.15  17.04
+
+             14  0.049 0.078 0.019 0.003 -0.051 1.66 -3.93               2.08  - 4.98
+
+             26  0.146 0.471 0.014 0.004             0.026 1.61 - 6.47 3.17    13.46
+
+aAtomicdisplacements and bond deviations in angstroms, angle and torsion deviations in degrees. The listed quantities give the
+number (N) of atoms in each molecule, followed by the rms deviation (R), average signed deviation (A), and maximum deviation
+(M) in atomic positions (atm), bond lengths (bnd), bond angles (ang), and torsion angles (tor); the "atm" quantities measure
+displacements in atomic positions. The notation corresponds to that used in ref. 32.
+bNumber of molecules. The total number of bonds, angles, and torsions are 1461, 2140, and 2383, respectively; the numbers for
+each molecule are the same as those listed in ref. 32.
+
+JOURNAL OF COMPUTATIONAL CHEMISTRY                                             637
+HALGREN                                                 Concluding Discussion
+
+to 10.03" when electrostatic interactions are also       This article describes the extension of MMFF94
+suppressed. Concomitantly, the rms deviation ia       to a much broader range of pharmaceutical and
+atomic positions falls first from 0.474 to 0.424 A    chemical structures than was covered by the core
+                                                      parameterization presented in parts 11,' 111,3 and
+and then to 0.336 A. While these rms deviations       IV.4 One key to this extension was the extraction
+                                                      and use of approximately 2800 good-quality crys-
+remain larger than those reported for the Tripos      tallographic structures from the Cambridge Struc-
+5.2 and DREIDING force fields, the differences are    tural Database. We also generated HF/6-31G*-
+narrowed very considerably. Moreover, the simple      optimized geometries for a variety of small
+device of omitting electrostatic interactions can be  molecules and ions, and obtained MP2/6-31G*-
+expected to unbalance a force field like CHARMm       optimized geometries for these (Table 11) and for a
+or MMFF94 that relies on a carefully orchestrated     number of additional structures (Tables IV and
+interplay between electrostatic, torsional, and vdW   VIII). The parameters derived from this additional
+contributions. Finally, we note that Mayo et al.      computational data allow charge distributions, ge-
+also reported comparisons in which electrostatic      ometries, and conformational energies of sulfon-
+interactions based on Gasteiger charges were used.    amides and certain oxyphosphorous compounds to
+These calculations did show larger rms deviations     be described at a high level. For prospective phar-
+in atomic positions, but only modestly so. Al-        maceutical and bio-organic applications, com-
+though Gasteiger charges are much smaller than        pounds of these types are among the most impor-
+MMFF94 charges: this last observation is not so       tant of those not included in MMFF94's core
+readily explained. However, the effect of the par-    parameterization.
+tial optimization to a gradient of 0.1 kcal/mol-A
+may carry more weight than we have credited to           A series of carefully calibrated empirical rules
+it, as the properties of the optimizer itself come    and default-parameter assignments plays a crucial
+into play whenever the optimization fails to reach    role in MMFF94's extension. Given the importance
+a stationary point on the potential energy surface.   of electrostatic contributions in modeling inter-
+In this regard, we note that the Newton-Raphson       molecular interactions, key among these is an em-
+optimizer used by Momany and Rone possesses           pirical rule used for assigning otherwise unknown
+complete information about the curvature of the       bond charge increments from "partial bond charge
+energy surface and immediately generates search       increments" [eq. (17)l. These quantities, which es-
+directions that include complicated (in Cartesian     sentially reflect effective electronegativities of the
+space) torsional motions. In comparison, the opti-    MMFF atom types, were determined by requiring
+mizer used in OPTIMOL/MMFF, like that used by         that they reproduce the explicitly parameterized
+Mayo et al., employs a variable-metric algorithm.     bond charge increments as well as possible.
+However, our algorithm, which we believe to be
+highly efficient, employs a block-diagonal estimate      For bonds and angles, the extension of MMFF94
+for the inverse Hessian matrix, which is then suc-    proved to be quite straightforward. We deter-
+cessively updated via the BFGS ~cheme.4It~may         mined additional reference bond lengths and an-
+yield a more nearly complete torsional optimiza-      gles by first fitting to the geometries of the
+tion at a rms gradient of 0.1 kcal/mol.A than         MP2/6-31G*-optimized structures, and by then
+does the DREIDING optimizer, which we under-          fitting to the geometries of the CSD structures. We
+stand uses a simple diagonal guess for the initial    then developed empirical rules for reference bond
+inverse Hessian.                                      lengths [eq. (IS)] and for bond-stretching force
+                                                      constants [eq. (19)], and specificallycalibrated each
+   Admittedly, the foregoing is conjecture: What      to reproduce core MMFF94 parameters. For refer-
+we can say with certainty is that a comparison of     ence bond angles, we generated a default angle for
+torsion angles and atomic positions is fraught with   each central-atom type by taking suitable averages
+difficulties. We feel that such comparisons have      over the parameterized reference angles. We then
+little meaning unless (i) the conditions of the ex-   employed a previously published empirical rule29
+perimental measurements are properly emulated         to obtain the angle-bending force constant [cf. eq.
+(e.g., through explicit crystal-phase simulations),
+and if geometry optimization is used, unless (ii)
+the minima on the potential energy surface are
+accurately located.
+
+638                                                   VOL. 17, NOS. 5 & 6
+(2011. This empirical rule had previously been cali-               MERCK MOLECULAR FORCE FIELD. V
+brated to reproduce spectroscopically observed
+force constants in a wide variety of molecules.        Here, not surprisingly,46we found that MMFF94's
+                                                       in vacuo optimization often changed the conforma-
+   Also described are procedures used to extend        tion considerably from that observed in the crystal.
+MMFF94's parameterization for stretch-bend in-         It would be of interest to determine how well
+teractions, out-of-plane bending interactions, tor-    MMFF94 reproduces crystal geometries in energy
+sion interactions, and van der Waals interactions.     minimization studies-or, better, in molecular-
+For torsion interactions, we began by fitting addi-    dynamics simulations-when the calculations are
+tional torsion parameters to MP2/6-31G*-derived        carried out in the context of the crystal lattice.
+conformational energies for sulfonamides and
+oxyphosphorous compounds, among others. To                To date, MMFF has principally been used in
+further extend the parameterization, we first gen-     energy-minimization studies and in other calcula-
+erated default values that depend only on the          tions and analyses supported by the host program
+atom types for the two central atoms (and on the       OPTIMOL.1,47Recently, however, a version of
+"torsion type" index) by suitably averaging over       MMFF has been implemented in the commercially
+the torsion parameters obtained in explicit fits to    distributed program CHARMm:3,48 and MMFF94
+ab initiu conformational energies. We then formu-      is expected to become available in CHAR~VIM:~
+lated an empirical rule for generating additional      the academic version, as well. In addition, work is
+default ("wildcarded") parameters. This rule is        currently underway to implement MMFF94 in the
+patterned after ones previously devised for the        BatchMin module of the MacroModel program
+DREIDING3' and UFF33force fields but differs in        suite.50Given the good results obtained for confor-
+that it employs slightly different functional forms,   mational energies, including results for conforma-
+makes finer context-related distinctions, and has      tional comparisons pertinent to protein conforma-
+been calibrated specifically for MMFF94 by requir-     tion: and given the careful attention devoted to
+ing that the generated torsion parameters closely      achieving a balanced representation of intermolec-
+reproduce those obtained in the explicit parame-       ular interactions: we consider MMFF94 to be both
+terizations.                                           a "protein" force field and an "organic" force
+                                                       field. We expect it to do well in modeling struc-
+   The extension of the van der Waals parameteri-      tures and properties in both arenas.
+zation also included the additional atom types
+needed to accommodate ionic species such as              Acknowledgments
+"protein" metals Zn2+,Ca2+, Cu2+, Cu+, Fez+,
+and Fe3+;the hydronium and hydroxide ions; and            I thank Joseph Andose for implementing an
+various halide, alkalai, and alkalai earth ions. Only  earlier version of eq. (181, and Robert Nachbar and
+a preliminary parameterization was undertaken          Simon Kearsley for providing procedures that as-
+but MMFF94 results for hydrates (Tables XI and         sisted in the preparation of the CSD data and in
+XII) appear to obey reasonable trends in interac-      rigidly superposing molecular structures.
+tion distances and, where experimental data were
+utilized, in association energies. It is well to keep     Supplementary Material
+in mind, however, that "electrostatic" interactions
+such as those between ligands and protein metals          Computer-readable parameter files correspond-
+(e.g., Zn2+)may need to be treated by a model          ing to Tables I, 111, V, and VI are available in
+that takes account of partial chemical bond forma-     Supplementary Material as Appendix B to part I of
+tion and of concomitant charge transfer between        this study.15
+the coordinating sites.
+                                                          References
+   Assessments of performance of the extended
+MMFF94 parameterization using the full set of           1. Part I: T. A. Halgren, J. Comput. Chem. (this issue).
+CSD data and using a smaller set of CSD struc-
+tures previously employed for force-field evalua-       2. Part 11: T. A. Halgren, 1. Comput. Chem. (this issue).
+tion showed that MMFF94 accounts for crystallo-         3. Part I11 T. A. Halgren, J. Comput. Chem.(this issue).
+                                                        4. Part IV:T. A. Halgren and R. 8.Nachbar, I. Comput. Chem.
+- - graphically derived bond lengths.and bond angles
+                                                            (this issue).
+with rms deviations of 0.02 A and 2". We
+also compared deviations in torsion angles and
+atomic positions for the smaller set of CSD data.
+
+JOURNAL OF COMPUTATIONAL CHEMISTRY                     639
+HALGREN                                                               23. R. M. Badger, J. Chem. Phys., 2, 128 (1934); R. M. Badger,
+
+ 5. The Cambridge Crystallographic Database is obtainable                 1. Chem. Phys., 3, 710 (1935).
+     from the Cambridge Crystallographic Data Centre, Cam-
+     bridge, UK.                                                      24. R. S. Roy, Proc. Phys. Soc., Ser. 2 , 1,445-448 (1968).
+
+ 6. R. B. Nachbar, Merck Research Laboratories (unpublished           25. D. M. Byler, H. Susi, and W. C. Damert, Spectrochim. Acta
+     research).                                                            A , 43,861-863 (1987).
+
+ 7. AMF is the proprietary Advanced Modeling Facility devel-          26. M. R. Peterson and I. G. Csizmadia, J. Mol. Struct., 123,
+    oped' at the Merck Research Laboratories by J. D.                      399-412 (1985); cf. Table I of this paper.
+     Andose, R. A. Blevins E. M. Fluder, J. Shpungin, and others
+     in the Scientific Computing Group of the Department of           27. Badger's rule (cf. ref. 28) also performed reasonably weL1,
+     Molecular Design and Diversity.                                       but gave a somewhat higher rms deviation of 1.06 md/A.
+
+ 8. T. A. Halgren. J. Am. Chem. Soc., 114, 7827-7843 (1992).          28. D. R. Herschbach and V. W. Laurie, J. Chem. Phys. 35,
+                                                                           458-463 (1961).
+ 9. M. J. Frisch, G. W. Trucks, M. Head-Gordon, P. M. W. Gill,
+     M. W. Wong, J. B. Foresman, B. G. Johnson, H. B. Schlegel,       29. T. A. Halgren, 1. Am. Chem. Soc., 112,4710-4723 (1990).
+     M. A. Robb, E. 5. Replogle, R. Gomperts, J. L. Andres,
+     K. Raghavachari, J. 5. Binkley, C. Gonzalez, R. L. Martin,       30. These calculations used the MM2X force field and the
+     D. J. Fox, D. J. Defrees, J. Baker, J. J. P. Stewart, and J. A.       sulfonamide-based supplementary parameter file
+     Pople, Gaussian 92 (Revision C), Gaussian, Inc., Pittsburgh,          "SULF.PAR' described in: M. K. Holloway, J. M. Wai,
+     PA, 1992.                                                             T. A. Halgren, P. M. D. Fitzgerald, J. P. Vacca, B. D. Dorsey,
+                                                                           R. B. Levin, W. J. Thompson, L. J. Chen, S. J. deSolms,
+10 C. M. Breneman and K. B. Wiberg, 1. Comput. Chem., 11,361               N. Gaffin, A. K. Ghosh, E. A. Giuliani, S. L. Graham, J. P.
+                                                                           Guare, R. W. Hungate, T. A. Lyle, W. M. Sanders, T. J.
+     (1987).                                                               Tucker, M. Wiggins, C. M. Wiscount, 0. W. Woltersdorf,
+
+11 PROBE is a computer program used to derive molecular-                  S . D. Young, P. L. Darke, and J. A. Zugay, 1. Med. Chem., 38,
+     mechanics parameters in least-squares fits to data obtained
+     from ah initio calculations. PROBE was created for the                305-317 (1995).
+     Biosym Consortium on Potential Energy Functions by
+     Biosym Technologies, Inc. (San Diego, CAI; cf. J. R. Maple,      31 In a few cases, information on crystal-structure geometries
+     M.-J. Hwang, T. P. Stockfish, U. Dinur, M. Waldman, C. 5.             was used to modify the empirical-rule values for delocal-
+                                                                           ized single bonds. Such torsion parameters are identified by
+    Ewig, and A. T. Hagler, 1. Comput. Chem., 15, 161-182                  the label "#E94."
+
+     (1994).                                                          32. 5. . L. Mayo, B. D. Olafson, and W. A. Goddard 111, 1. Phys.
+
+12 In addition to the 27 values constrained in the PROBE fit to            Chem., 94, 8897 (1990).
+     CHELPG-based values, the "#X94" bond charge incre-
+     ments also include parameters for homopolar bonds (hav-          33 A. K. Rapp6, C. J. Casewit, K. S. Colwell, W. A. Goddard 111,
+     ing zero bond charge increments) and parameters for bonds
+     to bromine and iodine from carbons of MMFF atom types 1              and W. M. Skiff, 1. A m . Chcm. Soc., 114, 10024-10035 (1992).
+     and 2. Owing to the unavailability of 6-31G* basis sets for
+     Br and I in Gaussian 92, we estimated these quantities from      34 F. C. Bernstein, T. F. Koetzle, G. J. 8. Williams, E. F. Meyer
+     scaled values (increased by 20%) of observed dipole mo-               Jr.,M. D. Brice, J. R. Rodgers, 0.Kennard, T. Shimanouchi,
+     ments for the methyl and vinyl halides.                               and M. Tasumi, J. Mol. Biol., 112, 535-542 (1977); E. E.
+                                                                           Abola, F. C. Bernstein, S. H. Bryant, T. F. Koetzle, and
+13 R. J. Abraham, L. Griffiths, and P. Loftus, J. Comput. Chenz.,
+     3, 407-416 (1982); R. J. Abraham, G. H. Grant, I. 5.                 1. Weng, In Cystallographic Databases-Information Content,
+
+    Haworth, and P. E. Smith, 1. Comput. Aid. Mol. Design, 5,              Software Systems, Scientific Applications, F. H. Allen, G. Ber-
+                                                                           geroff, and R. Sievers, Eds.; Data Commission of the Inter-
+     21-39 (1991).                                                         national Union of Crystallography: Cambridge, UK, 1987,
+                                                                           pp. 107-132.
+14. L. Pauling, The Nature of the Chemical Bond, 3rd ed., Cornell
+     University Press, Ithaca, NY, 1960, Chapter 3.                   35 P. Kebarle, Annu. Rev. Phys. Chem., 28, 445 (1977), and
+                                                                           references therein.
+15. The MMFF94 parameters are included in Appendix B (Sup-
+     plementary Material) for Part I (ref. 1) and are available in    36. L. Pauling, Tlzr Nature of the Chemical Bond, 3rd ed., Cornell
+     computer-readable ASCII format.                                       University Press, Ithaca, NY, 1960,Chapter 13.
+
+16. V. Schomaker and D. P. Stevenson, J. A m . Chem. Soc., 63,        37. M. C. Day Jr. and J. Selbin, Theoretical Inorganic Chemisty,
+     37-40 (1941).                                                         2nd ed., Van Nostrand Reinhold, New York, 1969, p. 120.
+
+17. R. Blom and A. Haaland, 1. Mol. Struct., 128, 21-27 (1985).       38. J. Chandrasekhar, D. C. Spellmayer, and W. L. Jorgensen,
+
+18. Eq. (18) was developed by Joseph D. Andose of the Merck                1. Am. Chem. Soc., 106, 903-910 (1984).
+     Research Laboratories for use with the predecessor MM2X
+     force field (cf. ref. 1).The parameters and the adjustments      39. The same assumption was previously employed in the core
+     for hybridization and bond-order described in the subsec-             MMFF94 parameterization of polar intermolecular interac-
+     tion "Empirical Rule For Reference Bond Lengths" include              tions (ref. 2). It presumes that additional polarization in the
+     modifications to parameters and procedures he developed.              condensed phase should strengthen favorable electrostatic
+                                                                           interactions.
+19. A. L. Allred and E. g. Rochow, J. Inorg. Nucl. Chem., 5, 264
+     (1958).                                                          40. See, for example: R. F. Frey, J. Coffin, 5. Q. Newton,
+                                                                           M. Ramek, V. K. W. Cheng, F. A. Momany, and L. Schafer,
+20. Table of Periodic Properties of the Elements, E. H. Sargent &          J. Am. Chem. Soc., 114, 5369-5377 (1992).
+     Co., Brochure $18806, Dyna-Slide Co., 0 1962.
+                                                                      41. M. Clark, R. D. Cramer 111, and N. Van Opdenbosch,
+21. Compare with ref. 14, Table 7-2, p. 224.                               J. Comput. Chem., 10, 982 (1989).
+
+22. See, for example, J. Stals, Rev. Pure Appl. Chem., 21, 1-22       42. P. G. Jones, Chem. Soc. Rev., 13, 157 (1984).
+     (1970).
+                                                                      43. F. A. Momany and R. Rone, J. Comput. Chem., 13, 888-900
+                                                                           (1992).
+
+                                                                      44. B. D. Olafson, personal communication.
+
+640                                                                   VOL. 17,NOS. 5&6
+45. R. Fletcher, Practical Methods of Optimization: Unconstrained              MERCK MOLECULAR FORCE FIELD. V
+    Optimization, Vol. 1, Wiley, New York, 1980, Chapter 3.
+                                                                       van der Waals Interactions" section of this study) is avail-
+46. M. C. Nicklaus, S. Wang, J. S. Driscoll, and G. W. A. Milne,        able from Molecular Simulations, Inc. (San Diego, CA).
+    Biorganic & Medicinal Chemistry, 3, 411-428 (1995).                 However, while the local Merck code employs MMFF94,
+                                                                       arrangements for including MMFF94 in the distributed MSI
+47. Current intentions are to release OPTIMOL/MMFF94                    version have not yet been concluded.
+    through the Quantum Chemistry Program Exchange (Indi-
+     ana University) under terms that would permit its unre-       49. B. R. Brooks, R. E. Bruccoleri, 8. D. Olafson, D. J. States, S.
+     stricted usage but prohibit its commercialization.                Swaminathan, and M. Karplus, 1.Comput. Chern., 4,187-217
+                                                                        (1983).
+48. R. Czerminski, T. A. Halgren, and J. L. Banks, unpublished
+    research. Currently, a version CHARMm that includes the        50. P. S. Shenkin and T. A. Halgren, work in progress. The
+    earlier and less widely parameterized MMFF93 force field            MacroModel program suite, developed in the laboratories
+    (refs. 3, 4;see also "Extension of the Parameterization for        of Professor Clark Still, is available from Columbia Univer-
+                                                                        sity.
+
+JOURNAL OF COMPUTATIONAL CHEMISTRY                                 641
+
