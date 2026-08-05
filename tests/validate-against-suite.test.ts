@@ -216,7 +216,7 @@ describe('Halgren MMFF94 suite validation', () => {
     }
 
     const lines = [
-      `\nPer-component energy deltas vs BatchMin on typing-exact molecules (${nChecked} of 550):`,
+      `\nPer-component energy deltas vs BatchMin on typing-exact molecules (${nChecked}):`,
       `  term       |Δ|≤0.05   mean|Δ|    max|Δ|`,
       `  ─────────────────────────────────────────`,
     ];
