@@ -3,12 +3,12 @@
  *
  * See energy/out-of-plane.ts for the energy — Halgren1996 eq. (6):
  *
- *   E_oop = 0.043844 · (k_oop/2) · χ²
+ *   E_oop = OOP_UNIT · (k_oop/2) · χ²
  *
  * with χ in degrees, so for each of the three Wilson angles at a
  * tri-coordinate center j:
  *
- *   dE/dx = 0.043844 · k_oop · χ_deg · dχ_deg/dx
+ *   dE/dx = OOP_UNIT · k_oop · χ_deg · dχ_deg/dx
  *
  * The geometric factor dχ/dx comes from derivatives.ts, which
  * differentiates the same unit-normal construction as
@@ -30,7 +30,7 @@ import { Vec3, wilson_oop_angle } from '../../utils/vector';
 import { oop_force_constant } from '../energy/out-of-plane';
 import { oop_angle_derivatives, RAD_PER_DEG } from './derivatives';
 
-const OOP_UNIT = 0.043844; // (mdyn·Å/rad²)·deg² → kcal/mol, same as angle bending
+const OOP_UNIT = 143.9325 * (Math.PI / 180) ** 2; // exact form of the published 0.043844 (see angle-bend.ts)
 
 /**
  * Gradient of the out-of-plane bending energy, dE/dx per atom.

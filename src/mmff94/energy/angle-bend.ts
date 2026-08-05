@@ -26,6 +26,13 @@ import type { TypedMolecule } from '../../types';
 import { angle_in_radians, Vec3 } from '../../utils/vector';
 import { make_class_context, angle_parameters } from '../parameters/parameter-classes';
 
+// Unit conversion (mdyn·Å/rad²) → (kcal/mol)/deg². The published
+// 0.043844 is the rounded form; BatchMin uses the exact product
+// 143.9325·(π/180)² = 0.0438443467… — the suite's bend components sit
+// ~1e-5 relative low with the rounded value (168 molecules in the
+// 1e-4..1e-3 band, all under).
+const ANGLE_UNIT = 143.9325 * (Math.PI / 180) ** 2;
+
 // Cubic bend constant. The paper gives cb = −0.007 deg⁻¹ "(or, more
 // precisely, −0.4 rad⁻¹)" — BatchMin uses the precise radian value
 // converted to degrees. The rounding matters for large deviations:
@@ -76,7 +83,7 @@ export function calc_angle_bend_energy(molecule: TypedMolecule): number {
           const theta_deg = theta_rad * (180.0 / Math.PI);
           const delta_theta = theta_deg - theta0;
           const half_k_a = 0.5 * k_a;
-          const harmonic = 0.043844 * half_k_a * delta_theta * delta_theta;
+          const harmonic = ANGLE_UNIT * half_k_a * delta_theta * delta_theta;
           const anharmonic = 1.0 + CB * delta_theta;
           total_energy += harmonic * anharmonic;
         }

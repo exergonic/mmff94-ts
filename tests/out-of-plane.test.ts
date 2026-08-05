@@ -42,7 +42,7 @@ function pyramid_molecule(alpha_deg: number, atom_types: number[]): TypedMolecul
   };
 }
 
-const OOP_UNIT = 0.043844;
+const OOP_UNIT = 143.9325 * (Math.PI / 180) ** 2; // exact form of the published 0.043844
 
 describe('wilson_oop_angle', () => {
   it('returns 0 for a planar center', () => {

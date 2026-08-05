@@ -26,7 +26,7 @@ import { Vec3, angle_in_radians } from '../../utils/vector';
 import { make_class_context, angle_parameters } from '../parameters/parameter-classes';
 import { angle_derivatives, RAD_PER_DEG } from './derivatives';
 
-const ANGLE_UNIT = 0.043844; // (mdyn·Å/rad²) → (kcal/mol)/deg²
+const ANGLE_UNIT = 143.9325 * (Math.PI / 180) ** 2; // exact form of the published 0.043844
 const LINEAR_UNIT = 143.9325; // eq. (4) unit — same as bond stretch
 // Cubic bend constant — must match the energy term's precise value
 // (−0.4 rad⁻¹ converted to degrees, not the rounded −0.007).

@@ -46,7 +46,7 @@ import type { TypedMolecule } from '../../types';
 import { OOP_PARAMS, lookup_param, ATOM_TYPE_PROPERTIES } from '../parameters';
 import { wilson_oop_angle, Vec3 } from '../../utils/vector';
 
-const OOP_UNIT = 0.043844; // (mdyn·Å/rad²)·deg² → kcal/mol, same as angle bending
+const OOP_UNIT = 143.9325 * (Math.PI / 180) ** 2; // exact form of the published 0.043844 (see angle-bend.ts)
 
 /**
  * The out-of-plane force constant for the tri-coordinate center j

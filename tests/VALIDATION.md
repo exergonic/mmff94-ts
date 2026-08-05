@@ -1,9 +1,8 @@
 # Validation
 
-Facts: what `mmff94-ts` has been validated against, and what remains
+What `mmff94-ts` has been validated against, and what remains
 undone. All numbers below are produced by `npm run test`
-(regenerate the suite scoreboard with
-`npx tsx tests/scripts/energy-scoreboard.ts`).
+(regenerate the suite scoreboard with `npx tsx tests/scripts/energy-scoreboard.ts`).
 
 Reference data: Halgren's MMFF94 validation suite (753 structures,
 per-component energies in `MMFF94_bmin.log`, per-atom reference
@@ -29,7 +28,7 @@ matches all seven terms within 0.05 kcal/mol
 | term | exact | max \|Δ\| | worst |
 |---|---|---|---|
 | bond stretch | 749/749 | 0.0005 | OHMW1 |
-| angle bend | 749/749 | 0.0007 | GAKTAN |
+| angle bend | 749/749 | 0.0000 | — |
 | stretch-bend | 749/749 | 0.0000 | — |
 | torsion | 749/749 | 0.0001 | TAJSUS |
 | out-of-plane | 749/749 | 0.0163 | KESNEB |
@@ -38,7 +37,10 @@ matches all seven terms within 0.05 kcal/mol
 
 BatchMin's log is a single-point calculation at the `.mmd` geometry
 (per the suite README), so a delta on a typing-exact molecule is a
-term or lookup bug by construction.
+term or lookup bug by construction. The unit conversions use the
+exact factors (143.9325·(π/180)² = 0.0438443467… for angle/oop, not
+the rounded 0.043844): the rounded form left all 168 bend components
+~1e-5 relative low.
 
 **Partial charges — 749/749 vs the suite's reference values.**
 Per-atom |Δ| < 10⁻³ e⁻ on the same reproducible set
