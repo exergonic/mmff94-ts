@@ -39,9 +39,12 @@ entirely on the client side.
 
 Typing and energies are validated against the full Halgren suite
 (753 molecules): **753/753 type-exact** vs OpenBabel's canonical types
-(100%), and all seven energy terms match the BatchMin references on
-the 749-molecule reproducible set (100%; the remaining 4 reference
-anomalies are documented in [Validation](#validation)). See
+(100%), and **all seven energy terms are machine-exact (747/747 at
+≤10⁻⁴ kcal/mol per term)** vs BatchMin's per-component references —
+including the suite's only empirical-rule bond (OHMW1, closed at
+1.4×10⁻⁶). Partial charges match the reference to <10⁻³ e⁻ on the
+749-molecule charge-comparable set. The documented reference
+anomalies are in [`tests/VALIDATION.md`](tests/VALIDATION.md). See
 [Validation](#validation).
 
 ## Validation
@@ -58,25 +61,28 @@ analytical gradient against finite differences.
    charges for 16 small organic molecules. All seven energy terms match exactly to five
    decimals. Will continue to expand molecular coverage.
 
-Per-component agreement with BatchMin on the reproducible set
-(749 molecules — 4 reference anomalies are excluded, each documented
-in [`tests/VALIDATION.md`](tests/VALIDATION.md)):
+Per-component agreement with BatchMin on the reproducible set —
+every molecule within 10⁻⁴ kcal/mol per term (the residual census,
+`tests/scripts/residual-census.ts`; the 0.05 gate in the suite tests
+is looser than this):
 
-| Term | Exact | Max abs(Δ) (kcal/mol) |
+| Term | Molecules ≤10⁻⁴ | Worst |Δ| (kcal/mol) |
 |-------|---|---|
-| Bond stretch | 749/749 | 0.00 |
-| Angle bend | 749/749 | 0.00 |
-| Stretch-bend | 749/749 | 0.00 |
-| Torsion | 749/749 | 0.00 |
-| Van der Waals | 749/749 | 0.00 |
-| Out-of-plane | 749/749 | 0.02 |
-| Electrostatic | 749/749 | 0.00 |
+| Bond stretch | 747/747 | 5.0e-5 (DEWJEU) |
+| Angle bend | 747/747 | 3.4e-5 (BEVJER10) |
+| Stretch-bend | 747/747 | 0.0 |
+| Torsion | 747/747 | 1.4e-5 (BEVJER10) |
+| Van der Waals | 747/747 | 4.4e-5 (MG2PW3) |
+| Out-of-plane | 747/747 | 1.6e-5 (ARGIND11) |
+| Electrostatic | 747/747 | 6.8e-5 (DONFOB) |
 
- All 749 reproducible suite molecules are type-exact (100%) and every
- energy term matches the BatchMin references on all of them (within
- 0.05 kcal/mol; the partial charges match to < 1e-3 e⁻ per atom on the
- same set). 
- More details in [`tests/VALIDATION.md`](tests/VALIDATION.md).
+Atom typing is type-exact on all 753 suite molecules (100%), and the
+partial charges match the BatchMin references to <10⁻³ e⁻ per atom on
+the 749-molecule charge-comparable set. The suite's only
+empirical-rule bond (OHMW1's hydroxide O–H, generated from part V
+eqs. 18-19) matches to 1.4×10⁻⁶. Every empirical rule (bond, angle,
+torsion, BCI fallback) is additionally pinned by hand-computed unit
+tests. More details in [`tests/VALIDATION.md`](tests/VALIDATION.md).
 
 ## Usage
 

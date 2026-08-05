@@ -139,7 +139,7 @@ and τ = ±180° when they are staggered (trans).
 
 ---
 
-## 5. Atom typing — `src/mmff94/atom-types.ts`
+## 5. Atom typing — `src/mmff94/assign-atom-types.ts`
 
 This is the hardest single piece. Every atom type is an integer (1–99) that selects
 the correct row from every parameter table. A wrong type means wrong bond lengths,
@@ -244,9 +244,9 @@ system in `src/mmff94/parameters/parameter-classes.ts`:
 3. **Step-down chain** (part I p. 513) — within the class: exact terminal types
    first, then the EqLvl3/4/5 equivalence levels of the terminals (from
    `mmffdef.par`, extracted into `atom-type-properties.ts`).
-4. **Empirical rules** — when the chain misses: part-II rules for angles
-   (reference θ₀ from coordination numbers, k_a from the Z/C element tables),
-   part-IV rules for torsions (`torsion-empirical.ts`, rules a–h), and the
+4. **Empirical rules** — when the chain misses: the part-V rules in
+   `empirical.ts` — bonds (eqs. 18-19), angles (the θ₀ protocol + eq. 20),
+   torsions (rules a–h), and the
    default-fsb table (`default-stretch-bend.ts`) for stretch-bend.
 
 The terms import these helpers from the parameters barrel; each energy term
@@ -263,11 +263,11 @@ stays a pure evaluation of geometry × resolved parameters.
 | `van-der-waals.ts` | VDW per-atom: R*, α_i, N_i, G_i, DA flag | atom type number | ~95 |
 | `bci.ts` | Bond charge increments | `"c-t1-t2"` + per-atom defaults | ~600 |
 | `out-of-plane.ts` | OOP bending: k_oop | `"t1-t2-t3-t4"` | ~120 |
-| `atom-types.ts` | Type definitions: symbol, element, valence | atom type number | ~95 |
+| `parameters/atom-types.ts` | Type definitions: symbol, element, valence | atom type number | ~95 |
 | `atom-type-properties.ts` | Per-type flags: crd, val, pilp, mltb, arom, lin, sbmb + EqLvl3/4/5 | atom type number | ~95 |
 | `default-stretch-bend.ts` | Element-row default k_sb values (mmffdfsb.par) | `"row-row-row"` | 30 |
 | `parameter-classes.ts` | BTij/ATijk/TTijkl/STijk class selection + class-scoped resolution (hand-written) | — | — |
-| `torsion-empirical.ts` | Part-IV empirical torsion rules (hand-written) | — | — |
+| `empirical.ts` | Part-V empirical rules: bonds (eqs. 18-19), angles (θ₀ + eq. 20), torsions (rules a–h) (hand-written) | — | — |
 
 (The `c` in the key format is the class column; `lookup.ts` provides
 `lookup_param()` for class-0 wildcard fallback.)
@@ -413,7 +413,7 @@ direction only — the par file stores each entry in ONE direction (decided by
 an order index), and consulting the other direction first would let wildcard
 defaults like `*-1-1-*` steal exact reversed entries (an H-C-C-C dihedral must
 resolve to `0-1-1-1-5`, not the generic `0-0-1-1-0`). If the chain misses
-entirely, the part-IV empirical rules apply (`torsion-empirical.ts`, rules
+entirely, the part-V empirical rules apply (`empirical.ts`, rules
 a–h: V₂ from the U parameters, V₃ from the V parameters, negative V₂ for O/S
 central pairs, with some combinations skipping the torsion).
 
@@ -711,7 +711,7 @@ SDF string (.mol/.sdf)
        │
        ▼
 ┌──────────────────┐
-│assign_atom_types()│  src/mmff94/atom-types.ts
+│assign_atom_types()│  src/mmff94/assign-atom-types.ts
 └─────────┬────────┘
           │
           ▼
@@ -778,7 +778,7 @@ src/index.ts  (public barrel)
   │
   ├── src/mmff94/index.ts       ← re-exports
   │     │
-  │     ├── atom-types.ts       ← types.ts
+  │     ├── assign-atom-types.ts ← types.ts
   │     │
   │     ├── energy/
   │     │     ├── bond-stretch.ts    ← types, vector, parameters
@@ -809,7 +809,7 @@ src/index.ts  (public barrel)
   │           ├── atom-types.ts  ← auto-generated
   │           ├── atom-type-properties.ts ← auto-generated
   │           ├── parameter-classes.ts ← class selection + resolution
-  │           └── torsion-empirical.ts  ← part-IV rules
+  │           └── empirical.ts  ← part-V rules (bond/angle/torsion)
   │
   ├── src/utils/vector.ts        ← no deps
   │
