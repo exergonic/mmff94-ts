@@ -10,6 +10,14 @@ Output: JSON keyed by molecule code -> list of atom type integers.
 Molecules whose force-field setup fails (metals, untyped elements) are
 recorded in a "skipped" list and excluded from the reference.
 
+The types.txt amendment below is a venv-local edit: any venv rebuild
+(uv sync, reinstall) reverts it, and suite molecules whose MacroModel
+codes are not in stock OpenBabel's table (21/31/51/201/204/206/
+65-67/70/207-212) then fail at READ with "Cannot perform atom type
+translation" (two warnings per atom — the element and type lookups)
+and the force-field setup aborts. Re-run this script after every
+venv change; it is idempotent.
+
 Usage: uv run --project tests/scripts python tests/scripts/extract_suite_types.py
 """
 

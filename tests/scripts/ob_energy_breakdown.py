@@ -11,8 +11,8 @@ analysis scripts, in one readable pass:
   5. the HIGH-verbosity per-interaction log (the debugging workhorse —
      `--verbose strbnd` prints every stretch-bend interaction)
 
-Usage (run from the repo root, with tests/scripts/.venv):
-  tests/scripts/.venv/Scripts/python tests/scripts/ob_energy_breakdown.py [NAME] [--verbose [TERM]]
+Usage (run from tests/scripts, with the uv project's venv):
+  uv run ob_energy_breakdown.py [NAME] [--verbose [TERM]]
   e.g. COYVIV (delocalized-N sulfone), FUCTIG01 (nitrate), VIYPAU (acetal)
 
 The force field itself is not modified here; the only environment
@@ -33,7 +33,7 @@ from openbabel import openbabel as ob
 # script here redirects the data dir to the wheel's actual data folder.
 os.environ["BABEL_DATADIR"] = os.path.join(os.path.dirname(ob.__file__), "bin", "data")
 
-SUITE_MMD = "tests/fixtures/validation-suite/MMFF94.mmd"
+SUITE_MMD = "../../tests/fixtures/validation-suite/MMFF94.mmd"
 
 # The log's section headers are printed space-separated ("E L E C T R O
 # S T A T I C   I N T E R A C T I O N S"), so a --verbose term must be

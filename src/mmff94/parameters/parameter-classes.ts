@@ -112,12 +112,20 @@ function in_ring(ctx: ClassContext, i: number, j: number): boolean {
 
 /** Is bond (i, j) part of an aromatic ring? Both endpoints are
  *  aromatic-typed and the bond lies in a ring (Kekulé input files
- *  carry no aromatic flags; BatchMin's perception marks ring bonds). */
+ *  carry no aromatic flags; BatchMin's perception marks ring bonds).
+ *  CIM+ (80) is an aromatic ring type whose par entry lacks the arom
+ *  flag — treat it as aromatic, mirroring bond_type_flag. Without
+ *  this the torsion class-2 branch fires on aromatic ring bonds
+ *  (TAJSUS's triazole C(80)–N(81) resolves class 2 / V2 = 4.8 where
+ *  the reference skips to class 0 / V2 = 4.0). */
 export function is_aromatic_bond(ctx: ClassContext, i: number, j: number): boolean {
   const { mol } = ctx;
   const pi = ATOM_TYPE_PROPERTIES[mol.atom_types[i]];
   const pj = ATOM_TYPE_PROPERTIES[mol.atom_types[j]];
-  if (!pi || !pj || !pi.arom || !pj.arom) return false;
+  if (!pi || !pj) return false;
+  const a_i = pi.arom || mol.atom_types[i] === 80;
+  const a_j = pj.arom || mol.atom_types[j] === 80;
+  if (!a_i || !a_j) return false;
   return in_ring(ctx, i, j);
 }
 
