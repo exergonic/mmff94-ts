@@ -9,8 +9,9 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { parse_sdf } from '../src/sdf';
-import { assign_atom_types } from '../src/mmff94/atom-types';
+import { assign_atom_types } from '../src/mmff94/assign-atom-types';
 import { assign_bci_charges } from '../src/mmff94/charges';
+import type { TypedMolecule } from '../src/types';
 
 const SDF_DIR = join(__dirname, 'fixtures', 'sdf');
 const REF_DIR = join(__dirname, 'references');
@@ -78,5 +79,25 @@ describe('BCI partial charges', () => {
         expect(Math.abs(q - ref[i])).toBeLessThan(1e-4);
       });
     }
+  });
+
+  it('the eq. (17) fallback reproduces the reference hydroxide charges (OHMW1)', () => {
+    // The O⁻–H bond (35-21) has NO stored BCI row — the increment is
+    // the difference of the per-atom pbci defaults (charges.ts). The
+    // hydroxide's H carries only that one increment, so the reference's
+    // own pchg values (the mmd: q(O) = −1.113, q(H) = +0.113) pin the
+    // fallback directly — the suite's only empirical-rule charge.
+    const mol: TypedMolecule = {
+      name: 'OH-',
+      atoms: [
+        { index: 0, element: 'O', x: 0, y: 0, z: 0 },
+        { index: 1, element: 'H', x: 0.9787, y: 0, z: 0 },
+      ],
+      bonds: [{ atom1: 0, atom2: 1, bond_order: 1 }],
+      atom_types: [35, 21],
+    };
+    const charged = assign_bci_charges(mol);
+    expect(charged.partial_charges![1]).toBeCloseTo(0.113, 3);
+    expect(charged.partial_charges![0]).toBeCloseTo(-1.113, 3);
   });
 });

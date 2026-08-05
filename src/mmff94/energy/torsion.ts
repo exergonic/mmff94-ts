@@ -29,13 +29,14 @@
 
 import type { TypedMolecule } from '../../types';
 import { dihedral_angle, Vec3 } from '../../utils/vector';
-import { make_class_context, type ClassContext, torsion_class, lookup_torsion } from '../parameters/parameter-classes';
-import { empirical_torsion } from '../parameters/torsion-empirical';
+import { make_class_context, type ClassContext, torsion_class, lookup_torsion, get_bond_order, is_aromatic_bond } from '../parameters/parameter-classes';
+import { ATOM_TYPE_PROPERTIES } from '../parameters';
+import { empirical_torsion } from '../parameters/empirical';
 
 /**
  * The three Fourier barrier heights for the dihedral i-j-k-l, resolved
  * exactly as the energy term resolves them: torsion class (TTijkl),
- * class-scoped step-down lookup, then the part-IV empirical rules.
+ * class-scoped step-down lookup, then the empirical rules (part V).
  *
  * Shared with the gradient so the two can never resolve different
  * parameters for the same dihedral.
@@ -68,7 +69,17 @@ export function torsion_terms(
   if (params) {
     return { v1: params.v1, v2: params.v2, v3: params.v3 };
   }
-  const emp = empirical_torsion(ctx, i, j, k);
+  // The empirical rules take the j/k properties and elements plus the
+  // graph facts they need (the j-k order and aromaticity) — the
+  // pure-formula home in empirical.ts never touches the ClassContext.
+  const emp = empirical_torsion(
+    ATOM_TYPE_PROPERTIES[tj],
+    ATOM_TYPE_PROPERTIES[tk],
+    molecule.atoms[j].element,
+    molecule.atoms[k].element,
+    get_bond_order(ctx, j, k),
+    is_aromatic_bond(ctx, j, k),
+  );
   if (emp.skip) return undefined;
   return { v1: emp.v1, v2: emp.v2, v3: emp.v3 };
 }

@@ -27,7 +27,7 @@ matches all seven terms within 0.05 kcal/mol
 
 | term | exact | max \|Δ\| | worst |
 |---|---|---|---|
-| bond stretch | 746/747 | 0.0005 | OHMW1 |
+| bond stretch | 747/747 | 0.0001 | DEWJEU |
 | angle bend | 747/747 | 0.0000 | — |
 | stretch-bend | 747/747 | 0.0000 | — |
 | torsion | 747/747 | 0.0000 | — |
@@ -38,12 +38,32 @@ matches all seven terms within 0.05 kcal/mol
 (The "exact" columns count molecules within 10⁻⁴ kcal/mol of the
 BatchMin component — the per-term residual census
 (`tests/scripts/residual-census.ts`) — not the 0.05 gate. At that
-bar six of seven terms are machine-exact on every molecule. The one
-remaining residual: OHMW1's hydroxide O–H bond — the reference's
-parameter row for the 44-18 pair (old numbering) has no counterpart
-in the renumbered OB par files, so the bond falls to a reference-side
-default whose exact constants are not in the suite data (empirical
-rule, part V, is the mechanism; r₀ ≈ 0.978 Å). TAJSUS's torsion
+bar ALL SEVEN TERMS are machine-exact on every molecule (747/747).
+The last stretch residual — OHMW1's hydroxide O–H, the only bond in
+the suite resolved by MMFF94's empirical-rule parameter generation
+(part V; the CCL `MMFF94.empirical_rule_parameters` file lists
+"Empirical rule bond parameters: 0 4 5" — one of only three
+original-suite molecules exercising any empirical rule, with
+CEWYIM30/KEPKIZ angles) — closed 2026-08-05 at 1.4×10⁻⁶. No stored
+row exists in any numbering; BatchMin generated k_b/r₀ at runtime
+from eqs. (18)-(19) of part V. mmff94-ts implements that generation
+(`parameters/empirical.ts`: eq. 18 Schomaker-Stevenson/Blom-Haaland
+r₀, eq. 19 inverse-sixth force-constant rule with Table V). The
+implemented form is MEASURED against the reference, not the paper's
+literal eq. (18): the paper adds a δ = 0.008 Å shrinkage and the
+mltb/BOij radius reductions, but the reference's O–H matches the
+plain form — r₀ = 0.72 + 0.33 − 0.050·1.30^1.4 = 0.9778 — to 1.4e-6,
+and Tinker's independent transcription (kbond.f: bl = rad0a + rad0b
+− cst·|χa−χb|^1.4, no δ, no corrections) implements exactly that
+form and reproduces the reference's Bond Stretching (0.7654 vs
+0.765397246118) on its own build (2026-08-05). The published tables
+are used as-is (r(O) = 0.72 — the CCL errata and Tinker's
+mmffcovrad agree). BatchMin's log flags the bond: "NO CHARGE
+INCREMENT CAN BE FOUND FOR THE BOND BETWEEN ATOMS O #4 AND H #5" and
+"low quality stretch parameters = 1"; the BCI side needs no
+empirical code — charges.ts's unparametrized fallback
+w = pbci(I) − pbci(K) IS the paper's eq. (17) (the refined rule).
+TAJSUS's torsion
 (1.2×10⁻⁴) closed 2026-08-04: the class-2 torsion branch must not
 fire when the central bond is an aromatic ring bond — type 80 (CIM+)
 lacks the arom par flag, so is_aromatic_bond now treats it as

@@ -48,6 +48,7 @@ import {
   lookup_param,
   type AngleParams,
 } from './index';
+import { empirical_bond_length, empirical_ka, empirical_theta0 } from './empirical';
 
 /** Per-term call context: molecule, adjacency, and the memoized
  *  in-ring checks shared by every class query in one energy pass. */
@@ -128,13 +129,6 @@ export function is_aromatic_bond(ctx: ClassContext, i: number, j: number): boole
   if (!a_i || !a_j) return false;
   return in_ring(ctx, i, j);
 }
-
-/** Element → periodic-table row (empirical rules): 0 = Z ≤ 2,
- *  1 = 3–10, 2 = 11–18, 3 = 19–36, 4 = 37–54. */
-export const ELEMENT_ROW: Record<string, number> = {
-  H: 0, B: 1, C: 1, N: 1, O: 1, F: 1,
-  Si: 2, P: 2, S: 2, Cl: 2, Br: 3, I: 4,
-};
 
 /** GetBondType — the BTij flag for bond (i, j), see the header. */
 export function bond_type_flag(ctx: ClassContext, i: number, j: number): number {
@@ -269,70 +263,6 @@ export function strbnd_type(ctx: ClassContext, i: number, j: number, k: number):
   }
 }
 
-// ── Part-II empirical angle fallbacks ─────────────────────────────────
-// When the class-scoped lookup misses (or its entry has k_a = 0), the
-// reference angle comes from the atom-type coordination numbers and the
-// force constant from the part-II empirical formula (with the part-V
-// element constants Z_i and C_i; C_i has no H entry, so an H-centered
-// empirical angle gets k_a = 0 — the spec).
-
-// MMFF part V, table VI: Z_i.
-const ELEMENT_Z: Record<string, number> = {
-  H: 1.395, C: 2.494, N: 2.711, O: 3.045, F: 2.847,
-  Si: 2.350, P: 2.350, S: 2.980, Cl: 2.909, Br: 3.017, I: 3.086,
-};
-
-// MMFF part V, table X: C_i (the central atom's constant).
-const ELEMENT_C: Record<string, number> = {
-  B: 0.704, C: 1.016, N: 1.113, O: 1.337,
-  Si: 0.811, P: 1.068, S: 1.249, Cl: 1.078, As: 0.825,
-};
-
-const ELEMENT_ATOMIC_NUMBER: Record<string, number> = {
-  H: 1, B: 5, C: 6, N: 7, O: 8, F: 9, Si: 14, P: 15, S: 16, Cl: 17, Br: 35, I: 53,
-};
-
-function empirical_theta0(ctx: ClassContext, j: number, cls: number): number {
-  const { mol } = ctx;
-  const prop = ATOM_TYPE_PROPERTIES[mol.atom_types[j]];
-  let theta0 = 120.0;
-  if (prop) {
-    if (prop.crd === 4) theta0 = 109.45;
-    if (prop.crd === 2 && mol.atoms[j].element === 'O') theta0 = 105.0;
-    // The rule is "atomic number > 10" (part II); the handful of
-    // MMFF-typed elements is mapped explicitly.
-    if ((ELEMENT_ATOMIC_NUMBER[mol.atoms[j].element] ?? 0) > 10) theta0 = 95.0;
-    if (prop.lin) theta0 = 180.0;
-    if (prop.crd === 3 && prop.val === 3 && !prop.mltb) {
-      theta0 = mol.atoms[j].element === 'N' ? 107.0 : 92.0;
-    }
-  }
-  // Small-ring angles are forced to the ring geometry.
-  if (cls === 3 || cls === 5 || cls === 6) theta0 = 60.0;
-  if (cls === 4 || cls === 7 || cls === 8) theta0 = 90.0;
-  return theta0;
-}
-
-function empirical_ka(ctx: ClassContext, i: number, j: number, k: number, theta0: number, cls: number): number {
-  const { mol } = ctx;
-  const Za = ELEMENT_Z[mol.atoms[i].element] ?? 0;
-  const Cb = ELEMENT_C[mol.atoms[j].element] ?? 0; // 0 for H — spec
-  const Zc = ELEMENT_Z[mol.atoms[k].element] ?? 0;
-
-  // Ring strain scales the constant down (part II): ×0.85 for
-  // 4-rings, ×0.05 for 3-rings.
-  let beta = 1.75;
-  if (cls === 4 || cls === 7 || cls === 8) beta *= 0.85;
-  if (cls === 3 || cls === 5 || cls === 6) beta *= 0.05;
-
-  const r0ab = bond_parameters(ctx, i, j)?.r0 ?? 1.5;
-  const r0bc = bond_parameters(ctx, j, k)?.r0 ?? 1.5;
-  const rr = r0ab + r0bc;
-  const D = (r0ab - r0bc) / (rr * rr);
-  const rad2 = (Math.PI / 180) * (Math.PI / 180);
-  return (beta * Za * Cb * Zc * Math.exp(-2 * D)) / (rr * theta0 * theta0 * rad2);
-}
-
 // ── Class-scoped lookups ──────────────────────────────────────────────
 
 /** Bond stretch parameters, class-aware: a BTij=1 bond (conjugated
@@ -407,9 +337,20 @@ export function angle_parameters(
     k_a = params.k_a;
     theta0 = params.theta0;
   } else {
-    // Total miss: the part II empirical θ₀ and force-constant rules.
-    theta0 = empirical_theta0(ctx, j, cls);
-    k_a = empirical_ka(ctx, i, j, k, theta0, cls);
+    // Total miss: the part V empirical θ₀ and force-constant rules
+    // (empirical.ts). The eq. (20) reference bond lengths fall back
+    // from the par to the eq. (18) empirical values (the Tinker
+    // behavior) before the 1.5 Å stand-in.
+    theta0 = empirical_theta0(ATOM_TYPE_PROPERTIES[tj], mol.atoms[j].element, cls);
+    const r0ab =
+      bond_parameters(ctx, i, j)?.r0 ??
+      empirical_bond_length(mol.atoms[i], mol.atoms[j]) ??
+      1.5;
+    const r0bc =
+      bond_parameters(ctx, j, k)?.r0 ??
+      empirical_bond_length(mol.atoms[j], mol.atoms[k]) ??
+      1.5;
+    k_a = empirical_ka(mol.atoms[i], mol.atoms[j], mol.atoms[k], r0ab, r0bc, theta0, cls);
   }
 
   const linear = ATOM_TYPE_PROPERTIES[tj]?.lin === 1;

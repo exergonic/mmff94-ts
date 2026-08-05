@@ -18,6 +18,7 @@
 import type { TypedMolecule } from '../../types';
 import { distance, Vec3 } from '../../utils/vector';
 import { make_class_context, bond_parameters } from '../parameters/parameter-classes';
+import { empirical_bond_parameters } from '../parameters/empirical';
 
 /**
  * Calculate the total bond stretching energy for all bonds in a molecule.
@@ -44,8 +45,16 @@ export function calc_bond_stretch_energy(molecule: TypedMolecule): number {
     // Class-aware lookup: a BTij=1 bond (conjugated single bond) uses
     // the class-1 entry — '0-2-2' is the C=C double-bond parameter and
     // would badly overestimate a diene's central single bond.
-    const params = bond_parameters(ctx, bond.atom1, bond.atom2);
-    if (!params) continue;
+    let params = bond_parameters(ctx, bond.atom1, bond.atom2);
+    if (!params) {
+      // Part V empirical-rule generation (eqs. 18-19): the designed
+      // fallback for a bond with no stored row — the suite's only case
+      // is OHMW1's hydroxide O–H. The generation is itself validated:
+      // OHMW1's stretch now matches the reference to 6e-5 (the two
+      // measured constants live in empirical.ts).
+      params = empirical_bond_parameters(molecule.atoms[bond.atom1], molecule.atoms[bond.atom2]);
+      if (!params) continue;
+    }
 
     const { k_b, r0 } = params;
     const dr = r - r0;
