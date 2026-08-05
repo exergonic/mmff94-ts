@@ -2,7 +2,7 @@
 // what the properties say, and how the 80-81 bond gets class 1.
 import { readFileSync } from 'fs';
 import { parse_mmd } from '../../src/utils/mmd-parser';
-import { assign_atom_types } from '../../src/mmff94/atom-types';
+import { assign_atom_types } from '../../src/mmff94/assign-atom-types';
 import { make_class_context, bond_type_flag, torsion_class } from '../../src/mmff94/parameters/parameter-classes';
 import { ATOM_TYPE_PROPERTIES } from '../../src/mmff94/parameters';
 

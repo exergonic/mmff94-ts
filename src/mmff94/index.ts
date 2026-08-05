@@ -10,7 +10,7 @@
 
 export {
   assign_atom_types,
-} from './atom-types';
+} from './assign-atom-types';
 
 export {
   assign_bci_charges,

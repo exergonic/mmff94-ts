@@ -1,7 +1,7 @@
 // Full per-atom charge decomposition for the S72-anion family.
 import { readFileSync } from 'fs';
 import { parse_mmd } from '../../src/utils/mmd-parser';
-import { assign_atom_types } from '../../src/mmff94/atom-types';
+import { assign_atom_types } from '../../src/mmff94/assign-atom-types';
 import { assign_bci_charges } from '../../src/mmff94/charges';
 import { BCI_PARAMS, BCI_DEFAULT_PARAMS } from '../../src/mmff94/parameters';
 import { make_class_context, bond_type_flag } from '../../src/mmff94/parameters/parameter-classes';

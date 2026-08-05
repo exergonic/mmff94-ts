@@ -35,7 +35,7 @@ for (const c of ['FE2PW3', 'CU1PW1', 'QUICNA01', 'SAHSUP']) {
 // extra: print any code given on argv
 const args = process.argv.slice(2);
 if (args.length) {
-  const { assign_atom_types } = await import('../../src/mmff94/atom-types');
+  const { assign_atom_types } = await import('../../src/mmff94/assign-atom-types');
   const { calc_energy } = await import('../../src/mmff94/energy/total');
   const { parse_mmd } = await import('../../src/utils/mmd-parser');
   const mols = parse_mmd(readFileSync('tests/fixtures/validation-suite/MMFF94.mmd', 'utf-8'));

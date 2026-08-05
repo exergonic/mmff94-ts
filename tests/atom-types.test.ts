@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { parse_sdf } from '../src/sdf';
-import { assign_atom_types } from '../src/mmff94/atom-types';
+import { assign_atom_types } from '../src/mmff94/assign-atom-types';
 import { readFileSync, readdirSync } from 'fs';
 import { join } from 'path';
 

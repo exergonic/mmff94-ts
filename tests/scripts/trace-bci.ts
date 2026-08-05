@@ -1,7 +1,7 @@
 // Trace BCI contributions for one atom of a molecule.
 import { readFileSync } from 'fs';
 import { parse_mmd } from '../../src/utils/mmd-parser';
-import { assign_atom_types } from '../../src/mmff94/atom-types';
+import { assign_atom_types } from '../../src/mmff94/assign-atom-types';
 import { BCI_PARAMS, BCI_DEFAULT_PARAMS } from '../../src/mmff94/parameters';
 import { make_class_context, bond_type_flag } from '../../src/mmff94/parameters/parameter-classes';
 

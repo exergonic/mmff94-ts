@@ -1,7 +1,7 @@
 // Per-center oop diagnosis mirroring the energy loop exactly.
 import { readFileSync } from 'fs';
 import { parse_mmd } from '../../src/utils/mmd-parser';
-import { assign_atom_types } from '../../src/mmff94/atom-types';
+import { assign_atom_types } from '../../src/mmff94/assign-atom-types';
 import { calc_energy } from '../../src/mmff94/energy/total';
 import { wilson_oop_angle } from '../../src/utils/vector';
 import { OOP_PARAMS, lookup_param, ATOM_TYPE_PROPERTIES } from '../../src/mmff94/parameters';

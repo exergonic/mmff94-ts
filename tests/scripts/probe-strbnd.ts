@@ -1,7 +1,7 @@
 // Per-angle stretch-bend diagnosis: key, table entry, k used.
 import { readFileSync } from 'fs';
 import { parse_mmd } from '../../src/utils/mmd-parser';
-import { assign_atom_types } from '../../src/mmff94/atom-types';
+import { assign_atom_types } from '../../src/mmff94/assign-atom-types';
 import { STRETCH_BEND_PARAMS, DEFAULT_STRETCH_BEND, ELEMENT_ROW, lookup_param, bond_parameters } from '../../src/mmff94/parameters';
 import { make_class_context, strbnd_type, angle_parameters } from '../../src/mmff94/parameters/parameter-classes';
 import { calc_energy } from '../../src/mmff94/energy/total';

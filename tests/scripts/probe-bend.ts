@@ -1,7 +1,7 @@
 // Per-angle bend diagnosis: class, key, k, energy.
 import { readFileSync } from 'fs';
 import { parse_mmd } from '../../src/utils/mmd-parser';
-import { assign_atom_types } from '../../src/mmff94/atom-types';
+import { assign_atom_types } from '../../src/mmff94/assign-atom-types';
 import { make_class_context, angle_class, angle_parameters } from '../../src/mmff94/parameters/parameter-classes';
 import { calc_energy } from '../../src/mmff94/energy/total';
 import { angle_in_radians } from '../../src/utils/vector';

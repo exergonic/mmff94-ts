@@ -13,7 +13,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { parse_sdf } from '../src/sdf';
-import { assign_atom_types } from '../src/mmff94/atom-types';
+import { assign_atom_types } from '../src/mmff94/assign-atom-types';
 import { assign_bci_charges } from '../src/mmff94/charges';
 import { calc_electrostatic_energy } from '../src/mmff94/energy/electrostatic';
 import { calc_energy } from '../src/mmff94/energy/total';

@@ -19,7 +19,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { parse_sdf } from '../src/sdf';
-import { assign_atom_types } from '../src/mmff94/atom-types';
+import { assign_atom_types } from '../src/mmff94/assign-atom-types';
 import { assign_bci_charges } from '../src/mmff94/charges';
 import { calc_energy, calc_gradient } from '../src/mmff94';
 import { optimize_lbfgs } from '../src/optimize/l-bfgs';

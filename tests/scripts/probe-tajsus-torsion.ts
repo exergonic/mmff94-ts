@@ -4,7 +4,7 @@
 // their energy sum must reproduce the log's TOTAL (7.48219).
 import { readFileSync } from 'fs';
 import { parse_mmd } from '../../src/utils/mmd-parser';
-import { assign_atom_types } from '../../src/mmff94/atom-types';
+import { assign_atom_types } from '../../src/mmff94/assign-atom-types';
 import { calc_energy } from '../../src/mmff94/energy/total';
 import { torsion_terms } from '../../src/mmff94/energy/torsion';
 import { make_class_context } from '../../src/mmff94/parameters/parameter-classes';

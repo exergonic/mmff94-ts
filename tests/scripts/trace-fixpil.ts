@@ -1,7 +1,7 @@
 // Trace FIXPIL's N81 charge.
 import { readFileSync } from 'fs';
 import { parse_mmd } from '../../src/utils/mmd-parser';
-import { assign_atom_types } from '../../src/mmff94/atom-types';
+import { assign_atom_types } from '../../src/mmff94/assign-atom-types';
 import { assign_bci_charges } from '../../src/mmff94/charges';
 
 const mols = parse_mmd(readFileSync('tests/fixtures/validation-suite/MMFF94.mmd', 'utf-8'));

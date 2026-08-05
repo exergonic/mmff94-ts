@@ -9,7 +9,7 @@
  */
 
 import type { Molecule, TypedMolecule } from '../types';
-import { assign_atom_types } from './atom-types';
+import { assign_atom_types } from './assign-atom-types';
 import { assign_bci_charges } from './charges';
 
 export function prepare_molecule(molecule: Molecule): TypedMolecule {

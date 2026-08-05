@@ -19,7 +19,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 import { Molecule as OCLMolecule, ForceFieldMMFF94, Resources } from 'openchemlib';
 import { parse_mmd } from '../src/utils/mmd-parser';
-import { assign_atom_types } from '../src/mmff94/atom-types';
+import { assign_atom_types } from '../src/mmff94/assign-atom-types';
 import { assign_bci_charges } from '../src/mmff94/charges';
 import { calc_energy } from '../src/mmff94/energy/total';
 import type { Molecule } from '../src/types';

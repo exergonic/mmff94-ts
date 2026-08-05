@@ -1,7 +1,7 @@
 // Charge sweep over the full 753: worst per-atom deviation per molecule.
 import { readFileSync } from 'fs';
 import { parse_mmd } from '../../src/utils/mmd-parser';
-import { assign_atom_types } from '../../src/mmff94/atom-types';
+import { assign_atom_types } from '../../src/mmff94/assign-atom-types';
 import { assign_bci_charges } from '../../src/mmff94/charges';
 
 const suiteDir = 'tests/fixtures/validation-suite';

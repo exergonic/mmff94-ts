@@ -1,7 +1,7 @@
 // Residual census: how far are we from exact per-term reproduction?
 import { readFileSync } from 'fs';
 import { parse_mmd } from '../../src/utils/mmd-parser';
-import { assign_atom_types } from '../../src/mmff94/atom-types';
+import { assign_atom_types } from '../../src/mmff94/assign-atom-types';
 import { calc_energy } from '../../src/mmff94/energy/total';
 import { join } from 'path';
 

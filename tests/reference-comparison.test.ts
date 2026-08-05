@@ -16,7 +16,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync, readdirSync } from 'fs';
 import { join, parse } from 'path';
 import { parse_sdf } from '../src/sdf';
-import { assign_atom_types } from '../src/mmff94/atom-types';
+import { assign_atom_types } from '../src/mmff94/assign-atom-types';
 import { calc_energy } from '../src/mmff94/energy/total';
 
 const SDF_DIR = join(__dirname, 'fixtures', 'sdf');

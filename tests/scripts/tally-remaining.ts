@@ -1,7 +1,7 @@
 // Tally the ours-vs-ref type mismatches across the whole suite.
 import { readFileSync } from 'fs';
 import { parse_mmd } from '../../src/utils/mmd-parser';
-import { assign_atom_types } from '../../src/mmff94/atom-types';
+import { assign_atom_types } from '../../src/mmff94/assign-atom-types';
 
 const ref = JSON.parse(readFileSync('tests/fixtures/validation-suite/mmff94-atom-types.json', 'utf-8'));
 const text = readFileSync('tests/fixtures/validation-suite/MMFF94.mmd', 'utf-8');

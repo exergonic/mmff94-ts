@@ -1,7 +1,7 @@
 // Dump any molecule: element, connectivity, our type vs reference type.
 import { readFileSync } from 'fs';
 import { parse_mmd } from '../../src/utils/mmd-parser';
-import { assign_atom_types } from '../../src/mmff94/atom-types';
+import { assign_atom_types } from '../../src/mmff94/assign-atom-types';
 
 const name = process.argv[2] ?? 'COXZEU';
 const suiteDir = 'tests/fixtures/validation-suite';
