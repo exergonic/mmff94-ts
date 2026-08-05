@@ -31,7 +31,7 @@ matches all seven terms within 0.05 kcal/mol
 | angle bend | 749/749 | 0.0000 | — |
 | stretch-bend | 749/749 | 0.0000 | — |
 | torsion | 749/749 | 0.0001 | TAJSUS |
-| out-of-plane | 749/749 | 0.0163 | KESNEB |
+| out-of-plane | 749/749 | 0.0044 | KINWEJ |
 | van der Waals | 749/749 | 0.0000 | — |
 | electrostatic | 749/749 | 0.0035 | SOHXOC |
 

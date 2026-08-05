@@ -75,24 +75,27 @@ export function oop_force_constant(
   let params = lookup_param(OOP_PARAMS, [sorted[0], tj, sorted[1], sorted[2]]);
 
   // The step-down chain (part I p. 513): exact types, then the
-  // EqLvl3 equivalence levels of the substituent types, one at a
-  // time, re-sorting after each substitution. The BatchMin reference
-  // resolves COYVIV's delocalized N(40) with [28,28,63] to the
-  // 2-40-28-28 entry through EqLvl3(63) = 2 (k = −0.007), not the
-  // −0.005 wildcard — while FUDPOJ's cyclopropenone centers keep
-  // their wildcards (the level-4 equivalents of the alkene/carbonyl
-  // C's would wrongly resolve 1-3-2-7 / 2-2-3-5). The carboxylate
-  // carbon (41) also keeps its class-0 wildcard (0.18): the EqLvl3
-  // of its aromatic C substituent (lvl3(37) = 2) would wrongly pull
-  // the class-2 X94 entry (0.161) — QUICNA01's and SAHSUP's
-  // deformed carboxylates need the 0.18 (the KNOWN_GOOD carboxylates
-  // are planar, so their oop energy is ~0 either way).
+  // EqLvl3 equivalence levels of the substituent types, tried in
+  // order and CUMULATIVELY — each substitution persists into the
+  // next position, so a center whose substituents need several
+  // level-3 steps resolves the fully-substituted key (KESNEB's and
+  // FUVXOJ's carbonyl C with [5,37,67] / [5,37,54] needs BOTH
+  // lvl3(37) = 2 AND lvl3(67/54) = 9 to hit the 2-3-5-9 entry,
+  // k = 0.081; SO07A's [7,37,43] needs 2 and 10 for the 2-3-7-10
+  // entry, k = 0.116). The BatchMin reference resolves COYVIV's
+  // delocalized N(40) with [28,28,63] through lvl3(63) = 2 to the
+  // 2-40-28-28 entry, and FUDPOJ's cyclopropenone centers keep
+  // their wildcards (their substituted keys never match). The
+  // carboxylate carbon (41) keeps its class-0 wildcard (0.18) — the
+  // reference does not substitute its substituents (QUICNA01's and
+  // SAHSUP's deformed carboxylates need the 0.18; the KNOWN_GOOD
+  // carboxylates are planar, so their oop energy is ~0 either way).
   if (tj !== 41 && !params) {
+    const t = [...sorted];
     for (let p = 0; p < 3; p++) {
-      const t = [...sorted];
       t[p] = ATOM_TYPE_PROPERTIES[t[p]]?.lvl3 ?? t[p];
-      t.sort((x, y) => x - y);
-      params = lookup_param(OOP_PARAMS, [t[0], tj, t[1], t[2]]);
+      const s = [...t].sort((x, y) => x - y);
+      params = lookup_param(OOP_PARAMS, [s[0], tj, s[1], s[2]]);
       if (params) break;
     }
   }
