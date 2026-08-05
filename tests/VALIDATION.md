@@ -14,6 +14,18 @@ It gives the structure, the total energy, the seven energy
 components, and the partial charges for each molecule.
 It also gives the atom types from the original program.
 
+The molecule-by-molecule comparison is committed as generated
+documentation (`npm run validation:doc` regenerates it from the suite
+files via `tests/scripts/generate-validation-doc.ts`):
+
+- `docs/validation/total-energies.txt` — all 753 totals, ours side by
+  side with the suite's OPTIMOL and BatchMin columns.
+- `docs/validation/per-term-and-charges.txt` — every per-term energy
+  delta and per-atom charge delta, molecule by molecule.
+
+The claims below are the summary of those files; if the two ever
+disagree, the generated files and the generator are the truth.
+
 ## Tolerances
 
 We use two tolerances:

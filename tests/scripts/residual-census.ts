@@ -4,39 +4,10 @@ import { parse_mmd } from '../../src/utils/mmd-parser';
 import { assign_atom_types } from '../../src/mmff94/assign-atom-types';
 import { calc_energy } from '../../src/mmff94/energy/total';
 import { join } from 'path';
+import { load_bmin_log } from './bmin-log';
 
 const suiteDir = 'tests/fixtures/validation-suite';
-function parse_fortran(s: string): number {
-  s = s.trim();
-  if (s.includes('D')) s = s.replace('D', 'e');
-  return parseFloat(s);
-}
-function parse_bmin_log(text: string): Map<string, Record<string, number>> {
-  const result = new Map<string, Record<string, number>>();
-  let currentCode = '';
-  const lines = text.split('\n');
-  for (let i = 0; i < lines.length; i++) {
-    const m = lines[i].match(/\[\s*(\w+),/);
-    if (m) { currentCode = m[1]; continue; }
-    if (!currentCode) continue;
-    const s = lines[i].match(/^\s+Stretch\s*=\s*(\S+)/);
-    if (s) {
-      const e: Record<string, number> = {};
-      e.stretch = parse_fortran(s[1]);
-      e.bend = parse_fortran(lines[++i].match(/=\s*(\S+)/)![1]);
-      e.torsion = parse_fortran(lines[++i].match(/=\s*(\S+)/)![1]);
-      e.oop = parse_fortran(lines[++i].match(/=\s*(\S+)/)![1]);
-      e.strbnd = parse_fortran(lines[++i].match(/=\s*(\S+)/)![1]);
-      e.elec = parse_fortran(lines[++i].match(/=\s*(\S+)/)![1]);
-      e.vdw = parse_fortran(lines[++i].match(/=\s*(\S+)/)![1]);
-      result.set(currentCode, e);
-      currentCode = '';
-    }
-  }
-  return result;
-}
-
-const bmin = parse_bmin_log(readFileSync(join(suiteDir, 'MMFF94_bmin.log'), 'utf-8'));
+const bmin = load_bmin_log(suiteDir);
 const mols = parse_mmd(readFileSync(join(suiteDir, 'MMFF94.mmd'), 'utf-8'));
 // Reference anomalies — per-term, as documented in VALIDATION.md.
 // JALSOE/SO18A left this set on 2026-08-05 (three-way verified).

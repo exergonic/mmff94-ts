@@ -78,6 +78,13 @@ Validated against Halgren's own 753-molecule MMFF94 Validation Suite
   0.765397246118).
 - **Partial charges: 749/749 to <10⁻³ e⁻** per atom (BCI model,
   eqs. (14)-(17)).
+- The molecule-by-molecule evidence is committed in
+  [`docs/validation/`](validation/): `total-energies.txt` lists all 753
+  totals side by side with the suite's own OPTIMOL and BatchMin values
+  (749/753 to 10⁻³ kcal/mol; the four exceptions are the reference
+  anomalies below), and `per-term-and-charges.txt` lists every
+  per-term energy delta and per-atom charge delta. Regenerate with
+  `npm run validation:doc`.
 - Gradients are checked against finite differences (δ = 10⁻⁶ Å,
   relative error < 10⁻⁵; worst observed 8×10⁻⁸).
 - A second independent check against OpenChemLib (devDependency)

@@ -109,7 +109,9 @@ export function parse_mmd(mmd_text: string): Molecule[] {
       const formal_charge = parseFloat(parts[cursor]);
       cursor++;
 
-      // Partial charge (not stored, just consume)
+      // Partial charge (the reference pchg column — stored so the
+      // validation tooling can compare against our BCI charges).
+      const partial_charge = parseFloat(parts[cursor]);
       cursor++;
 
       // Element from the MacroModel type index (first field): OpenBabel's
@@ -133,7 +135,7 @@ export function parse_mmd(mmd_text: string): Molecule[] {
         }
       }
 
-      atoms.push({ index: a, element, x, y, z, formal_charge });
+      atoms.push({ index: a, element, x, y, z, formal_charge, partial_charge });
     }
 
     if (atoms.length === 0) continue;

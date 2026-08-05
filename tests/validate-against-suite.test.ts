@@ -27,43 +27,9 @@ import { join } from 'path';
 import { parse_mmd } from '../src/utils/mmd-parser';
 import { assign_atom_types } from '../src/mmff94/assign-atom-types';
 import { calc_energy } from '../src/mmff94/energy/total';
+import { parse_bmin_log } from './scripts/bmin-log';
 
 const suiteDir = join(__dirname, 'fixtures', 'validation-suite');
-
-function parse_fortran(s: string): number {
-  s = s.trim();
-  if (s.includes('D')) s = s.replace('D', 'e');
-  return parseFloat(s);
-}
-
-function parse_bmin_log(text: string): Map<string, Record<string, number>> {
-  const result = new Map<string, Record<string, number>>();
-  let currentCode = '';
-  const lines = text.split('\n');
-
-  for (let i = 0; i < lines.length; i++) {
-    const m = lines[i].match(/\[\s*(\w+),/);
-    if (m) { currentCode = m[1]; continue; }
-    if (!currentCode) continue;
-
-    const s = lines[i].match(/^\s+Stretch\s*=\s*(\S+)/);
-    if (s) {
-      const e: Record<string, number> = {};
-      e.stretch = parse_fortran(s[1]);
-      e.bend = parse_fortran(lines[++i].match(/=\s*(\S+)/)![1]);
-      e.torsion = parse_fortran(lines[++i].match(/=\s*(\S+)/)![1]);
-      e.oop = parse_fortran(lines[++i].match(/=\s*(\S+)/)![1]);
-      e.strbnd = parse_fortran(lines[++i].match(/=\s*(\S+)/)![1]);
-      e.elec = parse_fortran(lines[++i].match(/=\s*(\S+)/)![1]);
-      e.vdw = parse_fortran(lines[++i].match(/=\s*(\S+)/)![1]);
-      const t = lines[++i].match(/Total Energy\s*=\s*([-0-9.]+)/);
-      if (t) e.total = parseFloat(t[1]);
-      result.set(currentCode, e);
-      currentCode = '';
-    }
-  }
-  return result;
-}
 
 describe('Halgren MMFF94 suite validation', () => {
   const molecules = parse_mmd(readFileSync(join(suiteDir, 'MMFF94.mmd'), 'utf-8'));

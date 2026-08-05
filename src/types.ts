@@ -17,6 +17,12 @@ export interface Atom {
    * charge field when present; used by atom typing (charged type
    * variants) and by the BCI charge model's primary charges. */
   formal_charge?: number;
+  /** Reference partial charge in electrons, when the structure file
+   * carries one (the validation suite's .mmd pchg column). Not used by
+   * any energy computation — the library computes BCI charges itself;
+   * this field exists so the suite parser can expose the reference for
+   * comparison. */
+  partial_charge?: number;
 }
 
 /** A bond connecting two atoms by their index in the atoms array. */
