@@ -97,12 +97,14 @@ The worst relative error is 8.5e-8.
 
 ## Outliers
 
-Four molecules have one term that we cannot reproduce.
-For each molecule, the reference itself is inconsistent for that
-term.
-We verified all other terms of these molecules against two
-independent implementations: Tinker and OpenBabel.
-Both implementations agree with our values.
+Four molecules have one energy term that we cannot reproduce: for
+each, the reference itself is inconsistent for that term (the first
+two rows below). We verified all other terms of these molecules
+against two independent implementations: Tinker and OpenBabel — both
+agree with our values. Two further molecules (JALSOE, SO18A) have all
+seven energy terms reproduced; only their reference partial charges
+are not comparable (the reference adjusts them to the dative
+representation, the third row below).
 
 | Molecules | Term | Reason |
 |---|---|---|
