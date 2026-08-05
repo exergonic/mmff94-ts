@@ -19,7 +19,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ocl": "vitest run tests/openchemlib-comparison.test.ts",
-    "bench": "vitest bench",
+    "bench": "npx tsx bench/energy.bench.ts",
     "typecheck": "tsc --noEmit",
     "extract-params": "python scripts/extract-mmff94-par.py",
     "prepublishOnly": "npm run build && npm test"
