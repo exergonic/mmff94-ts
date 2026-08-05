@@ -61,11 +61,12 @@ describe('partial charges vs the validation-suite reference (pchg)', () => {
     const molecules = parse_mmd(mmdText);
 
     // BatchMin's dative-adjusted thiosulfinate pair (see header) and
-    // the part V delocalized-anion caveat cases.
+    // the two anionic 5-ring N⁻ cases whose reference charges a
+    // uniform q⁰(76) cannot reproduce (the part V delocalized-anion
+    // caveat).
     const ANOMALY_EXCLUDED = new Set([
       'JALSOE', 'SO18A', // dative representation (BatchMin log)
-      'DAKBAS', 'AN06A', 'AN08A', 'TAJVUV', // vinyl/delocalized S⁻
-      'AN11A', 'DOZNIP', // anionic 5-ring N⁻
+      'AN11A', 'DOZNIP', // anionic 5-ring N⁻ (type 76)
     ]);
 
     let checked = 0;

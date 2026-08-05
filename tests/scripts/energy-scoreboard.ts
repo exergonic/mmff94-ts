@@ -46,18 +46,15 @@ const mols = parse_mmd(readFileSync(`${suiteDir}/MMFF94.mmd`, 'utf-8'));
 
 // Reference anomalies, excluded from the coverage counts (each is
 // documented in tests/charges-suite.test.ts and VALIDATION.md):
-// - the six part-V delocalized-anion cases (AN11A, DAKBAS, AN06A,
-//   AN08A, TAJVUV, DOZNIP): their reference partial charges — and
-//   hence their electrostatic energies — are not reproducible from
-//   eq. (15) (Halgren's own caveat: "unsymmetrical but strongly
-//   delocalized anions such as vinyl oxide and vinyl sulfide");
+// - AN11A and DOZNIP: the anionic 5-ring N⁻ (type 76) — their
+//   reference charges are not reproducible from eq. (15) with a
+//   uniform q⁰(76) (Halgren's caveat on "unsymmetrical but strongly
+//   delocalized anions");
 // - FE2PW3 and CU1PW1: BatchMin's van der Waals for the hydrated
 //   metal cations predates the X94 metal parameters (the OB — which
 //   matches this transcription exactly, 55.84481 vs 55.8448 — and
 //   Tinker both use the X94 rows).
-const ANOMALY_EXCLUDED = new Set([
-  'AN11A', 'DAKBAS', 'AN06A', 'AN08A', 'TAJVUV', 'DOZNIP', 'FE2PW3', 'CU1PW1',
-]);
+const ANOMALY_EXCLUDED = new Set(['AN11A', 'DOZNIP', 'FE2PW3', 'CU1PW1']);
 
 const terms = ['stretch', 'bend', 'strbnd', 'torsion', 'oop', 'vdw', 'elec'] as const;
 const totals = { exact: 0, n: 0, worst: 0, worstMol: '' };

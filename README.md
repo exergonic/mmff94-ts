@@ -40,63 +40,42 @@ entirely on the client side.
 Typing and energies are validated against the full Halgren suite
 (753 molecules): **753/753 type-exact** vs OpenBabel's canonical types
 (100%), and all seven energy terms match the BatchMin references on
-the 745-molecule reproducible set (100%; 8 reference anomalies
-documented in [Validation](#validation)). See
+the 749-molecule reproducible set (100%; the remaining 4 reference
+anomalies are documented in [Validation](#validation)). See
 [Validation](#validation).
-
-### Stretch goals
-
-- **Per-interaction energy breakdowns.** Expose every component of
-  every energy term — each bond stretch, angle bend, torsion,
-  out-of-plane bend, stretch-bend cross term, van der Waals pair and
-  electrostatic pair, with its atoms, types, parameters and energy
-  contribution — as first-class queryable data, not just the seven
-  term totals. The debugging value is proven: every per-term
-  mismatch found in this project's development was diagnosed through
-  OpenBabel's HIGH-verbosity interaction log (`probe-ob-log.py`,
-  `tests/scripts/ob_energy_breakdown.py --verbose TERM`). The goal is
-  to make that data simpler to access than OpenBabel's, where the
-  per-interaction listing is only reachable through a verbose log
-  capture hack (buffered `std::cout`, space-separated section
-  headers, fd redirects).
 
 ## Validation
 
 Every term is checked against two independent references, and every
 analytical gradient against finite differences.
 
-1. **OpenBabel** — per-term energies and per-atom partial
-   charges for 16 small organic molecules. All seven energy terms match exactly to five
-   decimals. Will continue to expand molecular coverage.
-2. **Halgren's 753-molecule MMFF94 validation suite** — per-component
+1. **Halgren's 753-molecule MMFF94 validation suite** — per-component
    energies and per-atom partial charges vs the
-   suite's reference values. The comparison runs on all 753
-   suite molecules — **our atom typing reproduces the reference
+   suite's reference values. **Our atom typing reproduces the reference
    types exactly for every one of them (753/753)**.
 
+2. **OpenBabel** — per-term energies and per-atom partial
+   charges for 16 small organic molecules. All seven energy terms match exactly to five
+   decimals. Will continue to expand molecular coverage.
+
 Per-component agreement with BatchMin on the reproducible set
-(745 molecules — 8 reference anomalies are excluded, each documented
+(749 molecules — 4 reference anomalies are excluded, each documented
 in [`tests/VALIDATION.md`](tests/VALIDATION.md)):
 
 | Term | Exact | Max abs(Δ) (kcal/mol) |
 |-------|---|---|
-| Bond stretch | 745/745 | 0.00 |
-| Angle bend | 745/745 | 0.00 |
-| Stretch-bend | 745/745 | 0.00 |
-| Torsion | 745/745 | 0.00 |
-| Van der Waals | 745/745 | 0.00 |
-| Out-of-plane | 745/745 | 0.02 |
-| Electrostatic | 745/745 | 0.00 |
+| Bond stretch | 749/749 | 0.00 |
+| Angle bend | 749/749 | 0.00 |
+| Stretch-bend | 749/749 | 0.00 |
+| Torsion | 749/749 | 0.00 |
+| Van der Waals | 749/749 | 0.00 |
+| Out-of-plane | 749/749 | 0.02 |
+| Electrostatic | 749/749 | 0.00 |
 
- All 745 reproducible suite molecules are type-exact (100%) and every
+ All 749 reproducible suite molecules are type-exact (100%) and every
  energy term matches the BatchMin references on all of them (within
  0.05 kcal/mol; the partial charges match to < 1e-3 e⁻ per atom on the
- same set). The "parameter-gap" workstream closed itself: the 18
- remaining mismatches were all lookup or constant bugs in our
- transcription — the oop term's missing EqLvl3 step-down chain, the
- stretch-bend class-0 lookup scanning other classes, and the rounded
- cubic-bend constant (−0.007 vs BatchMin's precise −0.4·π/180).
-
+ same set). 
  More details in [`tests/VALIDATION.md`](tests/VALIDATION.md).
 
 ## Usage

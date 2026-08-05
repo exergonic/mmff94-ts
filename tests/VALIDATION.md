@@ -25,13 +25,19 @@ condensed public version of this ledger.
   imidazolium C 80 via the N-type gate (CUDREY's 2-aminoimidazolium),
   and the hydroxide O 35 (OHMW1).
 - **Energy terms** vs BatchMin on all 753 typing-exact molecules:
-  **all 7 terms 745/745 exact** (within 0.05 kcal/mol; worst |Δ| 0.016,
-  KESNEB oop) on the reproducible set — 8 reference anomalies excluded
-  (the six part-V delocalized anions AN11A/DAKBAS/AN06A/AN08A/TAJVUV/
-  DOZNIP, whose reference charges eq. (15) cannot reproduce — Halgren's
-  own vinyl-oxide/vinyl-sulfide caveat — and FE2PW3/CU1PW1, whose
-  BatchMin vdW predates the X94 metal parameters; OB and Tinker agree
-  with our transcription there, 55.84481 vs 55.8448). The 18 "parameter-gap" molecules from the evening
+  **all 7 terms 749/749 exact** (within 0.05 kcal/mol; worst |Δ| 0.016,
+  KESNEB oop) on the reproducible set — 4 reference anomalies excluded
+  (the two anionic 5-ring N⁻ AN11A/DOZNIP, whose reference charges a
+  uniform q⁰(76) cannot reproduce, and FE2PW3/CU1PW1, whose BatchMin
+  vdW predates the X94 metal parameters; OB and Tinker agree with our
+  transcription there, 55.84481 vs 55.8448). The S2CM thiolate family
+  (DAKBAS/AN06A/AN08A/TAJVUV) turned out to be fully reproducible
+  after all: the q⁰(72) is environment-dependent, like the O2CM's
+  −(n−k)/n — −1 for the thiolate S⁻, −0.5 for each S of the
+  dithiocarboxylate C(=S)(S⁻) (the two equivalent terminal S's split
+  the −1, mirroring the carboxylate's two O's), 0 on phosphorus.
+  The 6 delocalized-anion "anomalies" were reduced to 2 by deriving
+  the environment rule instead of accepting the paper's caveat. The 18 "parameter-gap" molecules from the evening
   session were diagnosed one by one against the BatchMin per-component
   log, OpenBabel's per-interaction HIGH-verbosity log
   (`tests/scripts/probe-ob-log.py`) and Tinker's independent mmff94.prm
@@ -52,8 +58,9 @@ condensed public version of this ledger.
     deg⁻¹; BatchMin uses the paper's "more precise" −0.4 rad⁻¹
     (i.e. −0.4·π/180). GESNIB's near-linear C(37)–C(37)–C(22) angles
     (Δ ≈ 47°) differ by 0.035 kcal/mol each between the forms.
-- **Partial charges** vs the suite's reference values: **745/745** to
-  < 10⁻³ e⁻ per atom on the reproducible set (the 8 anomalies above). The default-BCI sign convention is part V
+- **Partial charges** vs the suite's reference values: **749/749** to
+  < 10⁻³ e⁻ per atom on the reproducible set (the 4 anomalies above;
+  the JALSOE/SO18A dative pair remains excluded from the charges). The default-BCI sign convention is part V
   eq. 14 (the unparametrized pair's increment flows TO the smaller
   type — the hydroxide's 21–35 pair, OHMW1); the parametrized pairs
   keep the par's own direction. The imidazolium N q⁰ is

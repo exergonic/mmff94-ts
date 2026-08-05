@@ -213,14 +213,26 @@ export function assign_bci_charges(molecule: TypedMolecule): TypedMolecule {
       return 0;
     }
     if (t === 72) {
-      // S2CM — the dithiocarboxylate thiolate S: −0.5 on a carbon
-      // center (C(=S)–S⁻, CORWUB10 — the α·crd sharing leaves −0.25
-      // on the S and −0.25 per S on the central C). An S⁻ on
-      // phosphorus (GESCIQ's P–S⁻) carries no primary charge.
+      // S2CM — the anionic thiolate/dithiocarboxylate S. The primary
+      // charge is environment-dependent, like the O2CM's −(n−k)/n
+      // (part V: "MMFF94 recognizes that the two terminal oxygens are
+      // equivalent and assigns a primary fractional formal atomic
+      // charge of −0.5 to each"):
+      //  - −1 for the thiolate S–R (DAKBAS's vinyl thiolate, AN06A's
+      //    alkyl thiolate, TAJVUV's 5-ring thiolate);
+      //  - −0.5 for EACH S of the dithiocarboxylate C(=S)(S⁻)
+      //    (CORWUB10 — the two equivalent terminal S's split the −1);
+      //  - 0 on phosphorus (GESCIQ's P–S⁻).
       for (const nb of adj[i]) {
-        if (molecule.atoms[nb].element === 'P') return 0;
+        const nbr = molecule.atoms[nb];
+        if (nbr.element === 'P') return 0;
+        if (nbr.element === 'C') {
+          for (const b of adj[nb]) {
+            if (b !== i && molecule.atoms[b].element === 'S' && molecule.atom_types[b] === 72) return -0.5;
+          }
+        }
       }
-      return -0.5;
+      return -1;
     }
     if (t === 76) {
       // N- — the anionic 5-ring N (the deprotonated pyrrole-type
