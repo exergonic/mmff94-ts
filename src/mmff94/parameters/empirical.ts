@@ -42,8 +42,8 @@
 // The angle rules never fire in the suite (the par's wildcards always
 // resolve, validated 747/747); they are pinned against the spec by
 // tests/angle-empirical.test.ts.
-import type { Atom } from '../../types';
-import type { AtomTypeProperties } from './atom-type-properties';
+import type { Atom } from '../../types.js';
+import type { AtomTypeProperties } from './atom-type-properties.js';
 
 /** Covalent single-bond radii (Å) — the CCL eq. (18) list. */
 export const COVALENT_RADII: Record<string, number> = {

@@ -19,10 +19,10 @@
  * or a bond the energy counts would contribute a different force here.
  */
 
-import type { TypedMolecule } from '../../types';
-import { Vec3 } from '../../utils/vector';
-import { make_class_context, bond_parameters } from '../parameters/parameter-classes';
-import { bond_length_derivatives } from './derivatives';
+import type { TypedMolecule } from '../../types.js';
+import { Vec3 } from '../../utils/vector.js';
+import { make_class_context, bond_parameters } from '../parameters/parameter-classes.js';
+import { bond_length_derivatives } from './derivatives.js';
 
 const BOND_UNIT = 143.9325; // (mdyn/Å) → (kcal/mol)/Å²
 const CS = -2.0; // cubic stretch constant, Å⁻¹

@@ -23,11 +23,11 @@
  * the default.
  */
 
-import type { Molecule, TypedMolecule, OptimizationResult } from '../types';
-import type { EnergyGradientFn } from './l-bfgs';
-import { prepare_molecule } from '../mmff94/prepare';
-import { calc_energy } from '../mmff94/energy/total';
-import { calc_gradient } from '../mmff94/gradient/total';
+import type { Molecule, TypedMolecule, OptimizationResult } from '../types.js';
+import type { EnergyGradientFn } from './l-bfgs.js';
+import { prepare_molecule } from '../mmff94/prepare.js';
+import { calc_energy } from '../mmff94/energy/total.js';
+import { calc_gradient } from '../mmff94/gradient/total.js';
 
 export interface SteepestDescentOptions {
   max_iterations?: number;

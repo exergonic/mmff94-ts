@@ -39,7 +39,7 @@
  * wildcard for most types).
  */
 
-import type { TypedMolecule } from '../../types';
+import type { TypedMolecule } from '../../types.js';
 import {
   ATOM_TYPE_PROPERTIES,
   ANGLE_PARAMS,
@@ -47,8 +47,8 @@ import {
   TORSION_PARAMS,
   lookup_param,
   type AngleParams,
-} from './index';
-import { empirical_bond_length, empirical_ka, empirical_theta0 } from './empirical';
+} from './index.js';
+import { empirical_bond_length, empirical_ka, empirical_theta0 } from './empirical.js';
 
 /** Per-term call context: molecule, adjacency, and the memoized
  *  in-ring checks shared by every class query in one energy pass. */

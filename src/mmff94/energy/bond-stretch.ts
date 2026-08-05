@@ -15,10 +15,10 @@
  *
  */
 
-import type { TypedMolecule } from '../../types';
-import { distance, Vec3 } from '../../utils/vector';
-import { make_class_context, bond_parameters } from '../parameters/parameter-classes';
-import { empirical_bond_parameters } from '../parameters/empirical';
+import type { TypedMolecule } from '../../types.js';
+import { distance, Vec3 } from '../../utils/vector.js';
+import { make_class_context, bond_parameters } from '../parameters/parameter-classes.js';
+import { empirical_bond_parameters } from '../parameters/empirical.js';
 
 /**
  * Calculate the total bond stretching energy for all bonds in a molecule.

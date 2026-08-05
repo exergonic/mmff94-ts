@@ -20,15 +20,15 @@
  * stays testable in isolation.
  */
 
-import type { Molecule, EnergyComponents } from '../../types';
-import { prepare_molecule } from '../prepare';
-import { calc_bond_stretch_energy } from './bond-stretch';
-import { calc_angle_bend_energy } from './angle-bend';
-import { calc_stretch_bend_energy } from './stretch-bend';
-import { calc_torsion_energy } from './torsion';
-import { calc_vdw_energy } from './van-der-waals';
-import { calc_electrostatic_energy } from './electrostatic';
-import { calc_oop_energy } from './out-of-plane';
+import type { Molecule, EnergyComponents } from '../../types.js';
+import { prepare_molecule } from '../prepare.js';
+import { calc_bond_stretch_energy } from './bond-stretch.js';
+import { calc_angle_bend_energy } from './angle-bend.js';
+import { calc_stretch_bend_energy } from './stretch-bend.js';
+import { calc_torsion_energy } from './torsion.js';
+import { calc_vdw_energy } from './van-der-waals.js';
+import { calc_electrostatic_energy } from './electrostatic.js';
+import { calc_oop_energy } from './out-of-plane.js';
 
 /**
  * Compute the full MMFF94 energy.

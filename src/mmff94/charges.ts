@@ -48,9 +48,9 @@
  * carry q⁰ = 0.
  */
 
-import type { TypedMolecule } from '../types';
-import { BCI_PARAMS, BCI_DEFAULT_PARAMS, ATOM_TYPE_PROPERTIES } from './parameters';
-import { make_class_context, bond_type_flag } from './parameters/parameter-classes';
+import type { TypedMolecule } from '../types.js';
+import { BCI_PARAMS, BCI_DEFAULT_PARAMS, ATOM_TYPE_PROPERTIES } from './parameters/index.js';
+import { make_class_context, bond_type_flag } from './parameters/parameter-classes.js';
 
 /** Primary formal atomic charges q⁰ (part V eq. 15), per type. */
 const PRIMARY_FORMAL_CHARGES: Record<number, number> = {

@@ -42,9 +42,9 @@
  * wildcard entry ("0-j-0-0") when no specific entry exists.
  */
 
-import type { TypedMolecule } from '../../types';
-import { OOP_PARAMS, lookup_param, ATOM_TYPE_PROPERTIES } from '../parameters';
-import { wilson_oop_angle, Vec3 } from '../../utils/vector';
+import type { TypedMolecule } from '../../types.js';
+import { OOP_PARAMS, lookup_param, ATOM_TYPE_PROPERTIES } from '../parameters/index.js';
+import { wilson_oop_angle, Vec3 } from '../../utils/vector.js';
 
 const OOP_UNIT = 143.9325 * (Math.PI / 180) ** 2; // exact form of the published 0.043844 (see angle-bend.ts)
 

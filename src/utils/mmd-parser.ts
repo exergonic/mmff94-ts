@@ -16,7 +16,7 @@
  *   21+    atom name fragments + trailing serial number
  */
 
-import type { Molecule, Atom, Bond } from '../types';
+import type { Molecule, Atom, Bond } from '../types.js';
 
 // MacroModel atom type (the .mmd first column) → element symbol.
 // Extracted from OpenBabel's data/types.txt MMD column — OpenBabel's

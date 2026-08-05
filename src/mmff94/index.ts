@@ -10,16 +10,16 @@
 
 export {
   assign_atom_types,
-} from './assign-atom-types';
+} from './assign-atom-types.js';
 
 export {
   assign_bci_charges,
-} from './charges';
+} from './charges.js';
 
 export {
   calc_energy,
-} from './energy/total';
+} from './energy/total.js';
 
 export {
   calc_gradient,
-} from './gradient/total';
+} from './gradient/total.js';

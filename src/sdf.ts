@@ -12,7 +12,7 @@
  *   "M END"      terminates the connection table
  */
 
-import type { Atom, Bond, Molecule } from './types';
+import type { Atom, Bond, Molecule } from './types.js';
 
 /**
  * Parse a V2000 MOL block or SDF record into a Molecule.

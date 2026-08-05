@@ -25,10 +25,10 @@
  * flips the sign of the whole term.
  */
 
-import type { TypedMolecule } from '../../types';
-import { Vec3, wilson_oop_angle } from '../../utils/vector';
-import { oop_force_constant } from '../energy/out-of-plane';
-import { oop_angle_derivatives, RAD_PER_DEG } from './derivatives';
+import type { TypedMolecule } from '../../types.js';
+import { Vec3, wilson_oop_angle } from '../../utils/vector.js';
+import { oop_force_constant } from '../energy/out-of-plane.js';
+import { oop_angle_derivatives, RAD_PER_DEG } from './derivatives.js';
 
 const OOP_UNIT = 143.9325 * (Math.PI / 180) ** 2; // exact form of the published 0.043844 (see angle-bend.ts)
 

@@ -23,10 +23,10 @@
  * scaled in MMFF94").
  */
 
-import type { TypedMolecule } from '../../types';
-import { Vec3 } from '../../utils/vector';
-import { vdw_pair_parameters, vdw_parameters_for } from '../energy/van-der-waals';
-import { bond_length_derivatives } from './derivatives';
+import type { TypedMolecule } from '../../types.js';
+import { Vec3 } from '../../utils/vector.js';
+import { vdw_pair_parameters, vdw_parameters_for } from '../energy/van-der-waals.js';
+import { bond_length_derivatives } from './derivatives.js';
 
 /**
  * Gradient of the vdW energy, dE/dx per atom.

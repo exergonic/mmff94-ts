@@ -19,17 +19,17 @@
  * can never disagree about which angles exist or with which constants.
  */
 
-import type { TypedMolecule } from '../../types';
-import { Vec3, angle_in_radians } from '../../utils/vector';
-import { make_class_context } from '../parameters/parameter-classes';
+import type { TypedMolecule } from '../../types.js';
+import { Vec3, angle_in_radians } from '../../utils/vector.js';
+import { make_class_context } from '../parameters/parameter-classes.js';
 import {
   stretch_bend_angle_terms,
-} from '../energy/stretch-bend';
+} from '../energy/stretch-bend.js';
 import {
   bond_length_derivatives,
   angle_derivatives,
   RAD_PER_DEG,
-} from './derivatives';
+} from './derivatives.js';
 
 const SB_UNIT = 2.51210; // eq. (5) unit conversion
 

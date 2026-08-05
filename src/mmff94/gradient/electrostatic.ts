@@ -23,11 +23,11 @@
  *     if the caller did not call assign_bci_charges()).
  */
 
-import type { TypedMolecule } from '../../types';
-import { Vec3 } from '../../utils/vector';
-import { assign_bci_charges } from '../charges';
-import { is_1_4_pair } from '../energy/electrostatic';
-import { bond_length_derivatives } from './derivatives';
+import type { TypedMolecule } from '../../types.js';
+import { Vec3 } from '../../utils/vector.js';
+import { assign_bci_charges } from '../charges.js';
+import { is_1_4_pair } from '../energy/electrostatic.js';
+import { bond_length_derivatives } from './derivatives.js';
 
 const S = 0.05; // the electrostatic buffering constant (Å)
 const ELEC_UNIT = 332.0716; // e²/Å → kcal/mol

@@ -21,10 +21,10 @@ export type {
   TypedMolecule,
   EnergyComponents,
   OptimizationResult,
-} from './types';
+} from './types.js';
 
 // SDF parser — read molecules from standard file formats
-export { parse_sdf } from './sdf';
+export { parse_sdf } from './sdf.js';
 
 // MMFF94 force field
 export {
@@ -32,12 +32,12 @@ export {
   assign_bci_charges,
   calc_energy,
   calc_gradient,
-} from './mmff94';
+} from './mmff94/index.js';
 
 // Geometry optimizers — L-BFGS is the primary minimizer; steepest
 // descent is the fallback (robust but slow — Armijo line search).
-export { optimize_lbfgs } from './optimize/l-bfgs';
-export { optimize_steepest_descent } from './optimize/steepest-descent';
+export { optimize_lbfgs } from './optimize/l-bfgs.js';
+export { optimize_steepest_descent } from './optimize/steepest-descent.js';
 
 // Utility — for advanced users who want to build their own tools
 export {
@@ -45,4 +45,4 @@ export {
   angle_in_radians,
   dihedral_angle,
   rotate_around_axis,
-} from './utils/vector';
+} from './utils/vector.js';

@@ -15,15 +15,15 @@
  * energy term applies it — the term functions are the only place
  * that scaling can live, since they return full arrays, not pairs.
  */
-import type { Molecule } from '../../types';
-import { prepare_molecule } from '../prepare';
-import { calc_bond_stretch_gradient } from './bond-stretch';
-import { calc_angle_bend_gradient } from './angle-bend';
-import { calc_stretch_bend_gradient } from './stretch-bend';
-import { calc_torsion_gradient } from './torsion';
-import { calc_vdw_gradient } from './van-der-waals';
-import { calc_electrostatic_gradient } from './electrostatic';
-import { calc_oop_gradient } from './out-of-plane';
+import type { Molecule } from '../../types.js';
+import { prepare_molecule } from '../prepare.js';
+import { calc_bond_stretch_gradient } from './bond-stretch.js';
+import { calc_angle_bend_gradient } from './angle-bend.js';
+import { calc_stretch_bend_gradient } from './stretch-bend.js';
+import { calc_torsion_gradient } from './torsion.js';
+import { calc_vdw_gradient } from './van-der-waals.js';
+import { calc_electrostatic_gradient } from './electrostatic.js';
+import { calc_oop_gradient } from './out-of-plane.js';
 
 /**
  * Compute the full gradient of the MMFF94 energy.

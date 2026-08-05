@@ -27,11 +27,11 @@
  * misses entirely.
  */
 
-import type { TypedMolecule } from '../../types';
-import { dihedral_angle, Vec3 } from '../../utils/vector';
-import { make_class_context, type ClassContext, torsion_class, lookup_torsion, get_bond_order, is_aromatic_bond } from '../parameters/parameter-classes';
-import { ATOM_TYPE_PROPERTIES } from '../parameters';
-import { empirical_torsion } from '../parameters/empirical';
+import type { TypedMolecule } from '../../types.js';
+import { dihedral_angle, Vec3 } from '../../utils/vector.js';
+import { make_class_context, type ClassContext, torsion_class, lookup_torsion, get_bond_order, is_aromatic_bond } from '../parameters/parameter-classes.js';
+import { ATOM_TYPE_PROPERTIES } from '../parameters/index.js';
+import { empirical_torsion } from '../parameters/empirical.js';
 
 /**
  * The three Fourier barrier heights for the dihedral i-j-k-l, resolved

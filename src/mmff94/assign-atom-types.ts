@@ -19,7 +19,7 @@
  * chemical reason for the distinction.
  */
 
-import type { Molecule, TypedMolecule } from '../types';
+import type { Molecule, TypedMolecule } from '../types.js';
 
 /**
  * Assign an MMFF94 atom type to every atom in the molecule.

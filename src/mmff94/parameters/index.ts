@@ -13,18 +13,18 @@
  * in parameter-classes.ts selects the class itself.
  */
 
-export { lookup_param } from './lookup';
-export { ATOM_TYPES } from './atom-types';
-export { ATOM_TYPE_PROPERTIES, type AtomTypeProperties } from './atom-type-properties';
-export { BOND_PARAMS } from './bond';
-export { ANGLE_PARAMS, type AngleParams } from './angle';
-export { STRETCH_BEND_PARAMS, type StretchBendParams } from './stretch-bend';
-export { TORSION_PARAMS } from './torsion';
-export type { TorsionParams } from './torsion';
-export { VDW_PARAMS } from './van-der-waals';
-export { BCI_PARAMS, BCI_DEFAULT_PARAMS } from './bci';
-export { OOP_PARAMS } from './out-of-plane';
-export { DEFAULT_STRETCH_BEND } from './default-stretch-bend';
+export { lookup_param } from './lookup.js';
+export { ATOM_TYPES } from './atom-types.js';
+export { ATOM_TYPE_PROPERTIES, type AtomTypeProperties } from './atom-type-properties.js';
+export { BOND_PARAMS } from './bond.js';
+export { ANGLE_PARAMS, type AngleParams } from './angle.js';
+export { STRETCH_BEND_PARAMS, type StretchBendParams } from './stretch-bend.js';
+export { TORSION_PARAMS } from './torsion.js';
+export type { TorsionParams } from './torsion.js';
+export { VDW_PARAMS } from './van-der-waals.js';
+export { BCI_PARAMS, BCI_DEFAULT_PARAMS } from './bci.js';
+export { OOP_PARAMS } from './out-of-plane.js';
+export { DEFAULT_STRETCH_BEND } from './default-stretch-bend.js';
 export {
   make_class_context,
   get_bond_order,
@@ -37,6 +37,6 @@ export {
   angle_parameters,
   lookup_torsion,
   type ClassContext,
-} from './parameter-classes';
-export { ELEMENT_ROW } from './empirical';
-export { empirical_torsion } from './empirical';
+} from './parameter-classes.js';
+export { ELEMENT_ROW } from './empirical.js';
+export { empirical_torsion } from './empirical.js';

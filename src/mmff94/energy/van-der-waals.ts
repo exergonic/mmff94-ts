@@ -39,9 +39,9 @@
  * term carries a 1-4 factor, 0.75, applied in total.ts.)
  */
 
-import type { TypedMolecule } from '../../types';
-import { VDW_PARAMS } from '../parameters';
-import { distance, Vec3 } from '../../utils/vector';
+import type { TypedMolecule } from '../../types.js';
+import { VDW_PARAMS } from '../parameters/index.js';
+import { distance, Vec3 } from '../../utils/vector.js';
 
 /**
  * The pair parameters for one vdW interaction: combined radius R*

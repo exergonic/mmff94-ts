@@ -30,9 +30,9 @@
  * rescale individual pairs.
  */
 
-import type { TypedMolecule } from '../../types';
-import { distance, Vec3 } from '../../utils/vector';
-import { assign_bci_charges } from '../charges';
+import type { TypedMolecule } from '../../types.js';
+import { distance, Vec3 } from '../../utils/vector.js';
+import { assign_bci_charges } from '../charges.js';
 
 const S = 0.05; // the electrostatic buffering constant (Å)
 

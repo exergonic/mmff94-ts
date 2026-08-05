@@ -22,7 +22,7 @@ import {
   vec_dot,
   vec_cross,
   vec_length,
-} from '../../utils/vector';
+} from '../../utils/vector.js';
 
 /** Derivative of the unit vector u = v/|v| with respect to a displacement dv of v. */
 export function unit_vec_deriv(v: Vec3, dv: Vec3): Vec3 {

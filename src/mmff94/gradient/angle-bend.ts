@@ -21,10 +21,10 @@
  * lin flag that selects the cosine form.
  */
 
-import type { TypedMolecule } from '../../types';
-import { Vec3, angle_in_radians } from '../../utils/vector';
-import { make_class_context, angle_parameters } from '../parameters/parameter-classes';
-import { angle_derivatives, RAD_PER_DEG } from './derivatives';
+import type { TypedMolecule } from '../../types.js';
+import { Vec3, angle_in_radians } from '../../utils/vector.js';
+import { make_class_context, angle_parameters } from '../parameters/parameter-classes.js';
+import { angle_derivatives, RAD_PER_DEG } from './derivatives.js';
 
 const ANGLE_UNIT = 143.9325 * (Math.PI / 180) ** 2; // exact form of the published 0.043844
 const LINEAR_UNIT = 143.9325; // eq. (4) unit — same as bond stretch

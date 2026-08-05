@@ -18,16 +18,16 @@
  * angles), but the parameter table stores both independently.
  */
 
-import type { TypedMolecule } from '../../types';
+import type { TypedMolecule } from '../../types.js';
 import {
   STRETCH_BEND_PARAMS,
   DEFAULT_STRETCH_BEND,
   ELEMENT_ROW,
   lookup_param,
   type StretchBendParams,
-} from '../parameters';
-import { distance, angle_in_radians, Vec3 } from '../../utils/vector';
-import { make_class_context, type ClassContext, strbnd_type, bond_parameters, angle_parameters } from '../parameters/parameter-classes';
+} from '../parameters/index.js';
+import { distance, angle_in_radians, Vec3 } from '../../utils/vector.js';
+import { make_class_context, type ClassContext, strbnd_type, bond_parameters, angle_parameters } from '../parameters/parameter-classes.js';
 
 /**
  * All parameters a stretch-bend angle i-j-k needs: the two coupling

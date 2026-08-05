@@ -35,10 +35,10 @@
  * is dE/dx, so the descent direction is −H·∇E.
  */
 
-import type { Molecule, TypedMolecule, EnergyComponents, OptimizationResult } from '../types';
-import { prepare_molecule } from '../mmff94/prepare';
-import { calc_energy } from '../mmff94/energy/total';
-import { calc_gradient } from '../mmff94/gradient/total';
+import type { Molecule, TypedMolecule, EnergyComponents, OptimizationResult } from '../types.js';
+import { prepare_molecule } from '../mmff94/prepare.js';
+import { calc_energy } from '../mmff94/energy/total.js';
+import { calc_gradient } from '../mmff94/gradient/total.js';
 
 export interface LbfgsOptions {
   max_iterations?: number;

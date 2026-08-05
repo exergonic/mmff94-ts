@@ -22,9 +22,9 @@
  * The linear flag comes from the atom-type properties, not from θ₀.
  */
 
-import type { TypedMolecule } from '../../types';
-import { angle_in_radians, Vec3 } from '../../utils/vector';
-import { make_class_context, angle_parameters } from '../parameters/parameter-classes';
+import type { TypedMolecule } from '../../types.js';
+import { angle_in_radians, Vec3 } from '../../utils/vector.js';
+import { make_class_context, angle_parameters } from '../parameters/parameter-classes.js';
 
 // Unit conversion (mdyn·Å/rad²) → (kcal/mol)/deg². The published
 // 0.043844 is the rounded form; BatchMin uses the exact product

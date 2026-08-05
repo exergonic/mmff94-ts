@@ -21,11 +21,11 @@
  * part-IV empirical rules).
  */
 
-import type { TypedMolecule } from '../../types';
-import { Vec3, dihedral_angle } from '../../utils/vector';
-import { make_class_context } from '../parameters/parameter-classes';
-import { torsion_terms } from '../energy/torsion';
-import { dihedral_derivatives } from './derivatives';
+import type { TypedMolecule } from '../../types.js';
+import { Vec3, dihedral_angle } from '../../utils/vector.js';
+import { make_class_context } from '../parameters/parameter-classes.js';
+import { torsion_terms } from '../energy/torsion.js';
+import { dihedral_derivatives } from './derivatives.js';
 
 /**
  * Gradient of the torsion energy, dE/dx per atom.
