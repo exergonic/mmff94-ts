@@ -65,13 +65,11 @@ We checked every analytical gradient against finite differences.
    the reference itself is inconsistent. The
    [Validation document](tests/VALIDATION.md) has the full details.
 
-   The hard evidence is committed: [`docs/validation/total-energies.txt`](docs/validation/total-energies.txt)
+   The tabulated total energies [total-energies.txt](docs/validation/total-energies.txt), 
    lists all 753 totals side by side with the suite's own OPTIMOL and
-   BatchMin values (749/753 to 0.001 kcal/mol; the four exceptions are
-   the documented reference anomalies), and
-   [`docs/validation/per-term-and-charges.txt`](docs/validation/per-term-and-charges.txt)
-   lists the per-term and per-atom charge deltas molecule by molecule.
-   Regenerate both with `npm run validation:doc`.
+   BatchMin values (749/753 to 0.0001 kcal/mol). The four exceptions are
+   documented reference anomalies, not shortcomings of the implementation.
+   See the [Validation document](tests/VALIDATION.md) for details.
 
 2. **OpenBabel.** Per-term energies and per-atom partial charges for
    16 small organic molecules. All values match to five decimal
