@@ -27,13 +27,24 @@ matches all seven terms within 0.05 kcal/mol
 
 | term | exact | max \|Δ\| | worst |
 |---|---|---|---|
-| bond stretch | 749/749 | 0.0005 | OHMW1 |
-| angle bend | 749/749 | 0.0000 | — |
-| stretch-bend | 749/749 | 0.0000 | — |
-| torsion | 749/749 | 0.0001 | TAJSUS |
-| out-of-plane | 749/749 | 0.0044 | KINWEJ |
-| van der Waals | 749/749 | 0.0000 | — |
-| electrostatic | 749/749 | 0.0001 | — |
+| bond stretch | 746/747 | 0.0005 | OHMW1 |
+| angle bend | 747/747 | 0.0000 | — |
+| stretch-bend | 747/747 | 0.0000 | — |
+| torsion | 746/747 | 0.0001 | TAJSUS |
+| out-of-plane | 747/747 | 0.0000 | — |
+| van der Waals | 747/747 | 0.0000 | — |
+| electrostatic | 747/747 | 0.0001 | DONFOB |
+
+(The "exact" columns count molecules within 10⁻⁴ kcal/mol of the
+BatchMin component — the per-term residual census
+(`tests/scripts/residual-census.ts`) — not the 0.05 gate. At that
+bar five of seven terms are machine-exact on every molecule. The two
+remaining residuals: OHMW1's hydroxide O–H bond — the reference's
+parameter row for the 44-18 pair (old numbering) has no counterpart
+in the renumbered OB par files, so the bond falls to a reference-side
+default whose exact constants are not in the suite data (empirical
+rule, part V, is the mechanism; r₀ ≈ 0.978 Å); and TAJSUS's torsion
+(1.2×10⁻⁴ — a single dihedral's V values differ from the lookup).
 
 BatchMin's log is a single-point calculation at the `.mmd` geometry
 (per the suite README), so a delta on a typing-exact molecule is a

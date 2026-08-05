@@ -85,18 +85,33 @@ export function oop_force_constant(
   // entry, k = 0.116). The BatchMin reference resolves COYVIV's
   // delocalized N(40) with [28,28,63] through lvl3(63) = 2 to the
   // 2-40-28-28 entry, and FUDPOJ's cyclopropenone centers keep
-  // their wildcards (their substituted keys never match). The
-  // carboxylate carbon (41) keeps its class-0 wildcard (0.18) — the
-  // reference does not substitute its substituents (QUICNA01's and
-  // SAHSUP's deformed carboxylates need the 0.18; the KNOWN_GOOD
-  // carboxylates are planar, so their oop energy is ~0 either way).
+  // their wildcards (their substituted keys never match). A
+  // half-reduced key is REJECTED: the reference does not accept a
+  // substituted entry while a substituent still sits at its own
+  // reducible type — KINWEJ's [20,37,37] never takes the existing
+  // 1-37-37-37 entry (0.04) because the untouched 37s are
+  // reducible, and VIWCOT's [30,37,5] skips the existing 2-2-5-37
+  // entry (0.017) to reach 2-2-2-5 (0.013) once the 37 is also
+  // reduced. The carboxylate carbon (41) keeps its class-0
+  // wildcard (0.18) — the reference does not substitute its
+  // substituents (QUICNA01's and SAHSUP's deformed carboxylates
+  // need the 0.18; the KNOWN_GOOD carboxylates are planar, so
+  // their oop energy is ~0 either way).
   if (tj !== 41 && !params) {
     const t = [...sorted];
     for (let p = 0; p < 3; p++) {
       t[p] = ATOM_TYPE_PROPERTIES[t[p]]?.lvl3 ?? t[p];
       const s = [...t].sort((x, y) => x - y);
       params = lookup_param(OOP_PARAMS, [s[0], tj, s[1], s[2]]);
-      if (params) break;
+      if (!params) continue;
+      // Half-reduced keys are rejected: positions p+1..2 are still at
+      // their original types — the entry is only accepted once every
+      // remaining original is terminal (lvl3(t) = t).
+      const halfReduced = (p < 2) && [sorted[p + 1], sorted[p + 2]].some(
+        (u) => (ATOM_TYPE_PROPERTIES[u]?.lvl3 ?? u) !== u,
+      );
+      if (halfReduced) { params = undefined; continue; }
+      break;
     }
   }
 
