@@ -44,6 +44,10 @@ export function parse_bmin_log(text: string): Map<string, BminComponentEnergies>
         vdw: parse_fortran(lines[++i].match(/=\s*(\S+)/)![1]),
       };
       const t = lines[++i].match(/Total Energy\s*=\s*([-0-9.]+)/);
+      // NOTE: the log's "Total Energy" line is printed 2-decimal
+      // rounded (Fortran F9.2 — e.g. -51.42700), while the component
+      // lines are 5-decimal. Do NOT use `total` at fine precision;
+      // compare totals against MMFF94.energies instead (5 decimals).
       if (t) e.total = parseFloat(t[1]);
       result.set(currentCode, e);
       currentCode = '';
