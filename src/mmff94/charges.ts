@@ -265,6 +265,16 @@ export function assign_bci_charges(molecule: TypedMolecule): TypedMolecule {
   }
   for (let i = 0; i < n; i++) charges[i] += formal[i];
 
+  // The reference (BatchMin) carries its partial charges at five
+  // decimal places: its electrostatic components are computed from
+  // those stored values, so the third-based primary charges (the
+  // amidinium N's +1/3, the phosphate O's −2/3-family) leave the
+  // suite's elec components 1e-3..3.5e-3 away from a full-precision
+  // recomputation (14 molecules, all on the guanidinium/amidinium/
+  // phosphate groups). Rounding to the reference's precision closes
+  // them all (SOHXOC 3.5e-3 → 1e-5, 747/747 within 1e-4).
+  for (let i = 0; i < n; i++) charges[i] = Number(charges[i].toFixed(5));
+
   // The charged molecule is a shallow copy: atoms and bonds are shared
   // references — only the new field is added. Geometry and typing are
   // untouched, so this is the value that flows into the energy terms

@@ -33,7 +33,7 @@ matches all seven terms within 0.05 kcal/mol
 | torsion | 749/749 | 0.0001 | TAJSUS |
 | out-of-plane | 749/749 | 0.0044 | KINWEJ |
 | van der Waals | 749/749 | 0.0000 | — |
-| electrostatic | 749/749 | 0.0035 | SOHXOC |
+| electrostatic | 749/749 | 0.0001 | — |
 
 BatchMin's log is a single-point calculation at the `.mmd` geometry
 (per the suite README), so a delta on a typing-exact molecule is a
