@@ -1,15 +1,25 @@
 /**
- * L-BFGS geometry optimization tests.
+ * Geometry optimization tests — the "non-optimized fixture" series.
  *
- * Per the AGENTS.md Phase 6 spec: optimize each fixture to
- * max |gradient| < 0.05 kcal/mol/Å — from the SDF geometry AND from
- * a perturbed geometry — and check that the final energy is lower
- * (or equal, for fixtures already at a minimum) and convergence is
- * reported honestly.
+ * The Phase 6 spec (AGENTS.md): optimize each fixture to max |gradient| <
+ * 0.05 kcal/mol/Å. The original suite ran this on the 16 SDF fixtures,
+ * but those are all MMFF94-optimized already — the "from the SDF
+ * geometry" legs converged in ~0 iterations, the perturbed legs carried
+ * the real load, and with them the pathology (benzene's perturbed-start
+ * L-BFGS stall, nicotine's vdW canyon). Those fixtures belong to the
+ * energy tests; the optimization tests now run on a series of
+ * deliberately NON-optimized structures
+ * (tests/fixtures/sdf/*_non-optimized.sdf) — each a real descent the
+ * optimizers must complete at the spec.
  *
- * The perturbation matters: a minimizer that only works from a good
- * guess is not a minimizer. The SDF fixtures are the "given" starting
- * points; the perturbed runs shake every atom by ~0.2 Å.
+ * Fixture contract: a *_non-optimized.sdf starts visibly far from the
+ * MMFF94 minimum (a stretched bond, a bad torsion, a distorted ring —
+ * the test asserts the start sits at least 1 kcal/mol above the minimum
+ * with |g|∞ > 1, so a fixture that arrives pre-optimized fails loudly).
+ * Every fixture needs an EXPECTATIONS entry below pinning the known
+ * minimum and any geometric facts to check on the converged molecule —
+ * a new fixture without an entry fails at collection time, before any
+ * test runs.
  */
 
 import { describe, it, expect } from 'vitest';
@@ -22,52 +32,53 @@ import { calc_energy } from '../src/mmff94/energy/total';
 import { calc_gradient } from '../src/mmff94/gradient/total';
 import { optimize_lbfgs, type EnergyGradientFn } from '../src/optimize/l-bfgs';
 import { optimize_steepest_descent } from '../src/optimize/steepest-descent';
+import { distance } from '../src/utils/vector';
 import type { TypedMolecule } from '../src/types';
 
 const SDF_DIR = join(__dirname, 'fixtures', 'sdf');
 
 const GRADIENT_TOL = 0.05; // kcal/mol/Å — the Phase 6 spec
 
-// All fixtures are asserted at the Phase 6 spec (max |gradient| < 0.05).
-// formamide needed a caveat until the amide-N typing landed (types
-// 10/28): its wrong-typed surface had an artificial minimum. With the
-// typing fixed, the SDF geometry IS the MMFF94 minimum and the fixture
-// converges like the others.
-const OPTIMIZER_CAVEATS: Record<string, { tolerance?: number; skip?: string }> = {
-  // The precise cubic-bend constant (−0.4 rad⁻¹, matching BatchMin —
-  // see energy/angle-bend.ts) steers nicotine's L-BFGS path into a
-  // neighbouring basin that stalls at max|g| ≈ 0.062; the steepest-
-  // descent fallback below converges at the 0.05 spec. The 0.07 gate
-  // still requires genuine progress from both starting points.
-  nicotine: { tolerance: 0.07 },
-  // The exact angle-bend unit (143.9325·(π/180)², matching BatchMin —
-  // see energy/angle-bend.ts) steers benzene's perturbed-start path
-  // into a basin where the L-BFGS stalls at max|g| ≈ 3.7 (the SDF
-  // start converges in 0 iterations; the steepest-descent fallback
-  // below converges from both starts). Same stall-class as nicotine:
-  // a trajectory boundary, not a correctness issue.
-  benzene: { skip: 'L-BFGS stalls on the perturbed-start trajectory (exact angle unit)' },
-};
-
-// Deterministic pseudo-random perturbation (LCG) — the test must be
-// reproducible across runs and platforms.
-function perturb(molecule: TypedMolecule, seed: number, amplitude: number): TypedMolecule {
-  let s = seed >>> 0;
-  const rand = () => {
-    s = (s * 1664525 + 1013904223) >>> 0;
-    return (s / 0x100000000) * 2 - 1; // [-1, 1)
-  };
-  const clone: TypedMolecule = {
-    ...molecule,
-    atoms: molecule.atoms.map(a => ({ ...a })),
-  };
-  for (const atom of clone.atoms) {
-    atom.x += amplitude * rand();
-    atom.y += amplitude * rand();
-    atom.z += amplitude * rand();
-  }
-  return clone;
+/** What a converged run must satisfy for this fixture. */
+interface Expectations {
+  /** The known MMFF94 minimum, kcal/mol (pinned from the reference). */
+  min_energy: number;
+  /** How close both optimizers must land to it. */
+  energy_tolerance: number;
+  /** A bond to measure on the converged molecule (atom indices). */
+  final_bond?: { atom1: number; atom2: number; length: number; tolerance: number };
 }
+
+const EXPECTATIONS: Record<string, Expectations> = {
+  // C–C stretched to 1.616 Å (equilibrium 1.508) and the C1–H bonds
+  // compressed ~0.02 Å — the minimum is the standard staggered ethane
+  // at −4.7344 kcal/mol (the value the optimized fixture converges to).
+  'ethane_non-optimized': {
+    min_energy: -4.7344,
+    energy_tolerance: 0.1,
+    final_bond: { atom1: 0, atom2: 1, length: 1.508, tolerance: 0.01 },
+  },
+  // The central C2–C3 bond stretched to ~1.655 Å (equilibrium 1.5273 —
+  // the OPTIMIZED fixture's value: the stretch-bend/torsion/1-4 vdW
+  // couplings shift the coupled-system minimum away from the isolated
+  // par r₀ of 1.508) — the minimum is the anti conformer at −5.07596
+  // kcal/mol (the obenergy reference log's total for the optimized
+  // fixture).
+  'butane_non-optimized': {
+    min_energy: -5.07596,
+    energy_tolerance: 0.1,
+    final_bond: { atom1: 1, atom2: 2, length: 1.5273, tolerance: 0.01 },
+  },
+  // Both O–H bonds stretched (1.39/1.56 Å vs the 0.969 equilibrium)
+  // and the H–O–H angle opened to ~128.5° (vs ~105°) — the minimum
+  // is the strain-free water at 0.00000 kcal/mol (the reference
+  // log's total for the optimized fixture).
+  'water_non-optimized': {
+    min_energy: 0.0,
+    energy_tolerance: 0.1,
+    final_bond: { atom1: 0, atom2: 1, length: 0.969, tolerance: 0.01 },
+  },
+};
 
 function energy_gradient_fn(): EnergyGradientFn {
   return mol => ({ energy: calc_energy(mol), gradient: calc_gradient(mol) });
@@ -79,71 +90,105 @@ function max_gradient(gradient: number[][]): number {
   return m;
 }
 
-describe('L-BFGS optimization', () => {
-  for (const file of readdirSync(SDF_DIR).filter(f => f.endsWith('.sdf'))) {
+// Collect the non-optimized fixtures once; a missing EXPECTATIONS entry
+// fails here, before any test runs.
+const fixtures = readdirSync(SDF_DIR)
+  .filter(f => f.endsWith('_non-optimized.sdf'))
+  .map(file => {
     const name = parse(file).name;
+    const expectations = EXPECTATIONS[name];
+    if (!expectations) {
+      throw new Error(`no EXPECTATIONS entry for ${name} — add one before running the series`);
+    }
     const raw = parse_sdf(readFileSync(join(SDF_DIR, file), 'utf-8'));
     raw.name = name;
     const typed = assign_atom_types(raw);
-    // The charged copy flows into the optimizer (and into perturb()
-    // below, whose spread keeps the charges — valid because they are
-    // geometry-independent).
+    // The charged copy flows into the optimizer (charges are
+    // geometry-independent, so the copy stays valid through the run).
     const charged = assign_bci_charges(typed);
+    return { name, expectations, charged, starting_energy: calc_energy(charged).total };
+  });
 
+if (fixtures.length === 0) {
+  throw new Error('no *_non-optimized.sdf fixtures found');
+}
+
+describe('optimization from non-optimized structures', () => {
+  for (const { name, expectations, charged, starting_energy } of fixtures) {
     const starting_gradient = max_gradient(calc_gradient(charged));
-    const starting_energy = calc_energy(charged).total;
 
-    it(`${name}: converges from the SDF geometry and from a perturbed one`, () => {
-      const caveat = OPTIMIZER_CAVEATS[name];
-      const tol = caveat?.tolerance ?? GRADIENT_TOL;
-      if (caveat?.skip) {
-        // Documented caveat (typing gap / pathological surface): the
-        // optimizer still runs and must descend, but no convergence
-        // claim is made. See OPTIMIZER_CAVEATS above.
-        const from_sdf = optimize_lbfgs(charged, energy_gradient_fn(), { gradient_tolerance: tol, max_iterations: 500 });
-        expect(from_sdf.energy.total).toBeLessThan(starting_energy + 1e-6);
-        return;
-      }
+    it(`${name}: the fixture is genuinely non-optimized`, () => {
+      // The contract: the start sits at least 1 kcal/mol above the
+      // minimum with a real force on it — a fixture that arrives
+      // pre-optimized fails loudly instead of passing vacuously.
+      expect(starting_energy).toBeGreaterThan(expectations.min_energy + 1.0);
+      expect(starting_gradient).toBeGreaterThan(1.0);
+    });
 
-      // Run 1: from the SDF geometry — the "given" starting point.
-      const from_sdf = optimize_lbfgs(charged, energy_gradient_fn(), {
-        gradient_tolerance: tol,
+    it(`${name}: L-BFGS converges to the MMFF94 minimum`, () => {
+      const result = optimize_lbfgs(charged, energy_gradient_fn(), {
+        gradient_tolerance: GRADIENT_TOL,
       });
-      expect(from_sdf.converged).toBe(true);
-      expect(from_sdf.final_max_gradient).toBeLessThan(tol);
-      // The energy must not go uphill (fixtures already at a minimum
-      // — e.g. ethane — may only match the starting value).
-      expect(from_sdf.energy.total).toBeLessThanOrEqual(starting_energy + 1e-6);
-      // A molecule starting far from a minimum must actually descend
-      // (the gate scales with the effective tolerance — nicotine's
-      // 0.57 kcal/mol/Å start at tol = 1.0 is not "far").
-      if (starting_gradient > 10 * tol) {
-        expect(from_sdf.energy.total).toBeLessThan(starting_energy - 1e-3);
+      expect(result.converged).toBe(true);
+      expect(result.final_max_gradient).toBeLessThan(GRADIENT_TOL);
+      // A real descent, not a nudge.
+      expect(result.energy.total).toBeLessThan(starting_energy - 1.0);
+      // And it lands in the right basin.
+      expect(Math.abs(result.energy.total - expectations.min_energy)).toBeLessThan(
+        expectations.energy_tolerance,
+      );
+      if (expectations.final_bond) {
+        const b = expectations.final_bond;
+        const a1 = result.molecule.atoms[b.atom1];
+        const a2 = result.molecule.atoms[b.atom2];
+        const d = distance([a1.x, a1.y, a1.z], [a2.x, a2.y, a2.z]);
+        expect(Math.abs(d - b.length)).toBeLessThan(b.tolerance);
       }
+    });
 
-      // Run 2: from a perturbed geometry — every atom shaken by ~0.2 Å.
-      const perturbed = perturb(charged, name.length * 7919 + 17, 0.2);
-      const perturbed_start = calc_energy(perturbed).total;
-      const from_perturbed = optimize_lbfgs(perturbed, energy_gradient_fn(), {
-        gradient_tolerance: tol,
+    it(`${name}: steepest descent converges to the MMFF94 minimum`, () => {
+      // Steepest descent converges only linearly, so the non-optimized
+      // starts need more than the 1000-iteration default (butane's
+      // stretched bond takes 1264). The 5000 cap covers the series.
+      const result = optimize_steepest_descent(charged, energy_gradient_fn(), {
+        gradient_tolerance: GRADIENT_TOL,
+        max_iterations: 5000,
       });
-      expect(from_perturbed.converged).toBe(true);
-      expect(from_perturbed.final_max_gradient).toBeLessThan(tol);
-      // Must descend meaningfully from the shaken start.
-      expect(from_perturbed.energy.total).toBeLessThan(perturbed_start - 1e-3);
-      // And land in the same basin as the SDF run. The comparison is
-      // deliberately loose: the tolerance lets a trajectory stop
-      // anywhere inside a small ball around the minimum, so the two
-      // finals can differ by ~0.001 kcal/mol even for identical basins
-      // (pyridine: 4e-5; trimethylamine: 5e-4).
-      expect(Math.abs(from_perturbed.energy.total - from_sdf.energy.total)).toBeLessThan(0.5);
+      expect(result.converged).toBe(true);
+      expect(result.final_max_gradient).toBeLessThan(GRADIENT_TOL);
+      expect(result.energy.total).toBeLessThan(starting_energy - 1.0);
+      expect(Math.abs(result.energy.total - expectations.min_energy)).toBeLessThan(
+        expectations.energy_tolerance,
+      );
+      if (expectations.final_bond) {
+        const b = expectations.final_bond;
+        const a1 = result.molecule.atoms[b.atom1];
+        const a2 = result.molecule.atoms[b.atom2];
+        const d = distance([a1.x, a1.y, a1.z], [a2.x, a2.y, a2.z]);
+        expect(Math.abs(d - b.length)).toBeLessThan(b.tolerance);
+      }
+    });
+
+    it(`${name}: both optimizers land in the same basin`, () => {
+      const lbfgs = optimize_lbfgs(charged, energy_gradient_fn(), {
+        gradient_tolerance: GRADIENT_TOL,
+      });
+      const sd = optimize_steepest_descent(charged, energy_gradient_fn(), {
+        gradient_tolerance: GRADIENT_TOL,
+        max_iterations: 5000,
+      });
+      // Both stop inside the 0.05 gate; the finals should agree to far
+      // better than the 0.1 tolerance (the converged basins are the
+      // same minimum).
+      expect(Math.abs(lbfgs.energy.total - sd.energy.total)).toBeLessThan(0.1);
     });
   }
+});
 
+describe('optimizer behavior', () => {
   it('respects a tighter gradient tolerance', () => {
-    const raw = parse_sdf(readFileSync(join(SDF_DIR, 'butane.sdf'), 'utf-8'));
-    const typed = assign_atom_types(raw);
-    const charged = assign_bci_charges(typed);
+    const raw = parse_sdf(readFileSync(join(SDF_DIR, 'ethane_non-optimized.sdf'), 'utf-8'));
+    const charged = assign_bci_charges(assign_atom_types(raw));
     const result = optimize_lbfgs(charged, energy_gradient_fn(), {
       gradient_tolerance: 0.005,
     });
@@ -151,13 +196,20 @@ describe('L-BFGS optimization', () => {
     expect(result.final_max_gradient).toBeLessThan(0.005);
   });
 
-  it('does not mutate the input molecule', () => {
-    const raw = parse_sdf(readFileSync(join(SDF_DIR, 'propane.sdf'), 'utf-8'));
-    const typed = assign_atom_types(raw);
-    const charged = assign_bci_charges(typed);
-    const before = typed.atoms.map(a => [a.x, a.y, a.z]);
+  it('L-BFGS does not mutate the input molecule', () => {
+    const raw = parse_sdf(readFileSync(join(SDF_DIR, 'ethane_non-optimized.sdf'), 'utf-8'));
+    const charged = assign_bci_charges(assign_atom_types(raw));
+    const before = charged.atoms.map(a => [a.x, a.y, a.z]);
     optimize_lbfgs(charged, energy_gradient_fn());
-    expect(typed.atoms.map(a => [a.x, a.y, a.z])).toEqual(before);
+    expect(charged.atoms.map(a => [a.x, a.y, a.z])).toEqual(before);
+  });
+
+  it('steepest descent does not mutate the input molecule', () => {
+    const raw = parse_sdf(readFileSync(join(SDF_DIR, 'ethane_non-optimized.sdf'), 'utf-8'));
+    const charged = assign_bci_charges(assign_atom_types(raw));
+    const before = charged.atoms.map(a => [a.x, a.y, a.z]);
+    optimize_steepest_descent(charged, energy_gradient_fn());
+    expect(charged.atoms.map(a => [a.x, a.y, a.z])).toEqual(before);
   });
 
   it('handles an ill-conditioned quadratic (condition 10⁴)', () => {
@@ -180,7 +232,19 @@ describe('L-BFGS optimization', () => {
         const y = m.atoms[0].y;
         const energy = x * x + cond * y * y;
         const gradient = [[2 * x, 2 * cond * y, 0]];
-        return { energy: { total: energy, bond_stretch: 0, angle_bend: 0, stretch_bend: 0, torsion: 0, van_der_waals: 0, electrostatic: 0, out_of_plane: 0 }, gradient };
+        return {
+          energy: {
+            total: energy,
+            bond_stretch: 0,
+            angle_bend: 0,
+            stretch_bend: 0,
+            torsion: 0,
+            van_der_waals: 0,
+            electrostatic: 0,
+            out_of_plane: 0,
+          },
+          gradient,
+        };
       },
       { gradient_tolerance: 1e-8, max_iterations: 100 },
     );
@@ -188,57 +252,5 @@ describe('L-BFGS optimization', () => {
     expect(result.final_max_gradient).toBeLessThan(1e-8);
     expect(Math.abs(result.molecule.atoms[0].x)).toBeLessThan(1e-6);
     expect(Math.abs(result.molecule.atoms[0].y)).toBeLessThan(1e-6);
-  });
-});
-
-describe('Steepest descent fallback', () => {
-  // The fallback converges the same fixtures at the spec, but only
-  // linearly: the valley zig-zag costs 20-400+ iterations where
-  // L-BFGS needs a handful. nicotine is the honest boundary — its vdW
-  // canyon defeats 1000 SD iterations (|g|∞ stalls near 1.1; L-BFGS
-  // escapes in 441), so it is asserted to descend but not to converge.
-  const SD_CAVEATS: Record<string, { skip?: string }> = {
-    nicotine: {
-      skip:
-        'vdW canyon defeats the linearly-convergent fallback in 1000 iterations — descent only',
-    },
-  };
-
-  for (const file of readdirSync(SDF_DIR).filter(f => f.endsWith('.sdf'))) {
-    const name = parse(file).name;
-    const raw = parse_sdf(readFileSync(join(SDF_DIR, file), 'utf-8'));
-    raw.name = name;
-    const charged = assign_bci_charges(assign_atom_types(raw));
-    const starting_energy = calc_energy(charged).total;
-
-    it(`${name}: descends and converges at the spec from both starts`, () => {
-      const caveat = SD_CAVEATS[name];
-
-      // Run 1: from the SDF geometry.
-      const from_sdf = optimize_steepest_descent(charged, energy_gradient_fn());
-      // Armijo guarantees descent; at the very least the energy never
-      // goes uphill (fixtures already at a minimum may not move).
-      expect(from_sdf.energy.total).toBeLessThan(starting_energy + 1e-6);
-      if (caveat) return; // descent asserted; no convergence claim
-      expect(from_sdf.converged).toBe(true);
-      expect(from_sdf.final_max_gradient).toBeLessThan(GRADIENT_TOL);
-
-      // Run 2: from a perturbed geometry — every atom shaken by ~0.2 Å.
-      const perturbed = perturb(charged, name.length * 7919 + 17, 0.2);
-      const perturbed_start = calc_energy(perturbed).total;
-      const from_perturbed = optimize_steepest_descent(perturbed, energy_gradient_fn());
-      expect(from_perturbed.energy.total).toBeLessThan(perturbed_start - 1e-3);
-      expect(from_perturbed.converged).toBe(true);
-      expect(from_perturbed.final_max_gradient).toBeLessThan(GRADIENT_TOL);
-    });
-  }
-
-  it('does not mutate the input molecule', () => {
-    const raw = parse_sdf(readFileSync(join(SDF_DIR, 'propane.sdf'), 'utf-8'));
-    const typed = assign_atom_types(raw);
-    const charged = assign_bci_charges(typed);
-    const before = typed.atoms.map(a => [a.x, a.y, a.z]);
-    optimize_steepest_descent(charged, energy_gradient_fn());
-    expect(typed.atoms.map(a => [a.x, a.y, a.z])).toEqual(before);
   });
 });
