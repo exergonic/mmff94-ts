@@ -104,17 +104,18 @@ describe('Halgren MMFF94 suite validation', () => {
     // The oop term is validated against Halgren's own BatchMin energies.
     // These molecules are chosen because our atom typing reproduces the
     // reference types exactly, so the oop comparison isolates the term
-    // itself — the residual differences elsewhere in the suite are atom
-    // typing gaps, not oop errors. Several match to ~1e-3 kcal/mol.
+    // itself. The historical ~1e-3 residuals (a conversion-factor
+    // rounding) closed with the exact-factor fix; all pins now sit at
+    // ~1e-6, asserted at the 1e-4 gate used across the suite.
     const cases: [string, number][] = [
-      ['DADDAN', 0.05],     // exact match (Δ ≈ 0.0000)
-      ['GIDJUY', 0.05],     // exact match (Δ ≈ 0.0000)
-      ['VEJWOW', 0.05],     // exact match (Δ ≈ 0.0003)
-      ['DIKGAF', 0.05],     // exact match (Δ ≈ 0.001)
-      ['FAXVAB', 0.05],
-      ['GEXGIZ', 0.05],
-      ['VIRBON', 0.05],
-      ['AMHTAR01', 0.05],   // Δ ≈ 0.02 — ester/carboxyl pyramidalization
+      ['DADDAN', 1e-4],     // Δ ≈ 2.4e-6
+      ['GIDJUY', 1e-4],     // Δ ≈ 4.6e-8
+      ['VEJWOW', 1e-4],     // Δ ≈ 2.1e-6
+      ['DIKGAF', 1e-4],     // Δ ≈ 1.1e-6
+      ['FAXVAB', 1e-4],     // Δ ≈ 7.6e-8
+      ['GEXGIZ', 1e-4],     // Δ ≈ 3.1e-7
+      ['VIRBON', 1e-4],     // Δ ≈ 8.1e-7
+      ['AMHTAR01', 1e-4],   // Δ ≈ 8.8e-7
     ];
     for (const [code, tol] of cases) {
       const raw = molecules.find(m => m.name === code)!;
@@ -134,7 +135,7 @@ describe('Halgren MMFF94 suite validation', () => {
     const typed = assign_atom_types(raw);
     const ref = refEnergies.get('FUVDOP')!;
     const got = calc_energy(typed);
-    expect(Math.abs(got.torsion - ref.torsion)).toBeLessThan(0.01);
+    expect(Math.abs(got.torsion - ref.torsion)).toBeLessThan(1e-4);
   });
 
   it('torsion term matches BatchMin on the fused 5-ring case (FILNOD)', () => {
@@ -148,7 +149,7 @@ describe('Halgren MMFF94 suite validation', () => {
     const typed = assign_atom_types(raw);
     const ref = refEnergies.get('FILNOD')!;
     const got = calc_energy(typed);
-    expect(Math.abs(got.torsion - ref.torsion)).toBeLessThan(0.01);
+    expect(Math.abs(got.torsion - ref.torsion)).toBeLessThan(1e-4);
   });
 
   it('stretch-bend term matches BatchMin on the class-2 C-C-C case (JIYJAC)', () => {
@@ -163,7 +164,7 @@ describe('Halgren MMFF94 suite validation', () => {
     const typed = assign_atom_types(raw);
     const ref = refEnergies.get('JIYJAC')!;
     const got = calc_energy(typed);
-    expect(Math.abs(got.stretch_bend - ref.strbnd)).toBeLessThan(0.01);
+    expect(Math.abs(got.stretch_bend - ref.strbnd)).toBeLessThan(1e-4);
   });
 
   it('reports per-component energies for typing-exact molecules', () => {
@@ -210,14 +211,14 @@ describe('Halgren MMFF94 suite validation', () => {
         const s = stats[idx];
         s.mean += Math.abs(d);
         s.max = Math.max(s.max, Math.abs(d));
-        if (Math.abs(d) <= 0.05) s.green++;
+        if (Math.abs(d) <= 1e-4) s.green++;
         s.worst.push([mol.name!, d]);
       });
     }
 
     const lines = [
       `\nPer-component energy deltas vs BatchMin on typing-exact molecules (${nChecked}):`,
-      `  term       |Δ|≤0.05   mean|Δ|    max|Δ|`,
+      `  term       |Δ|≤1e-4   mean|Δ|    max|Δ|`,
       `  ─────────────────────────────────────────`,
     ];
     termDefs.forEach(([label], idx) => {

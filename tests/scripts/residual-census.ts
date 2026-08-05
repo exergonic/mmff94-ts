@@ -38,19 +38,28 @@ function parse_bmin_log(text: string): Map<string, Record<string, number>> {
 
 const bmin = parse_bmin_log(readFileSync(join(suiteDir, 'MMFF94_bmin.log'), 'utf-8'));
 const mols = parse_mmd(readFileSync(join(suiteDir, 'MMFF94.mmd'), 'utf-8'));
-const ANOMALY = new Set(['AN11A', 'DOZNIP', 'FE2PW3', 'CU1PW1', 'JALSOE', 'SO18A']);
+// Reference anomalies — per-term, as documented in VALIDATION.md.
+// JALSOE/SO18A left this set on 2026-08-05 (three-way verified).
+const PER_TERM_EXCLUDED: Record<string, string[]> = {
+  AN11A: ['elec'],
+  DOZNIP: ['elec'],
+  FE2PW3: ['vdw'],
+  CU1PW1: ['vdw'],
+};
 
 const terms = ['stretch', 'bend', 'strbnd', 'torsion', 'oop', 'vdw', 'elec'] as const;
 const gk = { stretch: 'bond_stretch', bend: 'angle_bend', strbnd: 'stretch_bend', torsion: 'torsion', oop: 'out_of_plane', vdw: 'van_der_waals', elec: 'electrostatic' } as const;
 
 const rows: { mol: string; term: string; d: number }[] = [];
 for (const mol of mols) {
-  if (ANOMALY.has(mol.name)) continue;
+  const excluded = PER_TERM_EXCLUDED[mol.name] ?? [];
+  if (excluded.length === terms.length) continue;
   const ref = bmin.get(mol.name);
   if (!ref) continue;
   const typed = assign_atom_types(mol);
   const got = calc_energy(typed);
   for (const t of terms) {
+    if (excluded.includes(t)) continue;
     rows.push({ mol: mol.name, term: t, d: Math.abs(got[gk[t]] - ref[t]) });
   }
 }

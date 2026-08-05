@@ -44,17 +44,31 @@ function parse_bmin_log(text: string): Map<string, Record<string, number>> {
 const bmin = parse_bmin_log(readFileSync(`${suiteDir}/MMFF94_bmin.log`, 'utf-8'));
 const mols = parse_mmd(readFileSync(`${suiteDir}/MMFF94.mmd`, 'utf-8'));
 
-// Reference anomalies, excluded from the coverage counts (each is
-// documented in tests/charges-suite.test.ts and VALIDATION.md):
-// - AN11A and DOZNIP: the anionic 5-ring N⁻ (type 76) — their
-//   reference charges are not reproducible from eq. (15) with a
-//   uniform q⁰(76) (Halgren's caveat on "unsymmetrical but strongly
-//   delocalized anions");
-// - FE2PW3 and CU1PW1: BatchMin's van der Waals for the hydrated
-//   metal cations predates the X94 metal parameters (the OB — which
-//   matches this transcription exactly, 55.84481 vs 55.8448 — and
-//   Tinker both use the X94 rows).
-const ANOMALY_EXCLUDED = new Set(['AN11A', 'DOZNIP', 'FE2PW3', 'CU1PW1']);
+// Reference anomalies — the terms that cannot reproduce the BatchMin
+// component, documented in tests/VALIDATION.md. Every OTHER term of
+// these molecules was cross-verified three-way (this transcription,
+// Tinker analyze, BatchMin) on 2026-08-05:
+// - AN11A and DOZNIP: the anionic 5-ring N⁻ (type 76) — the
+//   electrostatic component diverges across ALL THREE implementations
+//   (DOZNIP: ours −286.532 vs Tinker −286.373 vs BatchMin −286.479;
+//   Tinker drops the term for AN11A) — no uniform q⁰(76) exists
+//   (Halgren's caveat on "unsymmetrical but strongly delocalized
+//   anions"); their other six terms are three-way verified.
+// - FE2PW3 and CU1PW1: the hydrated-metal van der Waals splits
+//   2-vs-2 — this transcription + OpenBabel (55.84481 / 6.94628)
+//   vs Tinker + BatchMin (45.92859 / 6.04850). The distributed
+//   parameter sets genuinely differ (the X94 revision vs the Merck
+//   original); Tinker agrees with BatchMin, NOT with the X94 rows.
+//   Their other six terms are three-way verified.
+// JALSOE and SO18A were excluded here until 2026-08-05; their seven
+// terms are now three-way verified (all ≤ 1e-4 vs BatchMin), so they
+// are back in the census.
+const PER_TERM_EXCLUDED: Record<string, string[]> = {
+  AN11A: ['elec'],
+  DOZNIP: ['elec'],
+  FE2PW3: ['vdw'],
+  CU1PW1: ['vdw'],
+};
 
 const terms = ['stretch', 'bend', 'strbnd', 'torsion', 'oop', 'vdw', 'elec'] as const;
 const totals = { exact: 0, n: 0, worst: 0, worstMol: '' };
@@ -63,7 +77,8 @@ const perTerm = Object.fromEntries(terms.map(t => [t, { exact: 0, n: 0, worst: 0
 >;
 
 for (const mol of mols) {
-  if (ANOMALY_EXCLUDED.has(mol.name)) continue;
+  const excluded = PER_TERM_EXCLUDED[mol.name] ?? [];
+  if (excluded.length === terms.length) continue;
   const refTypes = reference.molecules[mol.name];
   if (!refTypes || refTypes.length !== mol.atoms.length) continue;
   const typed = assign_atom_types(mol);
@@ -73,20 +88,21 @@ for (const mol of mols) {
   if (!ref) continue;
   const e = calc_energy(typed);
   const components = { stretch: e.bond_stretch, bend: e.angle_bend, strbnd: e.stretch_bend, torsion: e.torsion, oop: e.out_of_plane, vdw: e.van_der_waals, elec: e.electrostatic };
+  const comparable = terms.filter(t => !excluded.includes(t));
   totals.n++;
   let molExact = true;
-  for (const t of terms) {
+  for (const t of comparable) {
     perTerm[t].n++;
     const d = Math.abs(components[t] - ref[t]);
     if (d > perTerm[t].worst) { perTerm[t].worst = d; perTerm[t].worstMol = mol.name; }
-    if (d < 0.05) perTerm[t].exact++;
+    if (d < 1e-4) perTerm[t].exact++;
     else molExact = false;
   }
-  const molWorst = Math.max(...terms.map(t => Math.abs(components[t] - ref[t])));
+  const molWorst = Math.max(...comparable.map(t => Math.abs(components[t] - ref[t])));
   if (molWorst > totals.worst) { totals.worst = molWorst; totals.worstMol = mol.name; }
   if (molExact) totals.exact++;
   else {
-    const bad = terms.filter(t => Math.abs(components[t] - ref[t]) >= 0.05)
+    const bad = comparable.filter(t => Math.abs(components[t] - ref[t]) >= 1e-4)
       .map(t => `${t}=${Math.abs(components[t] - ref[t]).toFixed(3)}`)
       .join(' ');
     console.log(`  MISMATCH ${mol.name}: ${bad}`);
@@ -94,7 +110,7 @@ for (const mol of mols) {
 }
 
 console.log(`typing-exact molecules with bmin refs: ${totals.n}`);
-console.log(`all-7-terms within 0.05: ${totals.exact} (${(100 * totals.exact / totals.n).toFixed(1)}%)  worst |d|: ${totals.worst.toFixed(4)} (${totals.worstMol})`);
+console.log(`all-comparable-terms within 1e-4: ${totals.exact} (${(100 * totals.exact / totals.n).toFixed(1)}%)  worst |d|: ${totals.worst.toFixed(4)} (${totals.worstMol})`);
 for (const t of terms) {
-  console.log(`  ${t.padEnd(8)} ${String(perTerm[t].exact).padStart(4)}/${perTerm[t].n} within 0.05  worst: ${perTerm[t].worst.toFixed(4)} (${perTerm[t].worstMol})`);
+  console.log(`  ${t.padEnd(8)} ${String(perTerm[t].exact).padStart(4)}/${perTerm[t].n} within 1e-4  worst: ${perTerm[t].worst.toFixed(4)} (${perTerm[t].worstMol})`);
 }

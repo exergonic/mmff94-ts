@@ -33,7 +33,7 @@ from openbabel import openbabel as ob
 # script here redirects the data dir to the wheel's actual data folder.
 os.environ["BABEL_DATADIR"] = os.path.join(os.path.dirname(ob.__file__), "bin", "data")
 
-SUITE_MMD = "../../tests/fixtures/validation-suite/MMFF94.mmd"
+SUITE_MMD = "tests/fixtures/validation-suite/MMFF94.mmd"
 
 # The log's section headers are printed space-separated ("E L E C T R O
 # S T A T I C   I N T E R A C T I O N S"), so a --verbose term must be

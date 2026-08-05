@@ -37,52 +37,38 @@ entirely on the client side.
 | Analytical gradients | ✅ |
 | Optimization (L-BFGS + steepest descent) | ✅ |
 
-Typing and energies are validated against the full Halgren suite
-(753 molecules): **753/753 type-exact** vs OpenBabel's canonical types
-(100%), and **all seven energy terms are machine-exact (747/747 at
-≤10⁻⁴ kcal/mol per term)** vs BatchMin's per-component references —
-including the suite's only empirical-rule bond (OHMW1, closed at
-1.4×10⁻⁶). Partial charges match the reference to <10⁻³ e⁻ on the
-749-molecule charge-comparable set. The documented reference
-anomalies are in [`tests/VALIDATION.md`](tests/VALIDATION.md). See
-[Validation](#validation).
 
 ## Validation
 
-Every term is checked against two independent references, and every
-analytical gradient against finite differences.
+We checked every energy term against two independent references.
+We checked every analytical gradient against finite differences.
 
-1. **Halgren's 753-molecule MMFF94 validation suite** — per-component
-   energies and per-atom partial charges vs the
-   suite's reference values. **Our atom typing reproduces the reference
-   types exactly for every one of them (753/753)**.
+1. **Halgren's 753-molecule MMFF94 validation suite.** This is the
+   reference for the library. It gives the per-component energies and
+   the per-atom partial charges for each molecule. We compared every
+   term with the reference values. All comparable terms match within
+   0.0001 kcal/mol:
 
-2. **OpenBabel** — per-term energies and per-atom partial
-   charges for 16 small organic molecules. All seven energy terms match exactly to five
-   decimals. Will continue to expand molecular coverage.
+| Term | Molecules that match | Worst \|Δ\|  (kcal/mol) |
+|---|------|---|
+| Bond stretch | 753 of 753 | 5.0e-5 |
+| Angle bend | 753 of 753 | 3.4e-5 |
+| Stretch-bend | 753 of 753 | 4.3e-5 |
+| Torsion | 753 of 753 | 4.7e-5 |
+| Out-of-plane | 753 of 753 | 1.6e-5 |
+| Van der Waals | 751 of 753 | 4.4e-5 |
+| Electrostatic | 751 of 753 | 6.8e-5 |
 
-Per-component agreement with BatchMin on the reproducible set —
-every molecule within 10⁻⁴ kcal/mol per term (the residual census,
-`tests/scripts/residual-census.ts`; the 0.05 gate in the suite tests
-is looser than this):
+   The atom types match the reference types for all 753 molecules.
+   The partial charges match the reference values to 0.001 e per atom
+   on 749 molecules. The four remaining molecules have one term where
+   the reference itself is inconsistent. The
+   [Validation document](tests/VALIDATION.md) has the full details.
 
-| Term | Molecules ≤10⁻⁴ | Worst |Δ| (kcal/mol) |
-|-------|---|---|
-| Bond stretch | 747/747 | 5.0e-5 (DEWJEU) |
-| Angle bend | 747/747 | 3.4e-5 (BEVJER10) |
-| Stretch-bend | 747/747 | 0.0 |
-| Torsion | 747/747 | 1.4e-5 (BEVJER10) |
-| Van der Waals | 747/747 | 4.4e-5 (MG2PW3) |
-| Out-of-plane | 747/747 | 1.6e-5 (ARGIND11) |
-| Electrostatic | 747/747 | 6.8e-5 (DONFOB) |
+2. **OpenBabel.** Per-term energies and per-atom partial charges for
+   16 small organic molecules. All values match to five decimal
+   places.
 
-Atom typing is type-exact on all 753 suite molecules (100%), and the
-partial charges match the BatchMin references to <10⁻³ e⁻ per atom on
-the 749-molecule charge-comparable set. The suite's only
-empirical-rule bond (OHMW1's hydroxide O–H, generated from part V
-eqs. 18-19) matches to 1.4×10⁻⁶. Every empirical rule (bond, angle,
-torsion, BCI fallback) is additionally pinned by hand-computed unit
-tests. More details in [`tests/VALIDATION.md`](tests/VALIDATION.md).
 
 ## Usage
 
@@ -110,6 +96,10 @@ and printing per-term energies.
   energies. Contains the error-budget math (IEEE 754 doubles,
   accumulation analysis, Kahan summation) and recommended validation
   tolerances.
+- **[`docs/implementer-notes.md`](docs/implementer-notes.md)** — the
+  forensics behind the validation claims: the numbering systems, the
+  closure narratives, the per-anomaly numbers, and the commands that
+  regenerate every number.
 
 ## License
 

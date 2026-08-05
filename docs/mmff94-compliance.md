@@ -48,7 +48,7 @@ class-scoped lookup misses) is implemented from the published rules:
 bond eqs. (18)-(19) + Table V, the θ₀ protocol + eq. (20) + Table VI,
 the torsion rules (pp. 631-632) + Table X, and the eq. (17) BCI
 fallback. All four families are pinned by hand-computed unit tests
-(29 tests) and cross-checked against Tinker's independent
+(41 tests) and cross-checked against Tinker's independent
 transcription (kbond.f, kangle.f, ktors.f — local build).
 
 ## Cross-check results
@@ -56,12 +56,25 @@ transcription (kbond.f, kangle.f, ktors.f — local build).
 Validated against Halgren's own 753-molecule MMFF94 Validation Suite
 (the definitive reference — the original program's output):
 
-- **Atom typing: 753/753 type-exact** vs OpenBabel's canonical types.
-- **Energies: all seven terms match the BatchMin per-component
-  references to ≤10⁻⁴ kcal/mol on 747/747 molecules** (every
-  reproducible suite molecule; worst residual 6.8×10⁻⁵). The suite's
-  only empirical-rule bond (OHMW1's hydroxide O–H) matches to
-  1.4×10⁻⁶; Tinker independently reproduces it (0.7654 vs
+- **Atom typing: 753/753 type-exact** vs OpenBabel's canonical types,
+  cross-checked against the original program's own per-atom
+  assignments (the suite's OPTIMOL log): 749/753 identical; the four
+  remaining atoms — the metal-hydrate cations' oxidation-state types
+  (the original program's FE+2/CU+1 vs OpenBabel's FE+3/CU+2) and
+  the dative sulfone-O class — are parameter-identical, as the
+  three-way energy checks prove. Tinker's prm atom table shares the
+  same class numbering, so the parameter-level cross-checks exercise
+  the same types.
+- **Energies: every BatchMin per-component reference reproduced to
+  ≤10⁻⁴ kcal/mol — five of seven terms on all 753 molecules, van der
+  Waals and electrostatics on 751** (worst residual 6.8×10⁻⁵; the
+  four per-term reference anomalies are itemized below and were
+  cross-verified three ways against Tinker's independent
+  transcription on 2026-08-05 — every non-divergent term of all six
+  formerly excluded molecules matches ours, Tinker, and BatchMin to
+  ~10⁻⁵, and JALSOE/SO18A's full seven terms rejoined the census).
+  The suite's only empirical-rule bond (OHMW1's hydroxide O–H) matches
+  to 1.4×10⁻⁶; Tinker independently reproduces it (0.7654 vs
   0.765397246118).
 - **Partial charges: 749/749 to <10⁻³ e⁻** per atom (BCI model,
   eqs. (14)-(17)).
@@ -70,9 +83,13 @@ Validated against Halgren's own 753-molecule MMFF94 Validation Suite
 - A second independent check against OpenChemLib (devDependency)
   reproduces total energies on the fixtures.
 
-The documented reference anomalies (molecules where the reference
-itself is inconsistent or the data is dative-adjusted) are itemized in
-`tests/VALIDATION.md`.
+The documented reference anomalies (the two hydrated-metal vdW
+parameter splits and the two type-76-anion electrostatics, both
+cross-checked three ways against Tinker — see
+`tests/VALIDATION.md`) are per-term: every other component of those
+four molecules is reproduced. The JALSOE/SO18A dative molecules'
+energies are fully verified (their reference partial charges are
+dative-adjusted and not comparable).
 
 ## Browser and build
 
