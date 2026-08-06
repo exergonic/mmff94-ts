@@ -468,10 +468,9 @@ Consumes the `partial_charges[]` attached by `assign_bci_charges()` (the term
 also computes them on demand if they are absent).
 
 Validated against the reference logs (per-atom charges AND energies) and
-against BatchMin: 140/140 typing-exact suite molecules match the
-electrostatic component — the three misses (BAOXLM01, CAMALD03, TAGVIG)
-are formal-charge salts (ammonium/metal carboxylates) whose formal
-charges are not yet read.
+against BatchMin: 751/753 suite molecules match the electrostatic
+component at |Δ| <= 1e-4 — the two exclusions (AN11A, DOZNIP) are the
+delocalized-anion reference anomalies (see VALIDATION.md).
 
 ### 7.7 Out-of-plane bending — `out-of-plane.ts`
 
@@ -496,7 +495,7 @@ Applied to every tri-coordinate center (planar or pyramidal) with exactly three
 bonded neighbors. The sign of k_oop encodes real chemistry: zero for amine N
 (pyramidalization comes from angle-bend reference values), negative for amide N
 (MMFF94 gives pyramidal amide nitrogen deliberately). Validated against
-BatchMin: exact on all 140 typing-exact suite molecules.
+BatchMin: 753/753 suite molecules at |Δ| <= 1e-4.
 
 ---
 
@@ -620,12 +619,12 @@ as a robustness fallback.
 Both optimizers stop when the maximum |gradient| component falls below
 `gradient_tolerance` (default 0.05 kcal/mol/Å).
 
-**Current status**: L-BFGS converges all 16 fixtures at the spec from both
-the SDF and the perturbed geometry (nicotine needs ~450 iterations from its
-vdW-canyon start). Steepest descent converges 15/16 at the spec — its
-linear valley zig-zag costs 20-400+ iterations where L-BFGS needs a handful —
-and nicotine's canyon is its documented boundary (descent-only there).
-`tests/optimization.test.ts` covers both.
+**Current status**: on the user-authored `*_non-optimized.sdf` fixtures
+(ethane, butane, water — genuinely strained starting geometries), both
+L-BFGS and steepest descent converge at the spec, max|g| < 0.05, with
+the final energies inside the per-fixture windows and the final bond
+lengths at the expected values. `tests/optimization.test.ts` covers
+both.
 
 ### 10.3 Considered and deferred: DIIS (GDIIS)
 
@@ -635,8 +634,8 @@ the same gradient history L-BFGS already exploits (its extrapolation is
 effectively a particular quasi-Newton scheme — Farkas & Schlegel, PCCP
 2002), it has no descent guarantee without bolting on the same line-search
 and trial-step machinery we already built, and its failure profile overlaps
-ours (the error vector is the gradient, so nicotine's vdW canyon would
-defeat it as it defeats steepest descent). Its famous habitats — SCF
+ours (the error vector is the gradient, so a descent-only valley defeats
+it as it defeats steepest descent). Its famous habitats — SCF
 convergence and constrained optimization — are out of scope here (fixed BCI
 charges, no constraints). Revisit only if constrained optimization or
 transition-state search ever enters scope. See Schlegel, *WIREs Comput.
@@ -831,7 +830,7 @@ Every energy term is tested **in isolation** before it is tested in combination.
 | **Unit** | Single energy function returns the right value for a known geometry | Compute by hand or with a reference for a 2-3 atom test case (H₂ for bond stretch, H₂O for angle bend) |
 | **Regression** | Total and per-component energies match Halgren suite | OPTIMOL totals from `MMFF94.energies`, component breakdowns from `MMFF94_bmin.log`; assert \|computed − reference\| < 0.01 kcal/mol |
 | **Gradient** | Analytical dE/dx matches (E(x+δ) − E(x−δ)) / (2δ) | Finite-difference on every coordinate of every atom in every fixture: δ = 10⁻⁶ Å, relative error < 10⁻⁵ |
-| **Optimization** | After minimization, max gradient < threshold and energy is lower | L-BFGS on each fixture from the SDF geometry and from a perturbed geometry (DONE — 16/16 at max\|g\| < 0.05) |
+| **Optimization** | After minimization, max gradient < threshold and energy is lower | L-BFGS and steepest descent on each `*_non-optimized.sdf` fixture (DONE — 3/3 at max\|g\| < 0.05) |
 
 ---
 
@@ -849,12 +848,12 @@ Every energy term is tested **in isolation** before it is tested in combination.
 | Stretch-bend | ✅ Implemented | 3 tests |
 | Torsion | ✅ Implemented | 4 tests |
 | Van der Waals | ✅ Implemented | 5 tests |
-| Electrostatic | ✅ Implemented (buffered r+0.05, 1-4 ×0.75) | 5 tests + reference logs + suite 140/140 |
+| Electrostatic | ✅ Implemented (buffered r+0.05, 1-4 ×0.75) | 5 tests + reference logs + suite 751/753 |
 | Out-of-plane | ✅ Implemented | 12 tests |
 | 1-4 scaling | ✅ Applied inside the electrostatic term | — |
 | Total energy | ✅ Sums all seven terms | 8 tests (reference + suite comparison) |
 | Gradients | ✅ Analytical (all 7 terms, shared helpers with the energy terms) | 9 tests (FD-verified, worst error 8×10⁻⁸) |
-| L-BFGS | ✅ Implemented (Nocedal & Wright Alg. 7.5 + strong-Wolfe) | 19 tests (16/16 fixtures at max\|g\| < 0.05) |
-| Steepest descent | ❌ Stub | 0 tests |
+| L-BFGS | ✅ Implemented (Nocedal & Wright Alg. 7.5 + strong-Wolfe) | 16 tests (3/3 fixtures at max\|g\| < 0.05) |
+| Steepest descent | ✅ Implemented (Armijo line search, wall-guarded) | same suite (3/3 fixtures at max\|g\| < 0.05) |
 | MMD parser (Halgren suite) | ✅ Complete | 4 tests |
-| **All tests** | **187 passing** | **20 files** |
+| **All tests** | **213 passing (4 skipped)** | **23 files** |

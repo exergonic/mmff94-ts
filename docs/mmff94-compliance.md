@@ -36,8 +36,14 @@ The papers also define rules to generate parameters when a lookup
 misses (part V): the bond rules (eqs. 18-19, Table V), the angle
 rules (eq. 20, Table VI), the torsion rules (pp. 631-632, Table X),
 and the charge fallback (eq. 17). This library implements these
-rules as published. Each rule is pinned by hand-computed unit tests
-and cross-checked against Tinker's independent implementation.
+rules. One deviation from the paper is measured, not literal: the
+empirical bond length uses the plain Schomaker-Stevenson form
+without eq. 18's delta = 0.008 A shrinkage and BOij/hybridization
+radius reductions, because the reference's only empirical bond
+(OHMW1's O-H) matches the plain form and Tinker's kbond.f
+implements the plain form too. Each rule is pinned by hand-computed
+unit tests and cross-checked against Tinker's independent
+implementation.
 
 ## Validation
 
@@ -106,7 +112,10 @@ differ from OpenBabel by up to 0.0007 kcal/mol in the angle term.
 18) is implemented in its plain published form, without the delta
 correction. The reference and Tinker do the same. OpenBabel's
 transcription includes the correction for that one bond. The
-reference bond matches to 1.4e-6 kcal/mol.
+reference bond matches to 1.4e-6 kcal/mol. The plain form is
+validated on BOij = 1 single bonds only (the suite's one empirical
+bond); the paper's BOij/hybridization reductions for multiple and
+aromatic bonds are not implemented.
 
 **The JALSOE/SO18A reference charges.** The reference adjusts these
 molecules to the dative representation. Their reference charges are
@@ -123,3 +132,8 @@ all seven terms.
   unit tests rather than reference energies.
 - The dielectric is the in-vacuo value D = 1.0. The alternative
   solvent model (D = r) is not exposed.
+- Partial charges are rounded to five decimal places to match
+  BatchMin's stored print precision. Part V/VI define no such
+  rounding; it is what lets the suite's electrostatic components
+  close against the reference. Pass `{ round: false }` to
+  `assign_bci_charges` for the full-precision values.

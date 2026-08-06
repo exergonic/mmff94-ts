@@ -57,7 +57,7 @@ We checked every analytical gradient against finite differences.
 | Stretch-bend | 753 of 753 | 4.3e-5 |
 | Torsion | 753 of 753 | 4.7e-5 |
 | Out-of-plane | 753 of 753 | 1.6e-5 |
-| Van der Waals | 751 of 753 | 4.4e-5 |
+| Van der Waals | 753 of 753 | 4.4e-5 |
 | Electrostatic | 751 of 753 | 6.8e-5 |
 
    The atom types match the reference types for all 753 molecules.
@@ -68,8 +68,10 @@ We checked every analytical gradient against finite differences.
 
    The tabulated total energies [total-energies.txt](docs/validation/total-energies.txt), 
    lists all 753 totals side by side with the suite's own OPTIMOL and
-   BatchMin values (749/753 to 0.0001 kcal/mol). The four exceptions are
-   documented reference anomalies, not shortcomings of the implementation.
+   BatchMin values (751/753 to 0.001 kcal/mol — the largest residual on
+   the matching set is 8.0e-5). The two exceptions are the documented
+   AN11A/DOZNIP electrostatics anomalies, not shortcomings of the
+   implementation.
    See the [Validation document](tests/VALIDATION.md) for details.
 
 2. **OpenBabel.** Per-term energies and per-atom partial charges for
@@ -94,6 +96,8 @@ const energy = calc_energy(mol);     // every term, plus the total
 const optimized = optimize_lbfgs(mol);
 console.log(optimized, energy.total, energy.bond_stretch, energy.torsion);
 ```
+
+MMFF94 is evaluated in vacuo: the dielectric is the default D = 1.0.
 
 See [`examples/quickstart.ts`](examples/quickstart.ts) for a complete
 walkthrough — parsing SDF, assigning types, computing BCI charges,

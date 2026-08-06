@@ -50,7 +50,9 @@ Naive summation of N terms each of magnitude ~|E|ₘₐₓ accumulates error as:
 This is already **four orders of magnitude below** the 0.0001 kcal/mol validation
 threshold used in Halgren's validation suite.
 
-With Kahan compensated summation, the accumulation error drops to:
+Kahan compensated summation (not implemented — the naive sum's bound
+above is already four orders of magnitude below the validation gate)
+would drop the accumulation error to:
 
 ```
 ε_kahan ≈ ε_machine × |E|ₘₐₓ + O(N × ε_machine² × |E|ₘₐₓ)
@@ -100,7 +102,7 @@ None of these exceed the 0.0001 kcal/mol tolerance for total energies.
 
 | Technique | Where | What it does |
 |---|---|---|
-| **Kahan summation** | `total.ts` (planned) | Compensates for accumulation error when summing thousands of energy terms |
+| **Kahan summation** | not implemented | Compensated summation would drop the accumulation error to ~8 × 10⁻¹² kcal/mol; the naive left-to-right sum's bound (1.6 × 10⁻⁸) is already four orders below the 0.0001 gate, so it is not used |
 | **Clamped dot product** | `vector.ts:angle_in_radians` | `acos(clamp(dot, -1, 1))` — prevents NaN from floating-point rounding near cos(0°) and cos(180°) |
 | **Min/max type ordering** | `bond-stretch.ts`, `angle-bend.ts` | Ensures `lookup_param` always produces the same key regardless of argument order |
 | **Sequential parameter fallback** | `lookup.ts` | Tries priority 0 → 1 → 2 → wildcards in a fixed, deterministic order |
@@ -126,6 +128,12 @@ thresholds against Halgren's validation suite:
 These tolerances are achievable with IEEE 754 doubles and straightforward
 JavaScript code. No WebAssembly, no native addons, no special precision
 libraries are needed.
+
+The cross-engine rows above are expected bounds, not measured results:
+no second-engine comparison is part of the validation suite (the suite
+runs on Node.js only). The measured evidence is the finite-difference
+gradient check (worst relative error 8.5e-8) and the reference-energy
+agreement at the 0.0001 kcal/mol level.
 
 ---
 
