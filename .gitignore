@@ -39,3 +39,4 @@ temp_tinker/
 temp_tinker/
 __pycache__/
 *.pyc
+*.tgz
