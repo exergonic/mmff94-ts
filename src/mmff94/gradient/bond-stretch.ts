@@ -21,7 +21,8 @@
 
 import type { TypedMolecule } from '../../types.js';
 import { Vec3 } from '../../utils/vector.js';
-import { make_class_context, bond_parameters } from '../parameters/parameter-classes.js';
+import { bond_parameters, make_class_context } from '../parameters/parameter-classes.js';
+import { empirical_bond_parameters } from '../parameters/empirical.js';
 import { bond_length_derivatives } from './derivatives.js';
 
 const BOND_UNIT = 143.9325; // (mdyn/Å) → (kcal/mol)/Å²
@@ -49,8 +50,18 @@ export function calc_bond_stretch_gradient(molecule: TypedMolecule): number[][] 
     const pos1: Vec3 = [molecule.atoms[a1].x, molecule.atoms[a1].y, molecule.atoms[a1].z];
     const pos2: Vec3 = [molecule.atoms[a2].x, molecule.atoms[a2].y, molecule.atoms[a2].z];
 
-    const params = bond_parameters(ctx, a1, a2);
-    if (!params) continue;
+    let params = bond_parameters(ctx, a1, a2);
+    if (!params) {
+      // Mirror the energy term's miss path: the part V empirical rules
+      // generate parameters for a bond with no stored row (e.g. the
+      // sp2-C-P bond of vinyl phosphine — Halgren's Table III has no
+      // 0-2-26 row). Without this the bond's gradient silently
+      // vanishes while its energy is nonzero — the optimizer sees no
+      // restoring force on the bond and collapses it (found via
+      // dogfooding: P-C ended at 0.957 Å vs the 1.83 equilibrium).
+      params = empirical_bond_parameters(molecule.atoms[a1], molecule.atoms[a2]);
+      if (!params) continue;
+    }
 
     // dE/dr — the derivative of eq. (2) w.r.t. r (see header)
     const { d_dx_a, d_dx_b } = bond_length_derivatives(pos1, pos2);
