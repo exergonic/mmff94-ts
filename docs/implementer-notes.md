@@ -192,6 +192,32 @@ electrostatic term for AN11A entirely (its charge machinery fails on
 the type-76 anion), which is itself informative. All six *other*
 terms of both molecules are three-way verified.
 
+The nine type-76 atoms in the suite show that the reference itself
+uses environment-dependent q⁰(76) — matching our fixed model exactly
+where the anion is symmetric, deviating where it is not:
+
+| molecule | atom | ours | reference (.mmd pchg) | Δ |
+|---|---|---|---|---|
+| JILWUW | 0 | −0.7750 | −0.7750 | 0.0 |
+| JILWUW | 1 | −0.7750 | −0.7750 | 0.0 |
+| DOZNIP | 6 | −0.7750 | −0.6500 | 1.3e-1 |
+| DOZNIP | 7 | −0.7750 | −0.6500 | 1.3e-1 |
+| DOZNIP | 8 | −1.0500 | −0.9667 | 8.3e-2 |
+| AN11A | 0 | −0.5000 | −0.2500 | 2.5e-1 |
+| AN11A | 1 | −0.7750 | −0.5875 | 1.9e-1 |
+| AN11A | 3 | −0.7750 | −0.5875 | 1.9e-1 |
+| AN11A | 4 | −0.5000 | −0.2500 | 2.5e-1 |
+
+JILWUW is the symmetric dianion — our q⁰(76) = −0.5 with the fcadj
+sharing reproduces its reference charges exactly. AN11A and DOZNIP
+are precisely Halgren's "unsymmetrical but strongly delocalized"
+cases: the reference's own q⁰ choice there differs from the
+symmetric-case value, so **no single q⁰(76) can match all three**
+(ours = the paper's symmetric definition, the reference = its own
+environment-dependent choice, Tinker = a third value). The
+electrostatics exclusion for these two molecules is therefore
+permanent: the parameter is underdetermined by the paper.
+
 ### 5.3 JALSOE / SO18A — the dative S–S charges
 
 BatchMin adjusts these S–S bonds to the "MMFF dative representation"
