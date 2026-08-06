@@ -6,13 +6,6 @@ original MMFF94 program. The format follows Wavefun's MMFF94
 compliance statement
 (https://downloads.wavefun.com/FAQ/MMFF94_compliance.html).
 
-## Which variant of MMFF94
-
-This library implements MMFF94 proper. It does not implement MMFF94s
-(the "static" variant, part VI of the series). MMFF94s changes the
-amide-nitrogen out-of-plane constants and the balance of terms. The
-standard variant is the one defined in Halgren's papers.
-
 ## Energy terms
 
 MMFF94 has seven energy terms. Each term uses the functional form
@@ -29,8 +22,7 @@ published by Halgren:
 | Out-of-plane | 0.043844·(k_oop/2)·χ² (Wilson angle, any tri-coordinate center) | eq. (6), part I |
 
 The conversion factors are the published Halgren values (143.9325,
-0.043844, 2.51210, 332.0716). OpenBabel's obenergy output uses
-MM2-style half-factors internally; this library does not.
+0.043844, 2.51210, 332.0716). 
 
 Pairs separated by three bonds (1-4 pairs) have their electrostatic
 interaction scaled by 0.75. Their van der Waals interaction is not
@@ -38,10 +30,7 @@ scaled. Halgren states this explicitly (part III, p. 496).
 
 ## Parameters
 
-The numeric parameters come from Halgren's published tables. They
-were transcribed into OpenBabel's text parameter files. The
-transcription is mechanical. The generated tables are committed with
-the library.
+The numeric parameters come from Halgren's published tables.
 
 The papers also define rules to generate parameters when a lookup
 misses (part V): the bond rules (eqs. 18-19, Table V), the angle
@@ -126,11 +115,11 @@ all seven terms.
 
 ## Limitations
 
-- The Badger's-rule fallback beyond Table V is not implemented. The
-  validation suite never needs it.
+- The part V Badger's-rule fallback for bonds outside Table V is
+  implemented: the length from eq. (18) and the force constant from
+  the Herschbach-Laurie parameterization of Badger's rule
+  (k = 1.86/(r − d)³), with the d values derived from the E94 rows of
+  Table V. The validation suite never needs it, so it is pinned by
+  unit tests rather than reference energies.
 - The dielectric is the in-vacuo value D = 1.0. The alternative
   solvent model (D = r) is not exposed.
-- Per-interaction energy breakdowns (each bond, angle, torsion, and
-  nonbonded pair as queryable data) are a documented goal, not yet
-  shipped.
-- The library has no runtime dependencies.
