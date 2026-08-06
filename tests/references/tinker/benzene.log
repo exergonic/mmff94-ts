@@ -1,0 +1,39 @@
+
+     ######################################################################
+   ##########################################################################
+  ###                                                                      ###
+ ###            Tinker  ---  Software Tools for Molecular Design            ###
+ ##                                                                          ##
+ ##                         Version 26.2  April 2026                         ##
+ ##                                                                          ##
+ ##               Copyright (c)  Jay William Ponder  1990-2026               ##
+ ###                           All Rights Reserved                          ###
+  ###                                                                      ###
+   ##########################################################################
+     ######################################################################
+
+
+ The Tinker Energy Analysis Utility Can :
+
+ General System and Force Field Information [G]
+ Force Field Parameters for Interactions [P]
+ Total Potential Energy and its Components [E]
+ Energy Breakdown over Each of the Atoms [A]
+ List of the Large Individual Interactions [L]
+ Details for All Individual Interactions [D]
+ Electrostatic Moments and Principle Axes [M]
+ Internal Virial & Instantaneous Pressure [V]
+ Connectivity Lists for Each of the Atoms [C]
+
+ Enter the Desired Analysis Types [G,P,E,A,L,D,M,V,C] :  
+ Total Potential Energy :                 16.2270 Kcal/mole
+
+ Energy Component Breakdown :           Kcal/mole        Interactions
+
+ Bond Stretching                           1.0193               12
+ Angle Bending                             0.0485               18
+ Stretch-Bend                             -0.1087               18
+ Out-of-Plane Bend                         0.0000               18
+ Torsional Angle                           0.0000               24
+ Van der Waals                            12.1897               36
+ Charge-Charge                             3.0781               36

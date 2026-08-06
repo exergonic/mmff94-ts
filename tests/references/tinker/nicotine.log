@@ -1,0 +1,39 @@
+
+     ######################################################################
+   ##########################################################################
+  ###                                                                      ###
+ ###            Tinker  ---  Software Tools for Molecular Design            ###
+ ##                                                                          ##
+ ##                         Version 26.2  April 2026                         ##
+ ##                                                                          ##
+ ##               Copyright (c)  Jay William Ponder  1990-2026               ##
+ ###                           All Rights Reserved                          ###
+  ###                                                                      ###
+   ##########################################################################
+     ######################################################################
+
+
+ The Tinker Energy Analysis Utility Can :
+
+ General System and Force Field Information [G]
+ Force Field Parameters for Interactions [P]
+ Total Potential Energy and its Components [E]
+ Energy Breakdown over Each of the Atoms [A]
+ List of the Large Individual Interactions [L]
+ Details for All Individual Interactions [D]
+ Electrostatic Moments and Principle Axes [M]
+ Internal Virial & Instantaneous Pressure [V]
+ Connectivity Lists for Each of the Atoms [C]
+
+ Enter the Desired Analysis Types [G,P,E,A,L,D,M,V,C] :  
+ Total Potential Energy :                 30.2548 Kcal/mole
+
+ Energy Component Breakdown :           Kcal/mole        Interactions
+
+ Bond Stretching                           1.7234               27
+ Angle Bending                             8.9798               49
+ Stretch-Bend                              0.6195               49
+ Out-of-Plane Bend                         0.0010               18
+ Torsional Angle                          -1.4607               71
+ Van der Waals                            22.6053              249
+ Charge-Charge                            -2.2135               57

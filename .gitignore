@@ -9,6 +9,7 @@ package-lock.json
 # Build and log files (but not tracked reference logs)
 *.log
 !tests/references/*.log
+!tests/references/tinker/*.log
 
 # OS
 .DS_Store

@@ -1,0 +1,38 @@
+
+     ######################################################################
+   ##########################################################################
+  ###                                                                      ###
+ ###            Tinker  ---  Software Tools for Molecular Design            ###
+ ##                                                                          ##
+ ##                         Version 26.2  April 2026                         ##
+ ##                                                                          ##
+ ##               Copyright (c)  Jay William Ponder  1990-2026               ##
+ ###                           All Rights Reserved                          ###
+  ###                                                                      ###
+   ##########################################################################
+     ######################################################################
+
+
+ The Tinker Energy Analysis Utility Can :
+
+ General System and Force Field Information [G]
+ Force Field Parameters for Interactions [P]
+ Total Potential Energy and its Components [E]
+ Energy Breakdown over Each of the Atoms [A]
+ List of the Large Individual Interactions [L]
+ Details for All Individual Interactions [D]
+ Electrostatic Moments and Principle Axes [M]
+ Internal Virial & Instantaneous Pressure [V]
+ Connectivity Lists for Each of the Atoms [C]
+
+ Enter the Desired Analysis Types [G,P,E,A,L,D,M,V,C] :  
+ Total Potential Energy :                  7.3687 Kcal/mole
+
+ Energy Component Breakdown :           Kcal/mole        Interactions
+
+ Bond Stretching                           0.1656               12
+ Angle Bending                             1.1786               21
+ Stretch-Bend                              0.2463               21
+ Out-of-Plane Bend                         0.0000                3
+ Torsional Angle                           0.0282               18
+ Van der Waals                             5.7499               45
