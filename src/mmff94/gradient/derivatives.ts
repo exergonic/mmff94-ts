@@ -54,6 +54,53 @@ export function bond_length_derivatives(
 }
 
 /**
+ * Finite-difference fallback for the angle derivative at near-linear
+ * geometries. The analytical form dθ/dx = −(1/sin θ)·dcos/dx is a 0/0
+ * limit at exactly 0° and 180°, but the true derivative is finite —
+ * the angle deficit is first-order in a transverse displacement.
+ *
+ * The angle is CUSPED in the transverse coordinate (θ = π − |δ|/r, a
+ * cone like |x|), so a central difference at the exact cusp averages
+ * the two one-sided slopes to zero. Forward differences of the angle
+ * itself (δ = 1e-6 Å, the suite's FD convention) give the correct
+ * directional derivative — and on each side of the cusp the angle is
+ * smooth, so the forward difference is accurate to second order.
+ */
+function angle_derivatives_fd(
+  pos_j: Vec3,
+  pos_i: Vec3,
+  pos_k: Vec3,
+): { d_dx_i: Vec3; d_dx_j: Vec3; d_dx_k: Vec3 } {
+  const DELTA = 1e-6;
+  const theta_of = (pi: Vec3, pj: Vec3, pk: Vec3): number => {
+    const v1 = vec_sub(pi, pj);
+    const v2 = vec_sub(pk, pj);
+    const l1 = vec_length(v1);
+    const l2 = vec_length(v2);
+    const u1: Vec3 = [v1[0] / l1, v1[1] / l1, v1[2] / l1];
+    const u2: Vec3 = [v2[0] / l2, v2[1] / l2, v2[2] / l2];
+    const c = Math.max(-1.0, Math.min(1.0, vec_dot(u1, u2)));
+    return Math.acos(c);
+  };
+  const theta0 = theta_of(pos_i, pos_j, pos_k);
+  const positions: [Vec3, Vec3, Vec3] = [pos_i, pos_j, pos_k];
+  const d: [Vec3, Vec3, Vec3] = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
+  const axes: [Vec3, Vec3, Vec3] = [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
+  for (let n = 0; n < 3; n++) {
+    for (let a = 0; a < 3; a++) {
+      const e = axes[a];
+      const moved = positions.map((p, idx) =>
+        idx === n
+          ? [p[0] + DELTA * e[0], p[1] + DELTA * e[1], p[2] + DELTA * e[2]]
+          : p,
+      ) as [Vec3, Vec3, Vec3];
+      d[n][a] = (theta_of(moved[0], moved[1], moved[2]) - theta0) / DELTA;
+    }
+  }
+  return { d_dx_i: d[0], d_dx_j: d[1], d_dx_k: d[2] };
+}
+
+/**
  * Derivative of the bond angle θ (radians) at the central atom j,
  * for the angle i−j−k. Mirrors angle_in_radians(): unit vectors
  * (i−j) and (k−j), then θ = acos(û₁·û₂).
@@ -75,10 +122,12 @@ export function angle_derivatives(
   const cos_theta = vec_dot(u_ji, u_jk);
   const sin_theta = Math.sqrt(Math.max(0.0, 1.0 - cos_theta * cos_theta));
   if (sin_theta < 1e-12) {
-    // Linear or degenerate angle: the derivative is undefined; the
-    // energy terms use the cosine form for linear centers and the
-    // finite-difference test avoids exactly-linear geometries.
-    return { d_dx_i: [0, 0, 0], d_dx_j: [0, 0, 0], d_dx_k: [0, 0, 0] };
+    // Linear or degenerate angle: the 1/sin θ form is a 0/0 limit,
+    // not a zero derivative — the true force bends the angle (the
+    // energy terms use the cosine form for linear centers; non-linear
+    // centers at exactly 0°/180° — e.g. a sketcher's linear water —
+    // get the finite-difference limit here).
+    return angle_derivatives_fd(pos_j, pos_i, pos_k);
   }
 
   // d(û₁·û₂)/dx_i = û₂ · dû₁/dx_i (û₂ fixed), and û₁ depends only on i and j.
@@ -179,6 +228,58 @@ export function dihedral_derivatives(
 }
 
 /**
+ * Finite-difference fallback for the Wilson out-of-plane angle
+ * derivative at χ near ±90° (the substituent perpendicular to the
+ * reference plane). The analytical form dχ/dx = (1/cos χ)·ds/dx is a
+ * 0/0 limit there. Like the bond angle at collinearity, χ is cusped
+ * in the transverse coordinate (χ = 90° − |δ|/r), so forward
+ * differences (δ = 1e-6 Å) give the correct directional derivative —
+ * the true force pushes the perpendicular substituent back toward the
+ * plane.
+ */
+function oop_angle_derivatives_fd(
+  pos_i: Vec3,
+  pos_j: Vec3,
+  pos_k: Vec3,
+  pos_l: Vec3,
+): { d_dx_i: Vec3; d_dx_j: Vec3; d_dx_k: Vec3; d_dx_l: Vec3 } {
+  const DELTA = 1e-6;
+  const chi_of = (pi: Vec3, pj: Vec3, pk: Vec3, pl: Vec3): number => {
+    const unit = (p: Vec3, q: Vec3): Vec3 => {
+      const v = vec_sub(p, q);
+      const l = vec_length(v);
+      return [v[0] / l, v[1] / l, v[2] / l];
+    };
+    const u_ji = unit(pi, pj);
+    const u_jk = unit(pk, pj);
+    const u_jl = unit(pl, pj);
+    const n = vec_cross(u_ji, u_jk);
+    const len = vec_length(n);
+    if (len < 1e-15) return 0; // i and k collinear with j — χ = 0 everywhere
+    const n_hat: Vec3 = [n[0] / len, n[1] / len, n[2] / len];
+    const s = Math.max(-1.0, Math.min(1.0, vec_dot(n_hat, u_jl)));
+    return Math.asin(s);
+  };
+  const chi0 = chi_of(pos_i, pos_j, pos_k, pos_l);
+  const positions: [Vec3, Vec3, Vec3, Vec3] = [pos_i, pos_j, pos_k, pos_l];
+  const d: [Vec3, Vec3, Vec3, Vec3] = [[0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]];
+  const axes: [Vec3, Vec3, Vec3] = [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
+  for (let n = 0; n < 4; n++) {
+    for (let a = 0; a < 3; a++) {
+      const e = axes[a];
+      const moved = positions.map((p, idx) =>
+        idx === n
+          ? [p[0] + DELTA * e[0], p[1] + DELTA * e[1], p[2] + DELTA * e[2]]
+          : p,
+      ) as [Vec3, Vec3, Vec3, Vec3];
+      d[n][a] =
+        (chi_of(moved[0], moved[1], moved[2], moved[3]) - chi0) / DELTA;
+    }
+  }
+  return { d_dx_i: d[0], d_dx_j: d[1], d_dx_k: d[2], d_dx_l: d[3] };
+}
+
+/**
  * Derivative of the Wilson out-of-plane angle χ (radians) for the
  * tri-coordinate center j. Mirrors wilson_oop_angle() exactly: unit
  * vectors (i−j), (k−j), (l−j); normal n = û_ji × û_jk; then
@@ -219,7 +320,10 @@ export function oop_angle_derivatives(
   const sin_chi = vec_dot(n_hat, u_jl);
   const cos_chi = Math.sqrt(Math.max(0.0, 1.0 - sin_chi * sin_chi));
   if (cos_chi < 1e-12) {
-    return { d_dx_i: [0, 0, 0], d_dx_j: [0, 0, 0], d_dx_k: [0, 0, 0], d_dx_l: [0, 0, 0] };
+    // χ at ±90°: the substituent is perpendicular to the reference
+    // plane — the 1/cos χ form is a 0/0 limit, not a zero derivative
+    // (the true force pushes the substituent back toward the plane).
+    return oop_angle_derivatives_fd(pos_i, pos_j, pos_k, pos_l);
   }
 
   // ds/dx = dn̂·û_jl + n̂·dû_jl, with n̂ = n/|n| built from unit vectors

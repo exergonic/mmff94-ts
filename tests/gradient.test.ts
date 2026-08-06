@@ -199,4 +199,92 @@ describe('gradient finite-difference checks', () => {
     const worst = check_term('total', m => calc_energy(m).total, calc_gradient);
     expect(worst).toBeLessThan(1e-5);
   });
+
+  it('angle-bend gradient at an exactly-linear angle is the FD limit, not zero', () => {
+    // A sketcher/embedder can hand the force field an exactly-linear
+    // water (H-O-H = 180°). The 1/sin θ analytical form is a 0/0 limit
+    // there; the FD fallback must give the true force — which bends
+    // the molecule, not stalls it.
+    const water = assign_atom_types({
+      name: 'linear-water',
+      atoms: [
+        { index: 0, element: 'O', x: 0, y: 0, z: 0 },
+        { index: 1, element: 'H', x: 1, y: 0, z: 0 },
+        { index: 2, element: 'H', x: -1, y: 0, z: 0 },
+      ],
+      bonds: [
+        { atom1: 0, atom2: 1, bond_order: 1 },
+        { atom1: 0, atom2: 2, bond_order: 1 },
+      ],
+    });
+    const charged = assign_bci_charges(water);
+    const analytic = calc_angle_bend_gradient(charged);
+
+    // The transverse force is nonzero — the angle wants to bend.
+    expect(Math.abs(analytic[1][1])).toBeGreaterThan(1e-3);
+
+    // The energy is CUSPED in the transverse coordinate (like |x|), so
+    // a central energy FD averages the two sides to zero — compare
+    // against the forward difference instead, which matches the
+    // one-sided angle derivative the fallback computes.
+    const e0 = calc_angle_bend_energy(charged);
+    for (let a = 0; a < 3; a++) {
+      for (let axis = 0; axis < 3; axis++) {
+        const key = axis === 0 ? 'x' : axis === 1 ? 'y' : 'z';
+        const original = water.atoms[a][key];
+        water.atoms[a][key] = original + DELTA;
+        const e_plus = calc_angle_bend_energy(charged);
+        water.atoms[a][key] = original;
+        const fd = (e_plus - e0) / DELTA;
+        // The suite's relative convention (a forward difference carries
+        // an O(δ) relative truncation — the same scale check_term uses).
+        const scale = Math.max(Math.abs(fd), Math.abs(analytic[a][axis]), 1.0);
+        expect(Math.abs(fd - analytic[a][axis]) / scale).toBeLessThan(1e-5);
+      }
+    }
+  });
+
+  it('oop gradient at χ = 90° is the FD limit, not zero', () => {
+    // A tri-coordinate center (carbonyl C) with a substituent exactly
+    // perpendicular to the reference plane: the 1/cos χ form is a 0/0
+    // limit; the FD fallback must push the substituent back toward
+    // the plane. (An amine N would be a vacuous test — its k_oop is
+    // zero by design.)
+    const carbonyl = assign_atom_types({
+      name: 'perpendicular-carbonyl',
+      atoms: [
+        { index: 0, element: 'C', x: 0, y: 0, z: 0 },
+        { index: 1, element: 'O', x: 1, y: 0, z: 0 },
+        { index: 2, element: 'H', x: 0, y: 1, z: 0 },
+        { index: 3, element: 'H', x: 0, y: 0, z: 1 },
+      ],
+      bonds: [
+        { atom1: 0, atom2: 1, bond_order: 2 },
+        { atom1: 0, atom2: 2, bond_order: 1 },
+        { atom1: 0, atom2: 3, bond_order: 1 },
+      ],
+    });
+    const charged = assign_bci_charges(carbonyl);
+    const analytic = calc_oop_gradient(charged);
+
+    // The force is nonzero — the perpendicular H is pushed sideways
+    // back toward the plane (the component along the plane normal is
+    // genuinely zero: moving along the normal keeps χ = 90°).
+    expect(Math.abs(analytic[3][0])).toBeGreaterThan(1e-4);
+
+    // Same cusp convention as the angle test: forward differences.
+    const e0 = calc_oop_energy(charged);
+    for (let a = 0; a < 4; a++) {
+      for (let axis = 0; axis < 3; axis++) {
+        const key = axis === 0 ? 'x' : axis === 1 ? 'y' : 'z';
+        const original = carbonyl.atoms[a][key];
+        carbonyl.atoms[a][key] = original + DELTA;
+        const e_plus = calc_oop_energy(charged);
+        carbonyl.atoms[a][key] = original;
+        const fd = (e_plus - e0) / DELTA;
+        const scale = Math.max(Math.abs(fd), Math.abs(analytic[a][axis]), 1.0);
+        expect(Math.abs(fd - analytic[a][axis]) / scale).toBeLessThan(1e-5);
+      }
+    }
+  });
 });
