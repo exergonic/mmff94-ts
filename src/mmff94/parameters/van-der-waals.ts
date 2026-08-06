@@ -93,6 +93,10 @@ export const VDW_PARAMS: Record<number, VdwParams> = {
   80: { A_i: 3.89, alpha_i: 1.0, N_i: 2.49, G_i: 1.282, DA: 0 },
   81: { A_i: 3.89, alpha_i: 0.8, N_i: 2.82, G_i: 1.282, DA: 0 },
   82: { A_i: 3.89, alpha_i: 0.95, N_i: 2.82, G_i: 1.282, DA: 2 },
+  // Metal cations: the +3/+2 rows (88/98) and the +2/+1 rows (87/97)
+  // share the same A_i and differ only in the polarizability (the
+  // +2/+1 alphas are the reference's; see the oxidation-state bridge
+  // in van-der-waals.ts).
   87: { A_i: 4.0, alpha_i: 0.45, N_i: 6.0, G_i: 1.4, DA: 0 },
   88: { A_i: 4.0, alpha_i: 0.55, N_i: 6.0, G_i: 1.4, DA: 0 },
   89: { A_i: 3.89, alpha_i: 1.4, N_i: 3.48, G_i: 1.282, DA: 2 },

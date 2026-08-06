@@ -137,32 +137,44 @@ unit test.
 
 ---
 
-## 5. The four reference anomalies — full forensics
+## 5. The reference anomalies — full forensics
 
-The census excludes terms, not molecules: five of seven terms are
-verified on **all 753**; van der Waals and electrostatics on 751.
-Here is everything known about the four excluded terms.
+The census excludes terms, not molecules: six of seven terms are
+verified on **all 753**; electrostatics on 751 (the two type-76
+anion electrostatics, §5.2). The former hydrated-metal vdW split
+(§5.1) is closed — both molecules rejoin the census.
 
-### 5.1 FE2PW3 / CU1PW1 — the hydrated-metal van der Waals
+### 5.1 FE2PW3 / CU1PW1 — the hydrated-metal van der Waals (CLOSED)
 
-The vdW component splits **2-vs-2**:
+The vdW component used to split **2-vs-2**:
 
-| | ours | OpenBabel | Tinker | BatchMin |
+| | ours (old) | OpenBabel | Tinker | BatchMin |
 |---|---|---|---|---|
 | FE2PW3 | 55.84481 | 55.8448 | 45.92859 | 45.92859 |
 | CU1PW1 | 6.94628 | — | 6.04850 | 6.04850 |
 
-This transcription and OpenBabel carry the **X94 revision** of the
-metal parameters; Tinker and BatchMin carry the **Merck original**.
-An earlier draft of VALIDATION.md claimed "Tinker agrees, so the
-reference is the outlier" — the three-way run (2026-08-05) proved
-that wrong: Tinker agrees with BatchMin, not with us. The open
-question is which parameter set Halgren's part III table actually
-specifies — the paper arbitration has not been done.
+The story looked like a parameter-version split: the X94 revision
+(us + OB) vs the Merck original (Tinker + BatchMin), with the paper
+arbitration open. The closure (2026-08-05) found the split was a
+**typing collapse, not a parameter difference**:
 
-Every *other* term of both molecules is three-way verified (the
-electrostatics to ~10⁻⁵ — the metal charges follow the formal
-charge).
+- The +2/+1 cation rows (87 FE+2, 97 CU+1) and the +3/+2 rows
+  (88 FE+3, 98 CU+2) share the same radius (A_i = 4.0) and differ
+  **only in the polarizability** (α = 0.45/0.35 vs 0.55/0.40).
+- OpenBabel's canonical typing types every hydrate cation as the
+  +3/+2 class (FE2PW3's Fe → 88, CU1PW1's Cu → 98), so the +2/+1
+  rows — the ones the original program's own types (FE+2/CU+1) use —
+  were never reached. Both us and OB therefore evaluated the +3/+2
+  polarizability (55.84/6.95); Tinker and BatchMin evaluated the
+  +2/+1 (45.93/6.05).
+- Fix: the vdW lookup bridges classes 88→87 and 98→97 when the
+  atom's formal charge says +2/+1 (the .mmd carries the oxidation
+  state; the same bridge pattern as the sulfinate 7→32). No
+  parameter table change — the transcribed rows were right all
+  along. Result: FE2PW3 vdW 45.92859 (Δ 2.6e-6), CU1PW1 6.04850
+  (Δ 4.9e-6), and the vdW term is 753/753 at ≤1e-4.
+
+Every *other* term of both molecules was already three-way verified.
 
 ### 5.2 AN11A / DOZNIP — the type-76 anion electrostatics
 
@@ -222,8 +234,8 @@ or with the paper, in one place:
 | eq. (18) δ-transcription | OpenBabel (0.73 + δ) vs paper-literal | OHMW1 closed — the plain form is right (§4.1) |
 | eq. (20) degrees² | OpenBabel historically (PR#2741669) | fixed upstream; we and Tinker square correctly |
 | torsion rules (c)/(g)/(h) | OB and our code (two of three), Tinker (one of three) | paper-arbitrated (§4.3) |
-| metal vdW parameters | the X94 revision (us + OB) vs the Merck original (Tinker + BatchMin) | open — §5.1 |
-| metal-hydrate cation types | OB's canonical (FE+3/CU+2) vs the original program (FE+2/CU+1) | parameter-inert — §5.4 |
+| metal vdW parameters | looked like the X94 revision (us + OB) vs the Merck original (Tinker + BatchMin) | closed — §5.1: a typing collapse, not a parameter difference; the formal-charge bridge selects the +2/+1 rows |
+| metal-hydrate cation types | OB's canonical (FE+3/CU+2) vs the original program (FE+2/CU+1) | bridged at the vdW lookup by formal charge — §5.1 |
 | type-76 charges | all three implementations differ | open — §5.2 |
 | OB 3.2.1 API | per-term energy methods removed; only `Energy()` | worked around in `ob_energy_breakdown.py` (stderr capture) |
 | OB datadir | `BABEL_DATADIR` must point at the wheel's `bin/data` | issue #3003 upstream |

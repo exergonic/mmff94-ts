@@ -54,12 +54,13 @@ const mols = parse_mmd(readFileSync(`${suiteDir}/MMFF94.mmd`, 'utf-8'));
 //   Tinker drops the term for AN11A) — no uniform q⁰(76) exists
 //   (Halgren's caveat on "unsymmetrical but strongly delocalized
 //   anions"); their other six terms are three-way verified.
-// - FE2PW3 and CU1PW1: the hydrated-metal van der Waals splits
-//   2-vs-2 — this transcription + OpenBabel (55.84481 / 6.94628)
-//   vs Tinker + BatchMin (45.92859 / 6.04850). The distributed
-//   parameter sets genuinely differ (the X94 revision vs the Merck
-//   original); Tinker agrees with BatchMin, NOT with the X94 rows.
-//   Their other six terms are three-way verified.
+// - FE2PW3 and CU1PW1 (CLOSED 2026-08-05): the hydrated-metal vdW
+//   split looked 2-vs-2 (us + OB 55.84481/6.94628 vs Tinker +
+//   BatchMin 45.92859/6.04850) but was a typing collapse — the
+//   +2/+1 cation rows differ from the +3/+2 rows only in the
+//   polarizability, and OB's canonical typing never reaches them.
+//   The vdW lookup bridges 88→87 / 98→97 by formal charge; both
+//   molecules now match BatchMin to ~1e-6 and rejoin the census.
 // JALSOE and SO18A were excluded here until 2026-08-05; their seven
 // terms are now three-way verified (all ≤ 1e-4 vs BatchMin), so they
 // are back in the census.

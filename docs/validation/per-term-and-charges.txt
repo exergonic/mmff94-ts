@@ -2,7 +2,6 @@ Per-term energy deltas (mmff94-ts − BatchMin 5.5, kcal/mol) and per-atom parti
 charge deltas (mmff94-ts − the .mmd reference pchg, e⁻) for the 753-molecule
 MMFF94 validation suite, computed at the .mmd geometries. A "—" marks a
 comparison excluded for the documented reference anomalies (AN11A/DOZNIP
-electrostatics, FE2PW3/CU1PW1 van der Waals — BatchMin-side anomalies;
 JALSOE/SO18A charges are dative-adjusted in the reference). The charge
 comparison is gated on typing-exactness (the BCI model is only meaningful
 where the atom types match the reference).
@@ -13,7 +12,7 @@ Per-term |Δ| <= 1e-4:
   strbnd   753/753 at |Δ| <= 1e-4
   torsion  753/753 at |Δ| <= 1e-4
   oop      753/753 at |Δ| <= 1e-4
-  vdw      751/751 at |Δ| <= 1e-4
+  vdw      753/753 at |Δ| <= 1e-4
   elec     751/751 at |Δ| <= 1e-4
 Charges: 749/749 molecules with max|Δq| <= 1e-3 e⁻ per atom
 
@@ -762,9 +761,9 @@ SO18A       0.00000 -0.00000  0.00000 -0.00005  0.00000 -0.00000  0.00000   -0.0
 BRMW1       0.00000  0.00000 -0.00000  0.00000  0.00000 -0.00000 -0.00000   -0.00001    0.00000
 CA2PW3     -0.00000  0.00000 -0.00000  0.00000  0.00000 -0.00002  0.00000   -0.00002    0.00000
 CLMW1       0.00000  0.00000 -0.00000  0.00000  0.00000 -0.00000 -0.00000    0.00000    0.00000
-CU1PW1      0.00000 -0.00000 -0.00000  0.00000  0.00000      —   -0.00000    0.89777    0.00000
+CU1PW1      0.00000 -0.00000 -0.00000  0.00000  0.00000 -0.00000 -0.00000   -0.00001    0.00000
 CU2PW3      0.00001  0.00001 -0.00000  0.00000  0.00000 -0.00001 -0.00003   -0.00003    0.00000
-FE2PW3     -0.00001  0.00000 -0.00000  0.00000  0.00000      —   -0.00002    9.91619    0.00000
+FE2PW3     -0.00001  0.00000 -0.00000  0.00000  0.00000  0.00000 -0.00002   -0.00002    0.00000
 FE3PW3     -0.00001 -0.00000 -0.00000  0.00000  0.00000 -0.00002  0.00000   -0.00003    0.00000
 FMW1       -0.00000  0.00001 -0.00000  0.00000  0.00000 -0.00001 -0.00000   -0.00000    0.00000
 H3OPW1     -0.00000 -0.00000  0.00000  0.00000  0.00000 -0.00000  0.00000   -0.00001    0.00000

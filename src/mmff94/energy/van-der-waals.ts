@@ -80,6 +80,15 @@ export function vdw_parameters_for(
   if (t === 7 && adj[i].some(nb => molecule.atom_types[nb] === 73)) {
     return VDW_PARAMS[32];
   }
+  // Metal-hydrate oxidation states: the original program typed the
+  // +2/+1 cations (FE+2, CU+1) with their own vdW rows (87/97, the
+  // paper's values); OpenBabel's canonical typing collapses them onto
+  // the +3/+2 rows (88/98). The .mmd's formal charge carries the
+  // oxidation state — bridge to the +2/+1 rows so the hydrates use
+  // the reference's own parameters (FE2PW3/CU1PW1; same pattern as
+  // the sulfinate bridge above).
+  if (t === 88 && molecule.atoms[i].formal_charge === 2) return VDW_PARAMS[87];
+  if (t === 98 && molecule.atoms[i].formal_charge === 1) return VDW_PARAMS[97];
   return VDW_PARAMS[t];
 }
 

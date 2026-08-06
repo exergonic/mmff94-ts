@@ -66,11 +66,12 @@ The table gives the results at the 0.0001 kcal/mol level.
 | Stretch-bend | 753 of 753 |
 | Torsion | 753 of 753 |
 | Out-of-plane bend | 753 of 753 |
-| Van der Waals | 751 of 753 |
+| Van der Waals | 753 of 753 |
 | Electrostatic | 751 of 753 |
 
 All comparable terms match within the 0.0001 kcal/mol tolerance for
-all 753 molecules.
+all 753 molecules. The two electrostatics exclusions (AN11A, DOZNIP)
+are the delocalized-anion reference anomalies below.
 
 The suite has one bond with parameters from the MMFF94 empirical
 rules (part V of the papers).
@@ -97,17 +98,22 @@ The worst relative error is 8.5e-8.
 
 ## Outliers
 
-Four molecules have one energy term that we cannot reproduce: for
-each, the reference itself is inconsistent for that term (the first
-two rows below). We verified all other terms of these molecules
-against two independent implementations: Tinker and OpenBabel — both
-agree with our values. Two further molecules (JALSOE, SO18A) have all
-seven energy terms reproduced; only their reference partial charges
-are not comparable (the reference adjusts them to the dative
-representation, the third row below).
+Two molecules have one energy term that we cannot reproduce: for
+each, the reference itself is inconsistent for that term. We verified
+all other terms of these molecules against two independent
+implementations: Tinker and OpenBabel — both agree with our values.
+Two further molecules (JALSOE, SO18A) have all seven energy terms
+reproduced; only their reference partial charges are not comparable
+(the reference adjusts them to the dative representation).
 
 | Molecules | Term | Reason |
 |---|---|---|
-| FE2PW3, CU1PW1 | Van der Waals | The implementations use different van der Waals parameters for the metal atoms. We and OpenBabel use the newer revision (X94). Tinker and BatchMin use the original values. |
 | AN11A, DOZNIP | Electrostatic | The anionic five-ring nitrogen has no uniform primary charge (Halgren states this). Each implementation gives a different value. Tinker does not give the term for AN11A. |
 | JALSOE, SO18A | Partial charges | The reference adjusts the sulfur-sulfur bonds to the dative representation. The reference charges are therefore not comparable. All seven energy terms match. |
+
+The former FE2PW3/CU1PW1 van der Waals split is closed: the +2/+1
+metal-hydrate cations carry their own vdW rows (which differ from the
++3/+2 rows only in the polarizability). OpenBabel's canonical typing
+collapses them onto the +3/+2 classes; the vdW term now bridges to
+the +2/+1 rows by formal charge (see implementer-notes §5.1), and
+both molecules rejoin the census on all terms.

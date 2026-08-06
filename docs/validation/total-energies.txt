@@ -4,7 +4,7 @@ side with the reference totals from the suite's own MMFF94.energies (OPTIMOL and
 BatchMin 5.5). No cutoffs on nonbonded interactions were used. All energies are
 in kcal/mol, computed at the .mmd geometries (single-point, like the references).
 
-mmff94-ts totals match BatchMin to |Δ| <= 1e-3 kcal/mol on 749/753 molecules
+mmff94-ts totals match BatchMin to |Δ| <= 1e-3 kcal/mol on 751/753 molecules
 (largest residual over the matching set: 8.0e-5 kcal/mol).
 The *-marked rows are the ones BatchMin itself diverges from OPTIMOL on (its
 single-precision charge sharing — up to 0.0035 kcal/mol); mmff94-ts computes in
@@ -756,9 +756,9 @@ SO18A          2.10300     2.10304     2.10304  -0.00004
 BRMW1        -13.13210   -13.13210   -13.13209  -0.00001  
 CA2PW3      -129.29119  -129.29119  -129.29117  -0.00002  
 CLMW1        -14.30054   -14.30054   -14.30054   0.00000  
-CU1PW1       -22.99142   -23.88920   -23.88919   0.89777 *
+CU1PW1       -23.88920   -23.88920   -23.88919  -0.00001  
 CU2PW3      -162.18768  -162.18768  -162.18765  -0.00003  
-FE2PW3      -146.92983  -156.84604  -156.84602   9.91619 *
+FE2PW3      -156.84604  -156.84604  -156.84602  -0.00002  
 FE3PW3      -262.64649  -262.64649  -262.64646  -0.00003  
 FMW1         -20.44875   -20.44875   -20.44875  -0.00000  
 H3OPW1       -28.28397   -28.28397   -28.28396  -0.00001  

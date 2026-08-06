@@ -14,8 +14,6 @@ const mols = parse_mmd(readFileSync(join(suiteDir, 'MMFF94.mmd'), 'utf-8'));
 const PER_TERM_EXCLUDED: Record<string, string[]> = {
   AN11A: ['elec'],
   DOZNIP: ['elec'],
-  FE2PW3: ['vdw'],
-  CU1PW1: ['vdw'],
 };
 
 const terms = ['stretch', 'bend', 'strbnd', 'torsion', 'oop', 'vdw', 'elec'] as const;

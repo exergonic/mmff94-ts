@@ -51,8 +51,6 @@ function parse_energies(text: string): EnergyRow[] {
 const PER_TERM_EXCLUDED: Record<string, string[]> = {
   AN11A: ['elec'],
   DOZNIP: ['elec'],
-  FE2PW3: ['vdw'],
-  CU1PW1: ['vdw'],
 };
 
 // Charges: the reference pchg is anomalous for these — JALSOE/SO18A
@@ -222,7 +220,6 @@ const perTermLines: string[] = [
   'charge deltas (mmff94-ts − the .mmd reference pchg, e⁻) for the 753-molecule',
   'MMFF94 validation suite, computed at the .mmd geometries. A "—" marks a',
   'comparison excluded for the documented reference anomalies (AN11A/DOZNIP',
-  'electrostatics, FE2PW3/CU1PW1 van der Waals — BatchMin-side anomalies;',
   'JALSOE/SO18A charges are dative-adjusted in the reference). The charge',
   'comparison is gated on typing-exactness (the BCI model is only meaningful',
   'where the atom types match the reference).',
