@@ -9,7 +9,7 @@ compliance statement
 ## Which variant of MMFF94
 
 This library implements MMFF94 proper. It does not implement MMFF94s
-(the "steric" variant, part VI of the series). MMFF94s changes the
+(the "static" variant, part VI of the series). MMFF94s changes the
 amide-nitrogen out-of-plane constants and the balance of terms. The
 standard variant is the one defined in Halgren's papers.
 
