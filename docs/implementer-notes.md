@@ -103,8 +103,7 @@ refined eq. (17) — pinned by the hydroxide reference charges
 
 Eq. (20) states mdyn·Å/rad² but the θ₀ protocol outputs degrees, so
 the implemented form squares the conversion: `rad2 = (π/180)²`, and
-**both** the numerator and denominator are squared (the D² correction
-was user-caught against the paper). Without the conversion an
+**both** the numerator and denominator are squared. Without the conversion an
 empirical angle would be off by (180/π)² ≈ 3283×.
 
 Both other transcriptions confirm the reading: Tinker `kangle.f`
