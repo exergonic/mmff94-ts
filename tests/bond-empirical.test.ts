@@ -8,6 +8,7 @@ import { describe, it, expect } from 'vitest';
 import {
   COVALENT_RADII,
   ELECTRONEGATIVITY,
+  HL_BADGER_D,
   empirical_bond_length,
   empirical_bond_parameters,
 } from '../src/mmff94/parameters/empirical';
@@ -72,5 +73,58 @@ describe('eqs. (18)-(19) — empirical bond parameters', () => {
   it('the published tables are used as-is: r(O) = 0.72, χ(O) = 3.5', () => {
     expect(COVALENT_RADII.O).toBe(0.72);
     expect(ELECTRONEGATIVITY.O).toBe(3.5);
+  });
+});
+
+describe("Badger's-rule fallback (the paper's 'should a case arise')", () => {
+  it('the d_ij table reproduces the E94 rows of Table V (k = 1.86/(r − d)³)', () => {
+    // The E94 force constants were generated from the tabulated
+    // lengths by exactly this relation; each row pins its own d.
+    const cases: [number, number, number, number][] = [
+      // [z1, z2, r0_ref, k_ref] from mmffbndk.par (E94 rows)
+      [1, 9, 0.92, 10.6],    // H–F
+      [1, 17, 1.28, 4.3],    // H–Cl
+      [14, 14, 2.32, 1.3],   // Si–Si
+      [16, 53, 2.4, 1.7],    // S–I
+      [17, 17, 1.99, 3.5],   // Cl–Cl
+      [35, 35, 2.28, 2.4],   // Br–Br
+    ];
+    for (const [z1, z2, r0, k] of cases) {
+      const key = z1 < z2 ? `${z1}-${z2}` : `${z2}-${z1}`;
+      const d = HL_BADGER_D[key];
+      expect(d).toBeDefined();
+      const kBadger = 1.86 / Math.pow(r0 - d!, 3);
+      // k_ref is printed at 1 decimal in the par file.
+      expect(Math.abs(kBadger - k)).toBeLessThan(0.06);
+    }
+  });
+
+  it('B–O (outside Table V): r0 = 0.81 + 0.72 − 0.085·1.49^1.4, k = 1.86/(r0 − d(1,1))³', () => {
+    const p = empirical_bond_parameters(A('B'), A('O'))!;
+    const expectedR0 = 0.81 + 0.72 - 0.085 * Math.pow(Math.abs(2.01 - 3.5), 1.4);
+    expect(p.r0).toBeCloseTo(expectedR0, 9);
+    expect(p.r0).toBeCloseTo(1.38145, 4);
+    // B and O are both row 1 (ELEMENT_ROW): d = 0.679
+    expect(p.k_b).toBeCloseTo(1.86 / Math.pow(expectedR0 - 0.679, 3), 9);
+    expect(p.k_b).toBeCloseTo(5.3663, 3);
+  });
+
+  it('B–N: the row-pair fallback with the same d(1,1), different length', () => {
+    const p = empirical_bond_parameters(A('B'), A('N'))!;
+    const expectedR0 = 0.81 + 0.73 - 0.085 * Math.pow(Math.abs(2.01 - 3.07), 1.4);
+    expect(p.r0).toBeCloseTo(expectedR0, 9);
+    expect(p.k_b).toBeCloseTo(1.86 / Math.pow(expectedR0 - 0.679, 3), 9);
+    expect(p.k_b).toBeCloseTo(4.0937, 3);
+  });
+
+  it('the fallback key is element-symmetric (B–O ≡ O–B)', () => {
+    const pBO = empirical_bond_parameters(A('B'), A('O'))!;
+    const pOB = empirical_bond_parameters(A('O'), A('B'))!;
+    expect(pBO.k_b).toBe(pOB.k_b);
+    expect(pBO.r0).toBe(pOB.r0);
+  });
+
+  it('pairs with no element data at all still fall through (Fe–O)', () => {
+    expect(empirical_bond_parameters(A('Fe'), A('O'))).toBeUndefined();
   });
 });

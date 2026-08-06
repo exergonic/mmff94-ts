@@ -150,6 +150,33 @@ const ELEMENT_V: Record<string, number> = {
 };
 
 /**
+ * The Herschbach-Laurie d_ij values for the MMFF element pairs —
+ * derived from the E94 rows of mmffbndk.par. The E94 force constants
+ * were generated from the tabulated lengths by Badger's rule
+ * (k = 1.86/(r − d)³, mdyn/Å and Å — the MMFF94 setup documentation,
+ * MMFFBNDK node), so d = r − (1.86/k)^(1/3) per row. The row-pair
+ * means (ELEMENT_ROW convention) cover element pairs outside the
+ * derived set.
+ */
+export const HL_BADGER_D: Record<string, number> = {
+  '1-9': 0.3602, '1-14': 0.5483, '1-17': 0.5235, '1-35': 0.6477, '1-53': 0.7167,
+  '6-14': 0.9658, '6-35': 1.0456, '6-53': 1.0607,
+  '7-9': 0.6794, '7-14': 0.945, '7-17': 0.94, '7-35': 1.0376, '7-53': 1.0485,
+  '8-8': 0.6774, '8-9': 0.6805, '8-14': 0.9201, '8-17': 0.9315, '8-35': 1.0321, '8-53': 0.9985,
+  '9-14': 0.9076, '9-15': 0.9001, '9-16': 0.904,
+  '14-14': 1.1932, '14-15': 1.1757, '14-16': 1.1739, '14-17': 1.1766,
+  '15-15': 1.1796, '15-16': 1.1815, '15-17': 1.1773, '16-17': 1.1776, '17-17': 1.18,
+  '14-35': 1.2296, '14-53': 1.3657, '15-35': 1.2339, '15-53': 1.3707,
+  '16-35': 1.2471, '16-53': 1.3696, '35-35': 1.3615, '53-53': 1.6185,
+};
+
+const HL_D_ROW: Record<string, number> = {
+  '0-1': 0.36, '0-2': 0.536, '0-3': 0.648, '0-4': 0.717,
+  '1-1': 0.679, '1-2': 0.935, '1-3': 1.046, '1-4': 1.061,
+  '2-2': 1.18, '2-3': 1.237, '2-4': 1.369, '3-3': 1.362, '4-4': 1.619,
+};
+
+/**
  * Eq. (18): the empirical reference bond length for i-j — the plain
  * Schomaker-Stevenson/Blom-Haaland form (no δ, no corrections; see the
  * header note). Returns undefined when the element data is missing
@@ -170,10 +197,13 @@ export function empirical_bond_length(a1: Atom, a2: Atom): number | undefined {
 
 /**
  * Eqs. (18)-(19): the empirical bond parameters for i-j — the k_b from
- * Table V scaled by the inverse sixth power of the length ratio.
- * Undefined when the element pair is outside Table V (the paper's
- * Badger's-rule fallback is not implemented — the suite never needs
- * it, and its constants come from a cited external paper).
+ * Table V scaled by the inverse sixth power of the length ratio. When
+ * the element pair is outside Table V, the paper's "should a case
+ * arise" fallback applies: the length from eq. (18) and the force
+ * constant from Badger's rule in its Herschbach-Laurie parameterization
+ * (k = 1.86/(r − d)³ — the same relation that generated the E94
+ * entries of Table V). Returns undefined when the element data is
+ * missing entirely.
  */
 export function empirical_bond_parameters(
   a1: Atom,
@@ -184,14 +214,37 @@ export function empirical_bond_parameters(
   if (z1 === undefined || z2 === undefined) return undefined;
   const key = z1 < z2 ? `${z1}-${z2}` : `${z2}-${z1}`;
   const ref = BNDK_REF[key];
-  if (!ref) return undefined;
 
   const r0 = empirical_bond_length(a1, a2);
   if (r0 === undefined) return undefined;
 
-  const rr = ref.r0_ref / r0;
-  const rr6 = rr * rr * rr * rr * rr * rr;
-  return { k_b: ref.k_ref * rr6, r0 };
+  if (ref) {
+    const rr = ref.r0_ref / r0;
+    const rr6 = rr * rr * rr * rr * rr * rr;
+    return { k_b: ref.k_ref * rr6, r0 };
+  }
+
+  // Badger's-rule fallback (part V's "should a case arise"): the
+  // Herschbach-Laurie d_ij for the element pair, or the row-pair mean
+  // when the pair is outside the derived set.
+  const rowKey = hl_row_key(z1, z2);
+  const d = HL_BADGER_D[key] ?? (rowKey === undefined ? undefined : HL_D_ROW[rowKey]);
+  if (d === undefined) return undefined;
+  return { k_b: 1.86 / ((r0 - d) * (r0 - d) * (r0 - d)), r0 };
+}
+
+function hl_row_key(z1: number, z2: number): string | undefined {
+  const r1 = row_of(z1);
+  const r2 = row_of(z2);
+  if (r1 === undefined || r2 === undefined) return undefined;
+  return r1 <= r2 ? `${r1}-${r2}` : `${r2}-${r1}`;
+}
+
+function row_of(z: number): number | undefined {
+  for (const [element, atomic] of Object.entries(ELEMENT_ATOMIC_NUMBER)) {
+    if (atomic === z) return ELEMENT_ROW[element];
+  }
+  return undefined;
 }
 
 /**
