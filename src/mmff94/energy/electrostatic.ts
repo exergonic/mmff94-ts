@@ -106,7 +106,10 @@ export function is_1_4_pair(i: number, j: number, adj: number[][]): boolean {
   let head = 0;
   while (head < queue.length) {
     const [node, depth] = queue[head++];
-    if (node === j && depth === 3) return true;
+    // BFS pops level by level, so the FIRST arrival of j is its
+    // shortest path: a 1-2 or 1-3 pair is never 1-4, even when a
+    // longer three-bond path also exists (shortest path wins).
+    if (node === j) return depth === 3;
     if (depth >= 3 || seen.has(node)) continue;
     seen.add(node);
     for (const nb of adj[node]) {

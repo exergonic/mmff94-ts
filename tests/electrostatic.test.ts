@@ -15,7 +15,7 @@ import { join } from 'path';
 import { parse_sdf } from '../src/sdf';
 import { assign_atom_types } from '../src/mmff94/assign-atom-types';
 import { assign_bci_charges } from '../src/mmff94/charges';
-import { calc_electrostatic_energy } from '../src/mmff94/energy/electrostatic';
+import { calc_electrostatic_energy, is_1_4_pair } from '../src/mmff94/energy/electrostatic';
 import { calc_energy } from '../src/mmff94/energy/total';
 
 /** A linear chain of n atoms along x, 1 Å apart, all type 1 (CR). */
@@ -101,5 +101,48 @@ describe('Electrostatic energy', () => {
       const charged = assign_bci_charges(typed);
       expect(Math.abs(calc_energy(charged).total - ref)).toBeLessThan(0.001);
     }
+  });
+});
+
+describe('is_1_4_pair — path multiplicity', () => {
+  // Two fused hexagons (naphthalene-like), fused along the 3-4 bond.
+  // Pairs across the fused system carry both a three-bond path and a
+  // longer one; pairs whose SHORTEST path is four bonds must NOT be
+  // scaled.
+  const fused = [
+    [1, 5], [0, 2], [1, 3], [2, 4, 9], [3, 5, 6],
+    [4, 0], [4, 7], [6, 8], [7, 9], [8, 3],
+  ];
+
+  it('a 1-4 pair with a longer alternate path is scaled (0-3: 3-bond and 7-bond paths)', () => {
+    expect(is_1_4_pair(0, 3, fused)).toBe(true);
+  });
+
+  it('a 1-4 pair across the fusion (5-7: 5-4-6-7) is scaled', () => {
+    expect(is_1_4_pair(5, 7, fused)).toBe(true);
+  });
+
+  it('a 1-4 pair with a 5-bond alternate (2-8: 2-3-9-8) is scaled', () => {
+    expect(is_1_4_pair(2, 8, fused)).toBe(true);
+  });
+
+  it('a pair whose shortest path is four bonds is NOT scaled (0-9)', () => {
+    expect(is_1_4_pair(0, 9, fused)).toBe(false);
+  });
+
+  it('a pair whose shortest path is four bonds is NOT scaled (1-6)', () => {
+    expect(is_1_4_pair(1, 6, fused)).toBe(false);
+  });
+
+  it('a pair with both a 1-3 and a 1-4 path is a 1-3 pair (cyclopentane 0-3)', () => {
+    // 0-4-3 is two bonds (1-3), 0-1-2-3 is three (1-4): the 1-3 path
+    // wins, so the pair is excluded from electrostatics entirely.
+    const cyclopentane = [[1, 4], [0, 2], [1, 3], [2, 4], [3, 0]];
+    expect(is_1_4_pair(0, 3, cyclopentane)).toBe(false);
+  });
+
+  it('a ring-closure pair (a bond) is never 1-4 (square ring 0-3)', () => {
+    const square = [[1, 3], [0, 2], [1, 3], [0, 2]];
+    expect(is_1_4_pair(0, 3, square)).toBe(false);
   });
 });

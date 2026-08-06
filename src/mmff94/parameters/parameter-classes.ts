@@ -72,9 +72,12 @@ export function get_bond_order(ctx: ClassContext, i: number, j: number): number 
 }
 
 /** Is bond (i, j) part of any ring? BFS for an alternate path, capped
- *  at ring size 8 (MMFF ring classes only reach 5-membered rings and
- *  the validation suite's largest rings are 8-membered; the cap just
- *  bounds the search). Only consulted for aromatic-type pairs, so the
+ *  at ring size 64 (MMFF ring classes only reach 5-membered rings and
+ *  the validation suite's largest rings are 8-membered; the cap only
+ *  bounds the search — any alternate path of two or more bonds proves
+ *  ring membership, so a cap below the real alternate-path length
+ *  would silently misread a large fused/macrocyclic ring bond as
+ *  external). Only consulted for aromatic-type pairs, so the
  *  answer distinguishes an aromatic ring bond (BTij = 0) from an
  *  external aromatic-aromatic bond like biphenyl's (BTij = 1). */
 function in_ring(ctx: ClassContext, i: number, j: number): boolean {
@@ -95,7 +98,7 @@ function in_ring(ctx: ClassContext, i: number, j: number): boolean {
   }
   while (queue.length > 0 && !found) {
     const [node, depth] = queue.shift()!;
-    if (depth >= 8) continue;
+    if (depth >= 64) continue;
     for (const nb of adj[node]) {
       if (nb === j) {
         found = true;
@@ -386,8 +389,12 @@ export function lookup_torsion(
     return undefined;
   };
 
-  // The order index is the canonical-direction discriminator (M = 136,
-  // the type-code base in the par's key encoding).
+  // The order index is the canonical-direction discriminator. M = 136
+  // is one more than the largest MMFF94 atom type number (135), so
+  // each type occupies a digit in a base-136 mixed-radix encoding of
+  // the i-j-k-l direction; order >= 0 selects the lexicographically
+  // canonical direction, matching the direction under which the par
+  // stores its asymmetric torsion entries.
   const M = 136;
   const order =
     tk * M ** 3 + tj * M ** 2 + tl * M + ti - (tj * M ** 3 + tk * M ** 2 + ti * M + tl);

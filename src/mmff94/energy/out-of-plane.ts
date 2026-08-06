@@ -106,7 +106,10 @@ export function oop_force_constant(
       if (!params) continue;
       // Half-reduced keys are rejected: positions p+1..2 are still at
       // their original types — the entry is only accepted once every
-      // remaining original is terminal (lvl3(t) = t).
+      // remaining original is terminal (lvl3(t) = t). The rule in one
+      // sentence: a substituted oop entry is accepted only when every
+      // remaining un-substituted substituent is already at its
+      // EqLvl3-terminal type.
       const halfReduced = (p < 2) && [sorted[p + 1], sorted[p + 2]].some(
         (u) => (ATOM_TYPE_PROPERTIES[u]?.lvl3 ?? u) !== u,
       );

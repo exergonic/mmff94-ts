@@ -37,7 +37,10 @@
 // to 3.5e-6, and Tinker's own transcription (kbond.f) implements
 // exactly this plain form (its bl(i) = rad0a + rad0b − cst·|χa−χb|^1.4,
 // no δ, no corrections). The published tables are used as-is: r(O) =
-// 0.72 (the CCL errata and Tinker's mmffcovrad agree).
+// 0.72 (the CCL errata and Tinker's mmffcovrad agree). Scope: the
+// plain form is validated on BOij = 1 single bonds only (the suite's
+// one empirical bond); the paper's δ/BOij/hybridization reductions for
+// multiple and aromatic bonds are NOT implemented.
 //
 // The angle rules never fire in the suite (the par's wildcards always
 // resolve, validated 747/747); they are pinned against the spec by
@@ -226,7 +229,9 @@ export function empirical_bond_parameters(
 
   // Badger's-rule fallback (part V's "should a case arise"): the
   // Herschbach-Laurie d_ij for the element pair, or the row-pair mean
-  // when the pair is outside the derived set.
+  // when the pair is outside the derived set. 1.86 is the Badger-rule
+  // constant (mdyn/Å·Å³) — the same constant that generated the E94
+  // rows of Table V (see the HL_BADGER_D header).
   const rowKey = hl_row_key(z1, z2);
   const d = HL_BADGER_D[key] ?? (rowKey === undefined ? undefined : HL_D_ROW[rowKey]);
   if (d === undefined) return undefined;

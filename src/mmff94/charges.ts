@@ -95,8 +95,17 @@ const PRIMARY_FORMAL_CHARGES: Record<number, number> = {
  * depend only on connectivity and atom types — so the charged
  * molecule stays valid while an optimizer moves the atoms (the
  * optimizer clones only the atom positions and keeps this field).
+ *
+ * The `round` option (default true) rounds the charges to five decimal
+ * places, matching BatchMin's stored print precision — the reference
+ * computes its electrostatic components from those stored values, so
+ * the rounding is what lets the suite's elec components close. Pass
+ * `{ round: false }` for the full-precision charges.
  */
-export function assign_bci_charges(molecule: TypedMolecule): TypedMolecule {
+export function assign_bci_charges(
+  molecule: TypedMolecule,
+  options: { round?: boolean } = {},
+): TypedMolecule {
   // Adjacency + the shared class context (the BTij flag selects the
   // bci class for conjugated single bonds).
   const adj: number[][] = Array.from({ length: molecule.atoms.length }, () => []);
@@ -129,7 +138,7 @@ export function assign_bci_charges(molecule: TypedMolecule): TypedMolecule {
     // the parametrized pairs (the par's w values carry the direction).
     // The unparametrized default is the difference w = pbci(I) −
     // pbci(K), the contribution to the atom of type I — so the
-    // smaller type RECEIVES +bci (part V eq. 14; verified on the
+    // smaller type RECEIVES +bci (part V eq. 17; verified on the
     // hydroxide's 21–35 pair, OHMW1).
     if (entry) {
       if (ti === t_min) {
@@ -272,8 +281,12 @@ export function assign_bci_charges(molecule: TypedMolecule): TypedMolecule {
   // suite's elec components 1e-3..3.5e-3 away from a full-precision
   // recomputation (14 molecules, all on the guanidinium/amidinium/
   // phosphate groups). Rounding to the reference's precision closes
-  // them all (SOHXOC 3.5e-3 → 1e-5, 747/747 within 1e-4).
-  for (let i = 0; i < n; i++) charges[i] = Number(charges[i].toFixed(5));
+  // them all (SOHXOC 3.5e-3 → 1e-5, 747/747 within 1e-4). The
+  // default keeps the rounding; the option exposes the full-precision
+  // charges for consumers comparing against a non-BatchMin reference.
+  if (options.round !== false) {
+    for (let i = 0; i < n; i++) charges[i] = Number(charges[i].toFixed(5));
+  }
 
   // The charged molecule is a shallow copy: atoms and bonds are shared
   // references — only the new field is added. Geometry and typing are
