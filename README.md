@@ -40,7 +40,8 @@ entirely on the client side.
 
 ## Validation
 
-We checked every energy term against two independent references.
+We checked every energy term against three references: the original
+validation suite, OpenBabel, and Tinker.
 We checked every analytical gradient against finite differences.
 
 1. **Halgren's 753-molecule MMFF94 validation suite.** This is the
@@ -72,8 +73,15 @@ We checked every analytical gradient against finite differences.
    See the [Validation document](tests/VALIDATION.md) for details.
 
 2. **OpenBabel.** Per-term energies and per-atom partial charges for
-   16 small organic molecules. All values match to five decimal
-   places.
+   16 small organic molecules. Most values match to five decimal
+   places. The angle term differs by up to 0.0007 kcal/mol for three
+   molecules. OpenBabel uses a rounded constant in the angle formula.
+   See the [Implementer's notes](docs/implementer-notes.md).
+
+3. **Tinker.** A second independent implementation. For the same 16
+   molecules, total energies match to four decimal places. This is
+   the print precision of Tinker. One angle term differs by 0.0001
+   kcal/mol. See the [Implementer's notes](docs/implementer-notes.md).
 
 
 ## Usage

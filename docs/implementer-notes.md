@@ -53,9 +53,11 @@ Scripts:
 |---|---|
 | `tests/scripts/energy-scoreboard.ts` | per-term coverage gate (≤1e-4) vs BatchMin |
 | `tests/scripts/residual-census.ts` | per-term ≤10⁻⁴ census with worst residuals |
-| `tests/scripts/probe-opti-typing.ts` | typing vs the original program's own assignments |
-| `tests/scripts/probe-tinker-anomalies.ts` | six-molecule three-way energy table (ours vs Tinker vs BatchMin) |
-| `tests/scripts/tinker_energy_breakdown.py` | the Tinker diagnostic (per-term + per-interaction) |
+| `tests/scripts/generate-validation-doc.ts` | writes `docs/validation/` (side-by-side totals + per-term/charge deltas; `npm run validation:doc`) |
+| `tests/scripts/bmin-log.ts` | shared BatchMin log parser (components; the total line is 2-decimal rounded — see §6) |
+| `tests/scripts/gen-tinker-fixtures.ts` | Tinker xyz/prm/key inputs for the 16 fixtures (original-type numbering, §6.1) |
+| `tests/scripts/tinker-fixture-comparison.ts` | three-way table (ours vs OpenBabel vs Tinker) on the 16 fixtures |
+| `tests/scripts/ob_fixture_angle_breakdown.py` | OpenBabel per-interaction angle log for an SDF fixture (the per-angle workhorse) |
 | `tests/scripts/ob_energy_breakdown.py` | the OpenBabel diagnostic (per-term + per-interaction) |
 
 ---
@@ -225,6 +227,59 @@ or with the paper, in one place:
 | type-76 charges | all three implementations differ | open — §5.2 |
 | OB 3.2.1 API | per-term energy methods removed; only `Energy()` | worked around in `ob_energy_breakdown.py` (stderr capture) |
 | OB datadir | `BABEL_DATADIR` must point at the wheel's `bin/data` | issue #3003 upstream |
+| angle cubic constant | OpenBabel uses the rounded −0.007 deg⁻¹ (the paper's literal) vs the precise −0.4 rad⁻¹ = −0.0069813… (us, BatchMin, Tinker) | closed — §6.1; it is the whole cause of the three N-sp3 fixtures' angle deltas (6e-5…7e-4) |
+| bmin log Total Energy print | the log's total line is 2-decimal rounded (Fortran F9.2) | compare totals against `MMFF94.energies` (5 decimals), never the log's total line |
+
+### 6.1 The fixture-level three-way cross-check (2026-08-05)
+
+The 16 fixture molecules (the SDFs that have obenergy logs — the
+`*_non-optimized` fixtures are excluded; they exist for the geometry
+optimizers) were run through the local Tinker build and compared
+three ways. The committed artifacts: the Tinker logs in
+`tests/references/tinker/`, the input generator
+(`gen-tinker-fixtures.ts`), and the comparison table
+(`tinker-fixture-comparison.ts`).
+
+The generator's one trap: Tinker's MMFF94 needs the ORIGINAL 1–178
+type numbering in its xyz files, while our typing (and the OB par
+files) is class-numbered. The map comes from the prm's atom section
+(`atom <original> <class> <name>`): the first original per class.
+Any original with the right class is equivalent — Tinker's lookups
+are class-keyed (`kbondm` does `ita = class(ia)`), which is why the
+OHMW1 runs could use the specific originals (177/106/124/75) without
+special handling. The key file carries `MMFF94` + `MMFF-PIBOND`
+(the conjugated fixtures — benzene, pyridine, pyrrole, ethene,
+formamide, nicotine — need the pibond assignment; it is inert for
+saturated molecules).
+
+Result (ours vs Tinker, which prints 4 decimals):
+
+- totals: all 16 within 5e-5 (worst: piperidine).
+- per-term: 111/112 within 5e-5. The exception is nicotine's
+  angle-bend at 1.1e-4 — and there Tinker agrees with us six times
+  better than OpenBabel does.
+
+Result (ours vs OpenBabel, which prints 5 decimals): exact on 13 of
+the 16 molecules. The three N-sp3 molecules (trimethylamine,
+piperidine, nicotine) differ in the angle term: 6e-5, 6e-5, and
+7e-4. The cause is OpenBabel's angle cubic constant: the paper gives
+cb = −0.007 deg⁻¹ "(or, more precisely, −0.4 rad⁻¹)"; BatchMin,
+Tinker, and we use the precise form −0.4·(π/180) = −0.0069813…,
+OpenBabel uses the rounded −0.007. The deviation grows with Δθ³ (the
+cubic term), which is why the strained angles of nicotine's
+pyrrolidine ring show the largest gap. Proven computationally:
+recomputing our angle totals with cb = −0.007 lands on OpenBabel's
+values to 1.3e-5 (trimethylamine, piperidine) and shrinks nicotine's
+gap tenfold. Nicotine's residual 6.8e-5 at the rounded constant is a
+4th-decimal detail (class resolution or accumulation order) — the
+per-angle parameters and valence angles are identical at every
+printed digit.
+
+The bmin log footnote: its `Total Energy` line is printed 2-decimal
+rounded (F9.2, e.g. −51.42700), unlike the 5-decimal component
+lines. The totals comparisons must use `MMFF94.energies` (5
+decimals); the generator does; do not add a totals comparison at
+fine precision against the log's total line.
 
 ---
 
