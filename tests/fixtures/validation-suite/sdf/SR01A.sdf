@@ -1,0 +1,17 @@
+SR01A: HYDROGEN SULFIDE
+mmff94-ts export-suite-sdf — the MMFF94 validation suite (hypervalent representation)
+
+  3  2  0  0  0  0  0  0  0  0999 V2000
+   -0.0007    0.0000   -0.0007 S   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.0007    0.0000    1.3403 H   0  0  0  0  0  0  0  0  0  0  0  0
+    1.3380    0.0000   -0.0796 H   0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  1  0  0  0  0  0  0
+  1  3  1  0  0  0  0  0  0
+M  END
+> <MMFF94_atom_types>
+15,71,71
+
+> <MMFF94_reference_charges>
+-0.36000,0.18000,0.18000
+
+$$$$

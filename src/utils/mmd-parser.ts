@@ -103,9 +103,12 @@ export function parse_mmd(mmd_text: string): Molecule[] {
       // Skip label, charge index
       cursor += 2;
 
-      // Formal charge (electrons) — stored: the metal cations'
-      // primary charges follow it (FE2PW3's Fe+2 vs FE3PW3's Fe+3,
-      // CU1PW1's Cu+1) even though their atom types are fixed.
+      // The mmd carries two identical charge columns — both are the
+      // reference pchg (the suite's formal charges live in the
+      // separate MMFF94.fc_* files). Stored under formal_charge
+      // anyway because for the metal cations the pchg EQUALS the
+      // formal charge (FE2PW3's Fe+2 vs FE3PW3's Fe+3, CU1PW1's
+      // Cu+1), which is how the BCI model recovers their q⁰.
       const formal_charge = parseFloat(parts[cursor]);
       cursor++;
 
@@ -113,6 +116,12 @@ export function parse_mmd(mmd_text: string): Molecule[] {
       // validation tooling can compare against our BCI charges).
       const partial_charge = parseFloat(parts[cursor]);
       cursor++;
+
+      // Residue name + atom label + serial ("CHGB O6 6"). The label
+      // is how the suite's formal-charge file addresses atoms; it is
+      // ALL-CAPS ("FE1", "O2F" — the trailing letter disambiguates
+      // equivalent atoms, BAOXLM01's two carboxylate oxygens).
+      const label = parts[cursor + 1]?.match(/^[A-Z]{1,2}\d+[A-Z]?$/) ? parts[cursor + 1] : undefined;
 
       // Element from the MacroModel type index (first field): OpenBabel's
       // mmd reader maps it through data/types.txt (MMD → atomic number),
@@ -135,7 +144,7 @@ export function parse_mmd(mmd_text: string): Molecule[] {
         }
       }
 
-      atoms.push({ index: a, element, x, y, z, formal_charge, partial_charge });
+      atoms.push({ index: a, element, x, y, z, formal_charge, partial_charge, label });
     }
 
     if (atoms.length === 0) continue;

@@ -23,6 +23,10 @@ export interface Atom {
    * this field exists so the suite parser can expose the reference for
    * comparison. */
   partial_charge?: number;
+  /** Atom label from the structure file (the suite's .mmd name field,
+   * e.g. "O6", "FE1") — how the reference files address individual
+   * atoms (the formal-charge file keys on it). */
+  label?: string;
 }
 
 /** A bond connecting two atoms by their index in the atoms array. */
