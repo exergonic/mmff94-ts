@@ -353,15 +353,19 @@ export function empirical_torsion(
       (pj?.val === 3 && pk?.val === 4) || (pj?.val === 4 && pk?.val === 3) ? 3.0 : 6.0;
     v.v2 = beta * pi_bc * Math.sqrt(ub * uc);
     found = true;
-  } else if (order_jk === 2) {
-    // rule (c): the j-k bond has a formal bond order of 2 — π = 1.0
-    // only for the full double bond (mltb 2 on both), else 0.4 (e.g.
-    // the formal C=N of a guanidinium resonance structure, mltb 2/1).
-    // The paper's condition is on the j-k bond order; OpenBabel's
-    // GetTorsionParam checks the i-j bond instead and Tinker's ktors
-    // checks only the mltb flags — both readings give π = 1.0 for the
-    // central single of butadiene, which the paper's rule (g) case
-    // (5) assigns π = 0.15.
+  } else {
+    // rule (c): the corroborated universal non-aromatic reading. The
+    // paper's text gates on the j-k formal bond order of 2, but BOTH
+    // implementations treat it as the else of the aromatic rule —
+    // every non-aromatic central bond gets eq. (21) with π = 1.0 when
+    // both atoms carry mltb 2 (Tinker's ktors reads only the mltb
+    // flags; OpenBabel reads the i-j bond — both give π = 1.0 for
+    // butadiene's central single), else π = 0.4. Measured on vinyl
+    // phosphine: the C-P dihedrals resolve 6·0.4·√(U_C·U_P) = 3.795
+    // in both references (vs the paper's rule (g) case (5) π = 0.15
+    // → 1.423); the suite never exercises the rules, so the
+    // corroboration is the arbiter. The paper's rules (d)-(h) below
+    // are unreachable for non-aromatic bonds — kept as the spec.
     const pi_bc = pj?.mltb === 2 && pk?.mltb === 2 ? 1.0 : 0.4;
     v.v2 = 6.0 * pi_bc * Math.sqrt(ub * uc);
     found = true;

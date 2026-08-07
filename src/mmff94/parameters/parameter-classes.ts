@@ -332,13 +332,31 @@ export function angle_parameters(
   let k_a: number;
   let theta0: number;
   if (params) {
-    // A found entry is final — including the k_a = 0 out-of-range
-    // defaults (e.g. '0-0-73-0'): the reference's answer for an
-    // unparametrized angle on that center is "no contribution", NOT
-    // the empirical rules. Overriding a found k = 0 invented terms
-    // BatchMin never had (the sulfinate S=O angles).
-    k_a = params.k_a;
-    theta0 = params.theta0;
+    if (params.k_a === 0) {
+      // A found k_a = 0 row is an out-of-range default (e.g. the
+      // '0-0-26-0' phosphine wildcard): the references do NOT treat
+      // it as "no contribution". OpenBabel's setup log ("USING
+      // EMPIRICAL RULE FOR ANGLE BENDING FORCE CONSTANT 1-3-7") and
+      // Tinker's parameter listing (KB = 0.661 @ 98.1° for the vinyl
+      // phosphine C–P–H) both apply the part V empirical force
+      // constant (eq. 20) with the row's θ₀. The old "found k = 0 is
+      // final" policy (from the sulfinate S=O angles, BatchMin's 0)
+      // zeroed the C–P–H and C–C–P terms entirely, so nothing held
+      // the P pyramidal and it flattened to trigonal planar.
+      theta0 = params.theta0;
+      const r0ab =
+        bond_parameters(ctx, i, j)?.r0 ??
+        empirical_bond_length(mol.atoms[i], mol.atoms[j]) ??
+        1.5;
+      const r0bc =
+        bond_parameters(ctx, j, k)?.r0 ??
+        empirical_bond_length(mol.atoms[j], mol.atoms[k]) ??
+        1.5;
+      k_a = empirical_ka(mol.atoms[i], mol.atoms[j], mol.atoms[k], r0ab, r0bc, theta0, cls);
+    } else {
+      k_a = params.k_a;
+      theta0 = params.theta0;
+    }
   } else {
     // Total miss: the part V empirical θ₀ and force-constant rules
     // (empirical.ts). The eq. (20) reference bond lengths fall back

@@ -28,6 +28,7 @@ import {
 } from '../parameters/index.js';
 import { distance, angle_in_radians, Vec3 } from '../../utils/vector.js';
 import { make_class_context, type ClassContext, strbnd_type, bond_parameters, angle_parameters } from '../parameters/parameter-classes.js';
+import { empirical_bond_length } from '../parameters/empirical.js';
 
 /**
  * All parameters a stretch-bend angle i-j-k needs: the two coupling
@@ -123,16 +124,30 @@ export function stretch_bend_angle_terms(
 
   // 2. Look up equilibrium bond lengths from bond parameters —
   //    each bond uses its own type pair (sorted), not the angle's
-  //    sorted terminal types.
-  const bond_ij = bond_parameters(ctx, i, j);
-  const bond_kj = bond_parameters(ctx, j, k);
-  if (!bond_ij || !bond_kj) return undefined;
+  //    sorted terminal types. The miss path mirrors the angle
+  //    term's: a par-less bond (e.g. the vinyl phosphine C–P —
+  //    Halgren's Table III has no 0-2-26 row) falls back to the
+  //    eq. (18) empirical length. Without this the whole strbnd
+  //    term silently vanished for par-less bonds while the
+  //    references evaluate it (Tinker's C–P–H: KSB 0.150/0.000 —
+  //    found via the vinyl phosphine flat-P investigation: the
+  //    missing strbnd force left the P at a spurious trigonal-planar
+  //    stationary point of our potential, which the references'
+  //    potentials do not have).
+  const r0_ij =
+    bond_parameters(ctx, i, j)?.r0 ??
+    empirical_bond_length(molecule.atoms[i], molecule.atoms[j]) ??
+    1.5;
+  const r0_kj =
+    bond_parameters(ctx, j, k)?.r0 ??
+    empirical_bond_length(molecule.atoms[j], molecule.atoms[k]) ??
+    1.5;
 
   // 3. Equilibrium angle from the same class-aware resolution the
   //    angle term uses, so ring and BT-flagged angles share θ₀.
   const { theta0, linear } = angle_parameters(ctx, i, j, k);
 
-  return { k_ij, k_kj, r0_ij: bond_ij.r0, r0_kj: bond_kj.r0, theta0, linear };
+  return { k_ij, k_kj, r0_ij, r0_kj, theta0, linear };
 }
 
 /**
