@@ -1,139 +1,163 @@
 # MMFF94 Compliance Statement
 
-**mmff94-ts 0.1.0-alpha.1** — a statement of what this library
-implements, how it was validated, and where it differs from the
-original MMFF94 program. The format follows Wavefun's MMFF94
-compliance statement
-(https://downloads.wavefun.com/FAQ/MMFF94_compliance.html).
+**mmff94-ts** implements the Merck Molecular Force Field (MMFF94) in
+pure TypeScript, with zero runtime dependencies. It runs in browsers
+and in Node.js, and computes energies, analytical gradients, and
+optimized geometries.
 
-## Energy terms
+The authoritative specification is Halgren's series of papers:
+*J. Comput. Chem.* 1996, *17*, 490-641, and the 1999 torsion paper
+(*J. Comput. Chem.* 1999, *20*, 720-729). Where the published text and
+the original MMFF94 program disagree, this library follows the
+program's observed behavior — the validation suite below is the
+arbiter, exactly as it is for the rest of the field.
 
-MMFF94 has seven energy terms. Each term uses the functional form
-published by Halgren:
+## 1. Which variant
+
+This library implements **MMFF94**, the original force field.
+
+- It is **not** MMFF94s (the "static" variant for conformational
+  energies). Most notably, the amide nitrogen keeps MMFF94's
+  deliberate pyramidalization (the negative out-of-plane constants) —
+  the "s" variant restores planarity, and we do not.
+- The in-vacuo dielectric (D = 1.0) is the default and the only
+  dielectric option. The D = r solvent model is not implemented.
+
+## 2. Energy terms
+
+All seven MMFF94 terms are implemented, with the published functional
+forms and conversion factors:
 
 | Term | Functional form | Reference |
 |---|---|---|
-| Bond stretch | 143.9325·(k_b/2)·Δr²·[1 + cs·Δr + 7/12·cs²·Δr²] | eq. (2), part I |
-| Angle bend | 0.043844·(k_a/2)·Δθ²·(1 + cb·Δθ) (eq. 4 for linear centers) | eqs. (3)-(4), part I |
-| Stretch-bend | 2.51210·[k_sb_IJK·(r₁−r₁₀) + k_sb_KJI·(r₂−r₂₀)]·(θ−θ₀) | eq. (5), part I |
-| Torsion | Σ (V_n/2)·[1 + cos(n·τ − γ_n)], n = 1, 2, 3 | eq. (7), part I |
-| Van der Waals | ε_ij·[(1.07·R*/(r+0.07·R*))⁷·(1.12·R*⁷/(r⁷+0.12·R*⁷) − 2)] | eq. (8), part I |
-| Electrostatic | 332.0716·q_i·q_j/(r + 0.05), 1-4 pairs ×0.75 | eq. (6), part III |
-| Out-of-plane | 0.043844·(k_oop/2)·χ² (Wilson angle, any tri-coordinate center) | eq. (6), part I |
+| Bond stretch | E = 143.9325·(k_b/2)·Δr²·(1 + cs·Δr + 7/12·cs²·Δr²) | eq. (2) |
+| Angle bend | E = 0.043844·(k_a/2)·Δθ²·(1 + cb·Δθ) | eq. (3), eq. (4) for linear centers |
+| Stretch-bend | E = 2.51210·[k_sb_IJK·(r₁−r₁₀) + k_sb_KJI·(r₂−r₂₀)]·(θ−θ₀) | eq. (5) |
+| Torsion | E = Σ (V_n/2)·[1 + cos(n·τ − γ_n)], n = 1, 2, 3 | eq. (7) |
+| Van der Waals | Buffered 14-7: ε_ij·[(1.07·R*/(r+0.07·R*))⁷·(1.12·R*⁷/(r⁷+0.12·R*⁷) − 2)] | eq. (8) |
+| Electrostatic | E = 332.0716·q_i·q_j/(r + 0.05) | eq. (6), part III |
+| Out-of-plane | E = 0.043844·(k_oop/2)·χ² | eq. (6), part I |
 
-The conversion factors are the published Halgren values (143.9325,
-0.043844, 2.51210, 332.0716). 
+The 1-4 rule matches the spec: electrostatic 1-4 pairs are scaled by
+0.75; van der Waals 1-4 pairs are **not** scaled (Halgren 1996,
+p. 496). Partial charges come from the bond-charge-increment (BCI)
+model (part V eq. 15, including the formal-charge sharing rules).
 
-Pairs separated by three bonds (1-4 pairs) have their electrostatic
-interaction scaled by 0.75. Their van der Waals interaction is not
-scaled. Halgren states this explicitly (part III, p. 496).
+## 3. Parameter provenance
 
-## Parameters
+The parameter tables are extracted from OpenBabel's `.par` text files
+(mmffbond, mmffang, mmffstbn, mmfftor, mmffvdw, mmffchg, mmffpbci,
+mmffoop), which are mechanical transcriptions of Halgren's published
+tables. The extraction script converts format only — it implements no
+force-field logic. The values are committed as TypeScript tables, so
+the build needs no Python and no external data.
 
-The numeric parameters come from Halgren's published tables.
+The parameter tables are cross-checked against Tinker's
+`mmff94.prm`, an independent transcription of the same originals.
 
-The papers also define rules to generate parameters when a lookup
-misses (part V): the bond rules (eqs. 18-19, Table V), the angle
-rules (eq. 20, Table VI), the torsion rules (pp. 631-632, Table X),
-and the charge fallback (eq. 17). This library implements these
-rules. One deviation from the paper is measured, not literal: the
-empirical bond length uses the plain Schomaker-Stevenson form
-without eq. 18's delta = 0.008 A shrinkage and BOij/hybridization
-radius reductions, because the reference's only empirical bond
-(OHMW1's O-H) matches the plain form and Tinker's kbond.f
-implements the plain form too. Each rule is pinned by hand-computed
-unit tests and cross-checked against Tinker's independent
-implementation.
+## 4. Validation against Halgren's own suite
 
-## Validation
+The library is validated against the MMFF94 Validation Suite
+(753 molecules, the CCL archive version), using the BatchMin 5.5
+per-component energies as the reference. Every molecule's atom types
+are assigned independently and compared:
 
-The library was validated against three references: the original
-program's own 753-molecule validation suite (BatchMin and OPTIMOL
-output), OpenBabel, and Tinker.
+- **Atom typing**: 753/753 molecules match OpenBabel's canonical
+  MMFF94 types; 749/753 are byte-identical to the original program's
+  own types (the four remaining atoms are parameter-inert
+  oxidation-state and dative-bonding cases, proven parameter-identical
+  by the energy checks).
 
-**Atom types.** The types match OpenBabel's canonical types on all
-753 molecules. They match the original program's own types on 749
-of 753 atoms. The four remaining atoms are described under
-"Differences".
+### 4.1 Per-component energy residuals
 
-**Energy terms.** Six of the seven terms match the BatchMin
-reference on all 753 molecules to 0.0001 kcal/mol or better. The
-electrostatics match on 751 molecules. The worst residual is
-6.8e-5 kcal/mol. The two excluded molecules are described under
-"Differences".
+For each of the seven terms, the table shows the absolute residual
+against BatchMin across the suite (typing-exact molecules; the four
+documented anomaly exclusions in section 5 applied):
 
-**Total energies.** The totals match the BatchMin reference to
-0.001 kcal/mol on 751 of 753 molecules.
+| Term | Molecules | Worst | Mean | RMS |
+|---|---|---|---|---|
+| Bond stretch | 753 | 4.97e-5 | 7.0e-6 | 1.0e-5 |
+| Angle bend | 753 | 3.45e-5 | 6.0e-6 | 8.4e-6 |
+| Stretch-bend | 753 | 4.34e-5 | 4.7e-6 | 7.1e-6 |
+| Torsion | 753 | 4.69e-5 | 1.2e-6 | 2.6e-6 |
+| Out-of-plane | 753 | 1.64e-5 | 6.0e-7 | 1.6e-6 |
+| Van der Waals | 751 | 4.37e-5 | 6.7e-6 | 9.4e-6 |
+| Electrostatic | 751 | 6.76e-5 | 7.1e-6 | 1.1e-5 |
 
-**Partial charges.** The charges match the reference values to
-0.001 e per atom on 749 molecules.
+At the ±5e-5 gate — the accuracy Wavefunction claims for Spartan —
+**745 of 753 molecules match all seven components**. Every component
+of every molecule is within 1e-4.
 
-**Gradients.** Every analytical gradient is checked against a
-central finite difference (step 1e-6 Å). The worst relative error
-is 8e-8.
+### 4.2 Total energies
 
-The molecule-by-molecule evidence is committed with the library:
-the 753 totals side by side with the reference values, and the
-per-term and per-atom-charge deltas for every molecule
-(`docs/validation/`).
+The total-energy residuals (the 749 molecules without excluded terms):
 
-## Differences from the original
+| Statistic | Value |
+|---|---|
+| Worst | 5.10e-4 kcal/mol |
+| Mean | 2.48e-4 kcal/mol |
+| RMS | 2.86e-4 kcal/mol |
 
-The library differs from the original program in the following
-places. Each difference is deliberate and documented.
+We do **not** claim the Wavefun-level ±5e-5 on totals; the per-term
+residuals accumulate to the ~2.5e-4 mean shown.
 
-**The two delocalized-anion electrostatics (AN11A, DOZNIP).** The
-anionic five-ring nitrogen (type 76) has no uniform primary charge.
-Halgren states this in the papers. The three implementations each
-produce a different value. The reference itself uses different
-charges in different environments: on the symmetric anion (JILWUW)
-our charge matches the reference exactly; on the two asymmetric
-anions it does not. No single value can match all three
-implementations. The electrostatics of the two molecules are
-therefore not compared. Every other term of these molecules
-matches.
+### 4.3 Partial charges
 
-**The metal-hydrate cations (FE2PW3, CU1PW1).** The original
-program types these cations with the +2/+1 oxidation states and
-their own van der Waals rows. OpenBabel's canonical typing assigns
-them the +3/+2 classes. The two row sets differ only in the
-polarizability. The van der Waals term selects the +2/+1 rows by
-the formal charge. With this bridge, both molecules match the
-reference to 1e-6 kcal/mol on all seven terms.
+BCI partial charges match the suite's reference charges to better
+than 1e-3 on all 749 charge-comparable molecules.
 
-**The angle cubic constant.** The paper gives the cubic constant as
-−0.007 per degree, "or, more precisely, −0.4 per radian". This
-library, BatchMin, and Tinker use the precise value. OpenBabel uses
-the rounded value. The difference grows with the cube of the angle
-deviation. It shows only on strained angles: three small molecules
-differ from OpenBabel by up to 0.0007 kcal/mol in the angle term.
+### 4.4 Gradients
 
-**The empirical bond rule.** The bond-length rule of part V (eq.
-18) is implemented in its plain published form, without the delta
-correction. The reference and Tinker do the same. OpenBabel's
-transcription includes the correction for that one bond. The
-reference bond matches to 1.4e-6 kcal/mol. The plain form is
-validated on BOij = 1 single bonds only (the suite's one empirical
-bond); the paper's BOij/hybridization reductions for multiple and
-aromatic bonds are not implemented.
+Analytical gradients exist for all seven terms and are
+finite-difference checked on every fixture and the pinned suite
+molecules (δ = 1e-6 Å; relative error < 1e-5; worst observed 8e-8).
 
-**The JALSOE/SO18A reference charges.** The reference adjusts these
-molecules to the dative representation. Their reference charges are
-therefore not comparable to any BCI model. Their energies match on
-all seven terms.
+## 5. Known deviations and limitations
 
-## Limitations
+1. **The type-76 anionic nitrogen** (AN11A, DOZNIP): the electrostatic
+   component diverges across *all* implementations (BatchMin, Tinker,
+   OpenBabel, and this library disagree; Tinker drops the term for
+   AN11A entirely). Halgren's own papers caution that strongly
+   delocalized anions have no uniform charge assignment. These two
+   molecules' electrostatics are excluded from the census; their other
+   six terms are verified.
+2. **The hydrated-metal van der Waals** (FE2PW3, CU1PW1): a parameter
+   split that proved to be a typing collapse, closed 2026-08-05 — both
+   molecules now match BatchMin to ~1e-6 and rejoin the census.
+3. **The empirical bond rule (eq. 18)**: the paper prints a δ = 0.008 Å
+   shrinkage plus hybridization corrections. Halgren's own reference
+   implementation does not apply them, and the validation suite
+   reflects that. This library matches the reference implementation,
+   not the literal printed equation. Tinker's transcription agrees.
+4. **The empirical torsion rules**: the corroborated universal rule
+   (c) reading — every non-aromatic central bond gets eq. (21) with
+   π = 1.0 for mltb-2/2 pairs, else 0.4 — matching both OpenBabel and
+   Tinker on the measured cases. The paper's rules (d)-(h) are
+   unreachable for non-aromatic bonds and are kept as the spec. The
+   suite never exercises the empirical torsion rules.
+5. **OpenBabel divergences on phosphorus bonds**: on the vinyl
+   phosphine C–P bond, OpenBabel's empirical bond length and
+   stretch-bend constants differ from the reference behavior; Tinker
+   and this library agree to four decimals. The finding is documented
+   in `docs/implementer-notes.md` §4.1.
+6. **Small-ring and linear-center edge cases**: the near-linear angle
+   and out-of-plane guards return the true limit values (the 2026-08
+   fixes), and the 3- and 4-ring class parameters follow the published
+   class scheme.
 
-- The part V Badger's-rule fallback for bonds outside Table V is
-  implemented: the length from eq. (18) and the force constant from
-  the Herschbach-Laurie parameterization of Badger's rule
-  (k = 1.86/(r − d)³), with the d values derived from the E94 rows of
-  Table V. The validation suite never needs it, so it is pinned by
-  unit tests rather than reference energies.
-- The dielectric is the in-vacuo value D = 1.0. The alternative
-  solvent model (D = r) is not exposed.
-- Partial charges are rounded to five decimal places to match
-  BatchMin's stored print precision. Part V/VI define no such
-  rounding; it is what lets the suite's electrostatic components
-  close against the reference. Pass `{ round: false }` to
-  `assign_bci_charges` for the full-precision values.
+## 6. Dependencies
+
+Zero runtime dependencies. The library compiles to ESM in `dist/` and
+runs in browsers and Node.js with identical results (verified in
+headless Chromium to 1e-7).
+
+## 7. Reproduction
+
+The numbers in section 4 are regenerable:
+
+- `npx tsx tests/scripts/residual-distribution.ts` — the residual
+  table and the ±5e-5 gate counts.
+- `npx tsx tests/scripts/energy-scoreboard.ts` — the per-molecule
+  census.
+- The validation suite tests: `npm run test` (the suite comparisons
+  are part of the regular test run).

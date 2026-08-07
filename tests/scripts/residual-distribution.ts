@@ -58,8 +58,9 @@ for (const mol of mols) {
   }
   const dTot = Math.abs(e.total - ref.total);
   // The totals census convention: a molecule with ANY excluded term
-  // (the documented anomalies) is dropped from the total stats too.
-  if (excluded.length > 0) { full.n++; continue; }
+  // (the documented anomalies) is dropped from the total stats. Its
+  // comparable terms still count toward the full-gate tallies.
+  if (excluded.length > 0) { continue; }
   totals.n++;
   totals.sum += dTot; totals.sumSq += dTot * dTot;
   if (dTot > totals.max) { totals.max = dTot; totals.maxMol = mol.name; }
