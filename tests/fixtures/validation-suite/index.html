@@ -1,117 +1,135 @@
-<HTML>
-<HEAD>
-<TITLE>MMFF94 Validation Suite</TITLE></HEAD>
-<BODY BACKGROUND="mmff94b.gif">
 <CENTER><H1><FONT COLOR="firebrick">MMFF94 Validation Suite</FONT></H1></CENTER>
-<CENTER>
+<CENTER><H3><i><FONT COLOR="firebrick">(Revised, June 1999)</i></FONT></H1></CENTER>
 <TABLE BORDER=0 CELLSPACING=0 CELLPADING=0>
-<TR><TD><B>Dr. Thomas A. Halgren</B></TD></TR>
+<TR><TD><B>Dr. Simon Kearsley</B></TD></TR>
 <TR><TD>Merck and Co., Inc.</TD></TR>
 <TR><TD>Building 50SW-100</TD></TR>
 <TR><TD>P.O. Box 2000</TD></TR>
 <TR><TD>Rahway, NJ 07065</TD></TR>
-<TR><TD></TD></TR>
-<TR><TD>Phone:  732-594-7735</TD></TR>
+<TR><TD>--------------</TD></TR>
+<TR><TD>Phone:  732-594-3656</TD></TR>
 <TR><TD>Fax:    732-594-4224</TD></TR>
-<TR><TD>E-Mail: <a href="mailto:halgren@merck.com">halgren@merck.com</a></TD></TR>
+<TR><TD>E-Mail: <a href="mailto:skk@merck.com">skk@merck.com</a></TD></TR>
 </TABLE>
 </CENTER>
 
-<p>The test molecules for this validation suite consist of 698 structures
-derived 
+<p>The test molecules for this validation suite consist of 698 structures derived 
 from the Cambridge Structural Database maintained by the Cambridge 
-Crystallographic Data Center (which graciously gave permission for their use), 
-plus 55 additional structures for small molecules and ions.  The native CSD 
-structures were modified by assigning single and multiple bonds, affixing 
-formal ionic charges where appropriate, and adding hydrogens to complete the 
-valence.  The resultant structures were minimized to a rms gradient of 0.000001
-kcal/mol/A on the MMFF94 energy surface, and were then systematically distorte 
-and re-minimized, and then distorted and re-minimized again. 
-The distortion/re-minimizaton steps were taken to reduce the likelihood
-that any final 
-conformation represents a very shallow local minimum on the MMFF94 surface, as 
-a molecular-mechanics optimizer might conceivably convert such a conformation 
-to a different local minimum and falsely imply a problem with the
-implementation of MMFF94 being tested.</p>
+Crystallographic Data Center (which graciously gave permission for their use) 
+plus 63 additional structures for small molecules and ions, for a total of 761. 
+The native CSD structures were modified by assigning single and multiple bonds, 
+affixing formal ionic charges where appropriate, and adding hydrogens to 
+complete the valence.  The resultant structures were minimized to a rms gradient 
+of 0.000001 kcal/mol/A on the MMFF94 energy surface, and were then 
+systematically distorted and re-minimized, and then distorted and re-minimized 
+again.  The distortion/re-minimizaton steps were taken to reduce the likelihood 
+that any final conformation represents a very shallow local minimum on the 
+MMFF94 surface, as a molecular-mechanics optimizer might conceivably convert 
+such a conformation to a different local minimum and falsely imply a problem 
+with the implementation of MMFF94 being tested.</p>
 
 <p>The validation suite was constructed to test all entries in the MMFF*.PAR 
 parameter files as well as all default-parameter and empirical-rule procedures.
-The MMFF94 parameter files can be accessed via an Internet browser at 
-<a href="http://journals.wiley.com">http://journals.wiley.com</a>
-(select "Journal of Computational Chemistry", then 
-"Supplementary Material", then "Volume 17", then the hyperlink for page 490) 
-or at <a href="ftp://ftp.wiley.com/public/journals/jcc/suppmat/17/490">ftp://ftp.wiley.com/public/journals/jcc/suppmat/17/490</a>.  The parameter 
-files can also be accessed by ftp at <tt>anonymous@ftp.wiley.com</tt>; cd to 
-<tt>public/journals/jcc/suppmat/17/490</tt>.</p>
+The last 8 the 63 additional structures mentioned were added in November 1998 in a 
+previous revision, which also corrected the MMFF94 
+results for eight members of the original suite -- namely, for structures 
+CEWYIM30, DAKCEX, FAPLUD, GIGCEE, KEPKIZ, SAKGUG, TAPJUP, and VEWZOM.  
+Named ERULE_01 through ERULE_08, these structures are fragments 
+of CSD structures that have been chosen to more fully test the MMFF94 empirical-
+rule parameter generation procedures than did the original members of the 
+suite (see below). 
 
-<p>In addition to input molecular structure files, this test suite provides
-output files from computer runs made using Merck's OPTIMOL molecular-mechanics
-program and BatchMin version 5.5 from Columbia University.<br>
-<font color="red">Note: some files are quite large. Before downloading,
+<p>This revision replaces Tom Halgren with Simon Kearsley
+as the person to contact at Merck; Tom has moved to Schrodinger, Inc. 
+effective June 1, 1999 (E-mail address: halgren@schrodinger.com).  
+It also specifies the  covalent atomic radii used in eq. (18) of ref. 5 
+(the reference to the origin of those radii 
+may have been incomplete) and lists Pauling electronegativities 
+that would be used in eq (16) (See Auxiliary Data below).
+
+<p>The MMFF94 parameter files can be accessed via an 
+Internet browser at http://journals.wiley.com (select "Journal of Computational 
+Chemistry", then "Supplementary Material", then "Volume 17", then the hyperlink 
+for page 490) or at ftp://ftp.wiley.com/public/journals/jcc/suppmat/17/490.  The parameter 
+files can also be accessed by ftp at anonymous@ftp.wiley.com; cd to 
+public/journals/jcc/suppmat/17/490.</p>
+  
+</p>
+
+<p>In addition to input molecular structure files and auxiliary data, the 
+validation  
+suite provides output files from computer runs made using Merck's OPTIMOL 
+molecular-mechanicsprogram and BatchMin 5.5 from Columbia University.<br>
+<p><font color="red">Note: some files are quite large. Before downloading,
 you may want to check the sizes listed at the end of this document.</font>
 You may want to retrieve the compressed tar achive of these files,
-<tt><a href="MMFF94.tar.gz">MMFF94.tar.gz</a></tt>, (6&nbsp;MBytes) and
-unpack it with:<pre>gunzip -c MMFF94.tar.gz | tar xvof -</pre> command under
-UNIX.</p> 
+<tt><a href="MMFF94.tar.gz">MMFF94.tar.gz</a></tt> (6.07 MBytes), and
+unpack it by giving the following UNIX command:
+<pre>gunzip -c MMFF94.tar.gz | tar xvof -</pre>
 <br>
 <CENTER><H2><FONT COLOR="olivedrab">Input Data</FONT></H2></CENTER>
 
-<p>Input structure files are provided in two formats: <tt>mol2</tt>,
-from Tripos, and 
+<p>The following files comprise the input molecular structure data:</p>
+<p><center>
+<table border=0>
+<tr><td align="left"><tt><a href="MMFF94_dative.mol2.shtml">MMFF94_dative.mol2</a></tt></td></tr>
+<tr><td align="left"><tt><a href="MMFF94_hypervalent.mol2.shtml">MMFF94_hypervalent.mol2</a></tt></td></tr>
+<tr><td align="left"><tt><a href="MMFF94.mmd.shtml">MMFF94.mmd</a></tt> (hypervalent representation only)</td></tr>
+</table></center></p>
+
+<p>Two formats are provided: <tt>mol2</tt>, from Tripos, and 
 <tt>mmd</tt>, the designation used at Merck for BatchMin <tt>dat</tt> files.
 We chose these 
 file formats because they are in fairly widespread use and because they allow 
-explicit single and multiple bonds to be designated.  For the convenience of 
-the user, the <tt>mol2</tt> files are presented in two versions.
-One of these  -- 
-<tt><a href="MMFF94_dative.mol2">MMFF94_dative.mol2</a></tt> -- uses dative bonding at sulfur in
-sulfonamides and similar 
-compounds.  This representation treats a sulfonamide as having four single 
-bonds to a tetracoordinate +2 sulfur, two of which come from formally negative 
+explicit single and multiple bonds to be designated. Unlike file formats more 
+commonly used at Merck, these formats are limited in that they cannot 
+specify formal-charge information.  For this updated suite, however, this 
+information has been included in other files described below.</p>   
+
+<p>For the convenience of the user, the <tt>mol2</tt> files are presented in 
+two versions. One of these  -- 
+<tt><a href="MMFF94_dative.mol2.shtml">MMFF94_dative.mol2</a></tt> -- uses dative 
+bonding in tetracoordinate sulfur and phosphorous compounds.
+This representation, for example, treats a sulfonamide as having four single 
+bonds to a +2 sulfur, two of which come from formally negative 
 terminal oxygen atoms.  This is the native representation for OPTIMOL, the host
 program for MMFF.  In contrast, the native BatchMin representation features two
 double bonds from formally neutral oxygen atoms to a formally neutral sulfur, 
-for a (hypervalent) total of six bonds to sulfur.  This hypervalent bonding 
-pattern is used in the
-<tt><a href="MMFF94_hypervalent.mol2">MMFF94_hypervalent.mol2</a></tt> and
-<tt><a href="MMFF94.mmd">MMFF94.mmd</a></tt> files in the tes 
-suite.</p>
+for a (hypervalent) total of six bonds to sulfur; correspondingly "hypervalent" 
+phosphorous compounds have a total of five bonds to phosphorous.  This hypervalent 
+bonding pattern is used in the
+<tt><a href="MMFF94_hypervalent.mol2.shtml">MMFF94_hypervalent.mol2</a></tt> and
+<tt><a href="MMFF94.mmd.shtml">MMFF94.mmd</a></tt> files in the validation 
+suite. Note: the atom types in the <tt>mol2</tt> files (which were generated by a file 
+conversion procedure developed at Merck) in some cases differ from 
+authentic SYBYL atom types, and therefore should not be relied upon.</p>
 
-<p>Thus, the following files comprise the input molecular structure data:
-<center>
-<table border=0>
-<tr><td align="left"><tt><a href="MMFF94_dative.mol2">MMFF94_dative.mol2</a></tt></td></tr>
-<tr><td align="left"><tt><a href="MMFF94_hypervalent.mol2">MMFF94_hypervalent.mol2</a></tt></td></tr>
-<tr><td align="left"<tt><a href="MMFF94.mmd">MMFF94.mmd</a></tt> (hypervalent representation only)</td></tr>
-</table></center></p>
-
-<p>In addition,
-a <tt><a href="MMFF94.dative_molecules">MMFF94.dative_molecules</a></tt>
-file is included that lists the names 
-of the molecules (129 in number) for which the <tt>mol2</tt>
-files provide contrasting 
-dative and hypervalent structures.  (For the <tt>mmd</tt> file,
-the molecule names begin 
-in column 11 of the header cards, immediately following the left square 
-bracket.)  Finally, a <tt><a href="MMFF94.titles">MMFF94.titles</a></tt>
-file gives short titles for all of the molecules in the test set.</p><br>
 
 <CENTER><H2><FONT COLOR="olivedrab">Output Data</FONT></H2></CENTER>
 
-<p>The <tt><a href="MMFF94.energies">MMFF94.energies</a></tt>
+<p>Results of the MMFF94 calculations are contained in the following three files:
+</p>
+<p><center>
+<table border=0>
+<tr><td align="left"><tt><a href="MMFF94.energies.shtml">MMFF94.energies</a></tt></td></tr>
+<tr><td align="left"><tt><a href="MMFF94_bmin.log.shtml">MMFF94_bmin.log</a></tt></td></tr>
+<tr><td align="left"><tt><a href="MMFF94_opti.log.shtml">MMFF94_opti.log</a></tt> (hypervalent representation only)</td></tr>
+</table></center></p>
+
+<p>The <tt><a href="MMFF94.energies.shtml">MMFF94.energies</a></tt>
 file contains records that list the molecule name, the 
 total MMMFF94 energy computed by OPTIMOL, and the BatchMin 5.5 energy.  It 
 should be noted that the BatchMin calculations used a locally modified version 
 of the mmff_setup co-process in which mmff_setup was enhanced to handle the
 full range of hypervalent -> dative bonding conversions encountered
-in the test suite; some cases were not properly accomodated in the distributed
-BatchMin 5.5 
+in the validation suite; some cases were not properly accommodated in the 
+distributed BatchMin 5.5 
 and 6.0 code, but all should be properly handled beginning with BatchMin 6.5 
 (these internal bonding conversions are needed because the mmff-setup code, 
 which was derived from OPTIMOL, assumes dative bonding). In all cases, no 
 cutoffs on nonbonded interactions were employed and a unit dielectric constant 
 was used. As comment records in the
-<tt><a href="MMFF94.energies">MMFF94.energies</a></tt> file indicate, the OPTIMOL 
+<tt><a href="MMFF94.energies.shtml">MMFF94.energies</a></tt> file indicate, the OPTIMOL 
 and BatchMin total energies agree to within 0.0001 kcal/mol in all but 15 
 instances;  the largest difference is about 0.0035 kcal/mol.  The 15 cases are 
 ones in which a positive or negative formal charge is shared among three atoms 
@@ -119,30 +137,32 @@ of the same MMFF atom type (e.g., the three nitrogens of a guanidinium group);
 the single-precision division by 3 in the BatchMin run produces a less precise 
 final partial atomic charge and a less accurate total MMFF94 energy.</p>
 
-<p>The <tt><a href="MMFF94_bmin.log">MMFF94_bmin.log</a></tt>
-file contains BatchMin 5.5 output, obtained on a sgi R10000 
+<p>The <tt><a href="MMFF94_bmin.log.shtml">MMFF94_bmin.log</a></tt>
+file contains BatchMin 5.5 output, obtained on a SGI R10000 
 processor, for single-point energy calculations on input structures read from 
-the <tt><a href="MMFF94.mmd">MMFF94.mmd</a></tt> file.
+the <tt><a href="MMFF94.mmd.shtml">MMFF94.mmd</a></tt> file.
 This log file partitions the total energy into components 
 such as bond stretching, angle-bending, torsion, van der Waals, and 
 electrostatic.  It provides the next level of information beyond the simple 
 compilation of total energies found in the
-<tt><a href="MMFF94.energies">MMFF94.energies</a></tt> file.</p>
+<tt><a href="MMFF94.energies.shtml">MMFF94.energies</a></tt> file.</p>
 
-<p>Finally, the <tt><a href="MMFF94_opti.log">MMFF94_opti.log</a></tt>
+<p>Finally, the <tt><a href="MMFF94_opti.log.shtml">MMFF94_opti.log</a></tt>
 file contains the output from an OPTIMOL run that 
 employed as input an internal Merck-format data file, 
-<tt>MMFF94.ffd</tt>, that contains 
-the same information as does the file
-<tt><a href="MMFF94_dative.mol2">MMFF94_dative.mol2</a></tt>
-(indeed, the <tt>mol2</tt> file 
-was created from it).  This log file provides by far the greatest amount of 
-validation information.  For each molecule, an initial <i>list</i>
+<tt>MMFF94.ffd</tt>, that contains a superset of the 
+information provided in the file
+<tt><a href="MMFF94_dative.mol2.shtml">MMFF94_dative.mol2</a></tt>
+(which was created from it).  This log file provides by far the greatest amount 
+of validation information.  For each molecule,  it begins with information about 
+the atom typing (when rings are present) and lists any invocations of the 
+empirical-rule generation procedures. An initial <i>list</i>
 section gives the 
 symbolic and numeric MMFF94 types for each atom, together with the MMFF94 
-formal charge (usually zero) and partial atomic charge (the last of which is 
-also provided in the input data files).  Next, the total energy and the energy 
-components (bond stretching, ...) are listed.  Also shown is the total rms 
+formal atomic charge (fractional, rather than integral, when carboxylate anions, 
+guanidinium cations, etc., are present, but usually zero) and partial atomic 
+charge (also provided in the input data files).  Next, the total energy and the 
+energy components (bond stretching, ...) are listed.  Also shown is the total rms 
 gradient (kcal/mol/A).  This quantity is typically small, as befits an energy-
 minimized structure, but is not zero because the stored coordinates have too 
 little numerical precision.  Finally, the <i>analyze</i> section exhaustively lists 
@@ -153,7 +173,7 @@ obvious
 for the most part, but it should be noted that the listed <i>FF CLASS</i>
 indices 
 are the quantities called <i>bond-type index</i>, <i>angle-type index</i>,
-etc., in the  1996 <i>J. Comp. Chem.</i> papers (see References).
+etc., in the  1996 <i>J. Comput. Chem.</i> papers (see References).
 For nonbonded interactions, only 
 pair-wise terms for which the van der Waals repulsion energy is at least 
 0.01 kcal/mol are listed.  Each nonbond output line includes the separate vdW 
@@ -162,24 +182,101 @@ Buffered 14-7 R* and Eps parameters produced by the MMFF combination rules;
 this data should be more than sufficient to validate an implementation of the 
 MMFF94 nonbonded potential. One cautionary note: eqs.(3) and (4) in the fifth 
 MMFF paper were typeset incorrectly; their counterparts in the first four MMFF 
-papers, however, are correct.  The OPTIMOL run was made
-on a R4000 processor.</p>
+papers, however, are correct.  The OPTIMOL run was also made
+on a R10000 processor.</p>
 <br>
 
+<CENTER><H2><FONT COLOR="olivedrab">Auxiliary Files</FONT></H2></CENTER>
+The following files provide additional information:
+</p>
+<p><center>
+<table border=0>
+<tr><td align="left"><tt><a href="MMFF94.titles.shtml">MMFF94.titles</a></tt></td></tr>
+<tr><td align="left"><tt><a href="MMFF94.changed-or-new_results.shtml">MMFF94.changed-or-new_results</a></tt></td></tr>
+<tr><td align="left"><tt><a href="MMFF94.empirical_rule_parameters.shtml">MMFF94.empirical_rule_parameters</a></tt></td></tr>
+<tr><td align="left"><tt><a href="MMFF94.dative_molecules.shtml">MMFF94.dative_molecules</a></tt></td></tr>
+<tr><td align="left"><tt><a href="MMFF94.fc_dative.shtml">MMFF94.fc_dative</a></tt></td></tr>
+<tr><td align="left"><tt><a href="MMFF94.fc_hypervalent.shtml">MMFF94.fc_hypervalent</a></tt></td></tr>
+</table></center></p>
+                            
+<p>The <tt><a href="MMFF94.titles.shtml">MMFF94.titles</a></tt>
+file gives short titles for all of the molecules in the validation suite.  The 
+<tt><a href="MMFF94.changed-or-new_results.shtml">MMFF94.changed-or-new_results</a></tt>
+ file lists the new MMFF94 energies for 
+the eight molecules for which there have been changes in the 
+MMFF94 atom-type assignments.  For reference, this file also lists the 
+previously obtained MMFF94 energies; it should be noted that the new energies 
+reflect new MMFF94-optimized geometries as well as new atom types and parameter 
+assignments.
+This file also lists the MMFF94 energies for the eight added "empirical rule"
+structures.  The <tt><a href="MMFF94.empirical_rule_parameters.shtml">MMFF94.empirical_rule_parameters</a></tt>
+file lists structures for 
+which parameters generated from MMFF94 empirical rules are required and 
+specifies the interactions involved.  This file shows that only structures 
+CEWYIM30, KEPKIZ, and OHMW1 from the original suite required such parameter 
+generation.  (It should be noted, however, that only the first instance of the 
+generation of a given parameter is reflected in the file; such generated 
+parameters are added to the internal database used by OPTIMOL or BatchMin, and 
+therefore are no longer "missing" if later structures in the suite request them.)
+Next, the <tt><a href="MMFF94.dative_molecules.shtml">MMFF94.dative_molecules</a></tt>
+file lists the names of the molecules (129 in number) for which the <tt>mol2</tt> files 
+provide contrasting dative and 
+hypervalent structures.  (For the <tt>mmd</tt> file, which always uses the 
+hypervalent representation, the molecule names begin in column 11 of the header cards, 
+immediately following the left square bracket.)  Finally, for the sake of completeness 
+the <tt><a href="MMFF94.fc_dative.shtml">MMFF94.fc_dative</a></tt> and 
+<tt><a href="MMFF94.fc_hypervalent.shtml">MMFF94.fc_hypervalent</a></tt> 
+files specify the formal ionic 
+charges used in these representations; as indicated previously, this information is 
+not preserved in the <tt>mol2</tt> input files, though in most cases it is 
+implicit in the MacroModel atom types (some of which represent Merck extensions) 
+listed in the <tt>mmd</tt> file.
+</p><br>
+
+<CENTER><H2><FONT COLOR="olivedrab">Auxiliary Data</FONT></H2></CENTER>
+The covalent atomic radii used eq (18) of ref. 5 are as follows: H 0.33, He --, Li 1.34, 
+Be 0.90, B 0.81, C 0.77, N 0.73, O 0.72, F 0.74, Ne --,
+Na 1.54, Mg 1.30,    Al 1.22, Si 1.15, P 1.09, S 1.03, Cl 1.01, Ar --,
+K 1.96, Ca 1.74,  Sc 1.44, Ti 1.36, V --, Cr --, Mn --,
+Fe --, Co --, Ni --, Cu 1.38, Zn 1.31,
+Ga  1.19, Ge 1.20, As  1.20 , Se 1.16, Br 1.15, Kr --,
+Rb 2.11, Sr 1.92,
+Y 1.62, Zr 1.48, Nb  --, Mo  --, Tc --,
+Ru --, Rh --, Pd --, Ag 1.53, Cd 1.48,
+In 1.46, Sn 1.40, Sb 1.41, Te 1.35, I  1.33, Xe --; undefined
+radii are shown as "--".
+<p>Though they are seldom if ever actually invoked, the (Pauling) electronegativities
+that would be used in eq (16) are:
+H 2.20,                                         He --,
+Li  0.97, Be 1.47,   B   2.01, C 2.5, N 3.07, O 3.5, F 4.10, Ne --,
+Na 1.01, Mg 1.23,  Al 1.47, si 1.74, P 2.06, S 2.44, Cl 2.83, Ar --,
+K  0.91, Ca 1.04,
+Sc  1.3, Ti 1.5, V 1.6, Cr 1.6,Mn  1.5,
+Fe 1.8, Co 1.8, Ni 1.8, Cu 1.9, Zn 1.6,
+Ga  1.82, Ge 2.02, As 2.20, Se 2.48,Br 2.74, Kr --,
+Rb  0.89, Sr 0.99,
+Y 1.3, Zr 1.4, Nb 1.6, Mo 1.8,Tc 1.9,
+Ru 2.2, Rh 2.2, Pd 2.2, Ag 1.9, Cd 1.7,
+In 1.49,sn 1.72,Sb 1.82, Te 2.01, I 2.21, Xe --.
+
+
+</p><br>
+<p>
 <CENTER><H2><FONT COLOR="olivedrab">Recommendation and Request</FONT></H2></CENTER>
 
 <p>To validate a MMFF94 implementation, it would certainly make sense to choose a 
-subset of the test suite, to convert the mol2 or mmd input data to another 
+subset of the validation suite, to convert the  <tt>mol2</tt> or  <tt>mmd</tt> 
+input data to another 
 format if necessary, and then to begin by computing and comparing total 
 energies to those listed in
-the <tt><a href="MMFF94.energies">MMFF94.energies</a></tt> file;
+the <tt><a href="MMFF94.energies.shtml">MMFF94.energies</a></tt> file;
 if and when differences 
 are found, the component energies can then be compared to those listed in 
-the <tt><a href="MMFF94_bmin.log">MMFF94_bmin.log</a></tt>
-or <tt><a href="MMFF94_opti.log">MMFF94_opti.log</a></tt> files.
+the <tt><a href="MMFF94_bmin.log.shtml">MMFF94_bmin.log</a></tt>
+or <tt><a href="MMFF94_opti.log.shtml">MMFF94_opti.log</a></tt> files.
  Examination of the detailed 
 interaction listings in the OPTIMOL log file might then be needed to diagnose
-a  problem.  Ultimately, the entire test set should be checked.  It is the 
+a  problem.  Ultimately, the entire validation suite should be checked.  It is the 
 implementer's choice as to whether to use a dative- or hypervalent-bonding 
 representation for affected compounds, or to support both formats.</p>
 
@@ -189,16 +286,17 @@ literature or in any other way.  This is a trademarking issue that our lawyers
 understand better than I; they are quite adamant about it.</p>
 
 <p>The second request is that any implementation of MMFF94 be explicitly
-characterized by its authors as to whether it is: (1) complete, or
-(2) partial.  
+characterized by its authors as to whether it is: (1) partial, or
+(2) complete.  
 An implementation should not be labeled <i>complete</i> unless
 it is applicable to
-all 753 molecules in the test suite and produces total and component energies 
+all 761 molecules in the test suite and produces total and component energies 
 that match those posted here to within numerical precision.  For a partial 
 implementation, published descriptions and product literature should state the 
-degree to which the implementation is applicable to the molecules in the test 
+degree to which the implementation is applicable to the molecules in the 
+validation  
 suite and the degree to which it produces authentic results for those members 
-of the test-suite to which it is applicable; a clear statement should also be 
+of the suite to which it is applicable; a clear statement should also be 
 made as to whether or not the MMFF94 functional form has been fully implemented, 
 as well as whether or not the MMFF94 <i>step-down</i>
 equivalencing protocol for 
@@ -208,13 +306,15 @@ employed.</p><br>
 
 <CENTER><H2><FONT COLOR="olivedrab">Restrictions</FONT></H2></CENTER>
 
-<p>While a legal agreement permits the posting of this public-access validation 
+<p>While a legal agreement authorizes the posting of this public-access 
+validation 
 suite, it prohibits Merck from providing assistance in the development,
 testing, and implementation of MMFF to any third-party commercial software 
 development company other than academic developers of software.  As a matter of
 courtesy, however, we would appreciate hearing from parties that implement 
 MMFF94 as to how they characterize the completeness and accuracy of their 
-implementation of MMFF94.</p><br>
+implementation of MMFF94 and as to whether they find discrepancies they believe
+may reflect errors in the posted results.</p><br>
 
 <CENTER><H2><FONT COLOR="olivedrab">References</FONT></H2></CENTER>
 <ol>
@@ -225,34 +325,52 @@ implementation of MMFF94.</p><br>
 <li>  Thomas A. Halgren and Robert B. Nachbar, <i>J. Comput. Chem.</i>, <b>17</b>, 587-615 
     (1996).
 <li>  Thomas A. Halgren, <i>J. Comput. Chem.</i>, <b>17</b>, 616-641 (1996).
-<li>  Thomas A. Halgren, <i>J. Comput. Chem.</i>, submitted (May, 1998).
-<li>  Thomas A. Halgren, <i>J. Comput. Chem.</i>, submitted (May, 1998).
+<li>  Thomas A. Halgren, <i>J. Comput. Chem.</i>, <b>20</b>, 720-729 (1999).
+<li>  Thomas A. Halgren, <i>J. Comput. Chem.</i>, <b>20</b>, 730-748 (1999).
 </ol>
 
 <p>Paper 6 describes the derivation and performance of the MMFF94s variant of
 MMFF94.  This variant and the rationale for it are briefly described in 
-papers 1, 3, and 4.  A companion MMFF94s validation suite will be provided when
-this manuscript is published (whether in <i>J. Comp. Chem.</i> or elsewhere)
-and the  MMFF94s parameters have passed into the public domain.</p>
+papers 1, 3, and 4.  A companion MMFF94s validation suite has also been posted;
+the browser and ftp addresses are the same as those for the present suite except that "MMFF94"
+is replaced by "MMFF94s".</p>
 
 <p>Paper 7 compares the abilities of MMFF94, MMFF94s, CFF95, CVFF, MSI CHARMm, 
 AMBER*, OPLS*, MM2*, and MM3* (1) to reproduce experimental and theoretical
-values for conformational energies, and (2) to produce realistic values and 
+values for conformational energies, and (2) to produce reasonable values and 
 trends for intermolecular-interaction energies and geometries in
-hydrogen-bonded complexes.  Some results are also presented for CHARMM 22.</p>
+hydrogen-bonded complexes.  Some results are also presented for CHARMM 22. The input data 
+used in evaluating the force fields examined in this paper have also been posted on the CCL archives
+in the hope that it will help others to test additional 
+force fields; these data can be accessed via a web
+browser at:
+<UL>
+<LI><A HREF="https://server.ccl.net/cca/data/ff_evaluation_suite" CLASS="navbig">https://server.ccl.net/cca/data/ff_evaluation_suite</A>,
+<LI><A HREF="http://server.ccl.net/cca/data/ff_evaluation_suite"
+CLASS="navbig">http://server.ccl.net/cca/data/ff_evaluation_suite</A>,  or
+<LI><A HREF="http://ftp.ccl.net/cca/data/ff_evaluation_suite"
+CLASS="navbig">http://ftp.ccl.net/cca/data/ff_evaluation_suite</A>
+</UL>
+or via anonymous ftp at:
+<A HREF="ftp://ftp.ccl.net/pub/chemistry/data/ff_evaluation_suite/" CLASS="navbig">
+ftp.ccl.net/pub/chemistry/data/ff_evaluation_suite</A>.
+</p>
 <BR>
 <CENTER><H2><FONT COLOR="olivedrab">File Sizes</FONT></H2></CENTER>
 <PRE>
-     File name                  Size in Bytes
+ File name                  Size in Bytes
+------------------------------------------
+ MMFF94.changed-or-new_results         858
  MMFF94.dative_molecules             1,080
- MMFF94.energies                    27,405
- MMFF94.mmd                      2,358,140
- MMFF94.titles                      53,463
- MMFF94_bmin.log                 1,168,907
- MMFF94_dative.mol2              1,643,541
- MMFF94_hypervalent.mol2         1,643,541
- MMFF94_opti.log                24,706,195
+ MMFF94.empirical_rule_parameters    2,453
+ MMFF94.energies                    31,499
+ MMFF94.fc_dative                   32,991
+ MMFF94.fc_hypervalent              20,575
+ MMFF94.mmd                      2,371,742
+ MMFF94.tar.gz                   6,069,796
+ MMFF94.titles                      53,537
+ MMFF94_bmin.log                 1,181,426
+ MMFF94_dative.mol2              1,653,121
+ MMFF94_hypervalent.mol2         1,653,121
+ MMFF94_opti.log                24,855,731
 </PRE>
-
-</BODY>
-</HTML>

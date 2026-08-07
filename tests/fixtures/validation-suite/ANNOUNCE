@@ -1,9 +1,9 @@
 From tom_halgren@merck.com  Mon Jun  1 16:03:53 1998
-Message-Id: <199806012003.QAA26291@ccl.osc.edu>
+Message-Id: <199806012003.QAA26291@www.ccl.net>
 Date: Mon, 01 Jun 1998 16:00:06 -0400
 From: "Halgren, Thomas" <tom_halgren@merck.com>
 Subject: Validation suite for MMFF94 now available
-To: "'Computational Chemistry List'" <chemistry@infomeister.osc.edu>
+To: "'Computational Chemistry List'" <chemistry@www.ccl.net>
 
 
 Dear CCLers,
@@ -55,11 +55,11 @@ other force fields.
 
 The MMFF94 validation suite can be accessed at:
 
-ftp://ccl.osc.edu/pub/chemistry/data/MMFF94
+ftp://www.ccl.net/pub/chemistry/data/MMFF94
 
 or at:
 
-http://ccl.osc.edu/cca/data/MMFF94
+http://www.ccl.net/cca/data/MMFF94
 
 I would be pleased to hear of any uses made of this data.
 

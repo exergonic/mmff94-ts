@@ -737,17 +737,26 @@ SO15A   : METHYL-SO2-NH(-)-METHYL ANION
 SO16A   : (CH3)2C=S=O                                                 
 SO18A   : METHYLTHIOSULFINATE ANION                                   
 BRMW1   : OH2 ... BR- DIMER                                           
-CA2PW3   : CALCIUM +2 CATION PLUS 3 WATERS                            
+CA2PW3  : CALCIUM +2 CATION PLUS 3 WATERS                            
 CLMW1   : OH2 ... CL-                                                 
 CU1PW1  : CU+ ... WATER DIMER                                         
-CU2PW3   : COPPER +2 CATION PLUS 3 WATERS                             
-FE2PW3   : IRON+2 CATION PLUS 3 WATERS                                
-FE3PW3   : IRON +3 CATION PLUS 3 WATERS                               
+CU2PW3  : COPPER +2 CATION PLUS 3 WATERS                             
+FE2PW3  : IRON+2 CATION PLUS 3 WATERS                                
+FE3PW3  : IRON +3 CATION PLUS 3 WATERS                               
 FMW1    : OH2 ... F- DIMER                                            
 H3OPW1  : H3O+ ... WATER DIMER                                        
 KPW1    : K+ ... WATER DIMER                                          
 LIPW1   : LI+ ... WATER DIMER                                         
-MG2PW3   : MAGNESIUM +2 CATION PLUS 3 WATERS                          
+MG2PW3  : MAGNESIUM +2 CATION PLUS 3 WATERS                          
 NAPW    : NA+ ... WATER DIMER                                         
 OHMW1   : OH2 ... OH-                                                 
-ZN2PW3   : ZINC +2 CATION PLUS 3 WATERS                               
+ZN2PW3  : ZINC +2 CATION PLUS 3 WATERS
+ERULE_01:
+ERULE_02:
+ERULE_03:
+ERULE_04:
+ERULE_05:
+ERULE_06:
+ERULE_07:
+ERULE_08:
+                              
