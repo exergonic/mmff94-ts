@@ -281,20 +281,30 @@ coordinate-aligned (the dative representation can reorder atoms):
 | CU1PW1 | Cu | 97 (CU+1) — correct oxidation state | 98 (CU+2) |
 | JALSOE, SO18A | dative sulfone O | 32 (O2CM) | 7 (O=C) |
 
-### 5.5 FAPLUD — the q⁰(72) formal-charge split (OPEN — workstream 3)
+### 5.5 FAPLUD — the q⁰(72) formal-charge split (CLOSED 2026-08-07)
 
-The only molecule whose electrostatics the library still cannot
+The last molecule whose electrostatics the library could not
 reproduce (the suite's November 1998 revision re-typed and re-valued
 it). The reference's own partial charges moved by 0.5 between the
-revisions: its P carries +1.3893 in the new pchg column where ours
-gives +1.8893 — the +0.5 is the pre-sharing primary charge of the
-anionic terminal S (type 72), which the reference now shares onto
-the neighboring P. The new revision's formal-charge split for the
-S⁻/O⁻ pairs of FAPLUD is not yet implemented in `assign_bci_charges`
-(the library's charges match the reference on all other molecules to
-<1e-3; a brute-force sum from the reference's own `.mmd` pchg column
-reproduces its −409.00764 exactly, so the divergence is confined to
-the charge assignment).
+revisions: its P carries +1.3893 in the new pchg column where the old
+model gave +1.8893, and its S(72) and O2CM O(32) each moved −0.25.
+The reference's model: when a phosphorus bears BOTH an O2CM oxygen
+and a terminal S2CM thiolate, the P(=O)(S⁻) −1 splits −0.5/−0.5 over
+the two terminal chalcogens:
+
+- q⁰(S72) = −0.5 when the P also bears a type-32 oxygen; else 0 on
+  phosphorus (the 13-atom P25 set — GESCIQ, SEFYIL, FUWTUM, GETJOE,
+  … — is unchanged, with or without a formal S=P double bond);
+- q⁰(O32) = −(n−k)/n counts a terminal S2CM as a second terminal
+  oxygen on a P center (n = 2, k = 1 → −0.5; the O2CM formula's
+  "two terminal oxygens are equivalent" extended to the chalcogen).
+
+Landscape-verified: all 45 S(72) atoms in the suite match the
+reference pchg to <1e-3 (`probe-s72-landscape.ts`), the JALSOE/SO18A
+dative-S–S pair remaining the only documented charge exclusion.
+Electrostatics census: 759/761 at ≤1e-4 — FAPLUD closed; the two
+type-76 anion exclusions (§5.2) remain. Full suite: 223 passed,
+5 skipped, 0 failed.
 
 OpenBabel's canonical types for the two metal-hydrate cations carry
 the wrong oxidation state; we match OpenBabel (the pinned 761/761

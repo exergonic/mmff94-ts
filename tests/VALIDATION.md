@@ -39,11 +39,13 @@ The library assigns the MMFF94 atom type to every atom of every
 molecule.
 We compared the assignments with two independent references:
 
-1. OpenBabel's canonical types. All 753 molecules match exactly.
-2. The original program's own assignments. 749 molecules match
+1. OpenBabel's canonical types. All 761 molecules match exactly.
+2. The original program's own assignments. 757 molecules match
    exactly. The remaining four atoms have different type labels,
    but their parameters are identical. The energy checks prove
-   this.
+   this. The 16 revision-affected molecules (ERULE_01–08 and the
+   eight corrected members) are byte-identical to the new log's
+   own assignments.
 
 ## Energies
 
@@ -69,15 +71,15 @@ members included).
 | Torsion | 761 | 0 | 0 | 0 |
 | Out-of-plane bend | 761 | 0 | 0 | 0 |
 | Van der Waals | 761 | 0 | 0 | 0 |
-| Electrostatic | 758 | 0 | 0 | 1 (FAPLUD, q⁰(72) — workstream 3) |
+| Electrostatic | 759 | 0 | 0 | 0 |
 
 The two stretch/strbnd residuals are the generated P–Si and F–N bonds
 of the ERULE fragments, whose reference values are printed to three
 decimals — our generated rows sit within that print precision (the
-remaining deltas are ±0.0005 Å of reference round-off). The single
-electrostatics exclusion set (AN11A, DOZNIP) is the delocalized-anion
-reference anomaly below; FAPLUD is the known q⁰(72) formal-charge split
-(see implementer-notes §4.3).
+remaining deltas are ±0.0005 Å of reference round-off). The two
+electrostatics exclusions (AN11A, DOZNIP) are the delocalized-anion
+reference anomaly below (FAPLUD's q⁰(72) split closed 2026-08-07 —
+see implementer-notes §5.5).
 
 The suite exercises the MMFF94 empirical rules in five places: the
 hydroxide O–H bond of OHMW1, the P–Si and F–N bonds of ERULE_03/06,

@@ -181,7 +181,7 @@ const worstTotal = [...results]
   .sort((a, b) => Math.abs(b.totalDelta!) - Math.abs(a.totalDelta!))[0];
 
 const totalLines: string[] = [
-  'This is a listing of total molecular energies for the 753-molecule MMFF94 test',
+  'This is a listing of total molecular energies for the 761-molecule MMFF94 test',
   'suite as computed by mmff94-ts (pure TypeScript, IEEE double precision), side by',
   'side with the reference totals from the suite\'s own MMFF94.energies (OPTIMOL and',
   'BatchMin 5.5). No cutoffs on nonbonded interactions were used. All energies are',
@@ -217,7 +217,7 @@ const summary = TERMS.map(
 
 const perTermLines: string[] = [
   'Per-term energy deltas (mmff94-ts − BatchMin 5.5, kcal/mol) and per-atom partial',
-  'charge deltas (mmff94-ts − the .mmd reference pchg, e⁻) for the 753-molecule',
+  'charge deltas (mmff94-ts − the .mmd reference pchg, e⁻) for the 761-molecule',
   'MMFF94 validation suite, computed at the .mmd geometries. A "—" marks a',
   'comparison excluded for the documented reference anomalies (AN11A/DOZNIP',
   'JALSOE/SO18A charges are dative-adjusted in the reference). The charge',

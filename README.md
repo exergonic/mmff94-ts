@@ -58,13 +58,13 @@ We checked every analytical gradient against finite differences.
 | Torsion | 761 of 761 | 4.7e-5 |
 | Out-of-plane | 761 of 761 | 1.6e-5 |
 | Van der Waals | 761 of 761 | 4.4e-5 |
-| Electrostatic | 758 of 761 | 1.4e+1 (FAPLUD, the known q⁰(72) gap) |
+| Electrostatic | 759 of 761 | 7.1e-5 |
 
    The atom types match the reference types for all 761 molecules.
    The partial charges match the reference values to 0.001 e per atom
-   on 749 molecules. The two AN11A/DOZNIP electrostatics exclusions
-   are terms where the reference itself is inconsistent; FAPLUD's
-   electrostatics is the documented q⁰(72) formal-charge split (see
+   on 757 molecules. The two AN11A/DOZNIP electrostatics exclusions
+   are terms where the reference itself is inconsistent (FAPLUD's
+   q⁰(72) split closed 2026-08-07 — see
    `docs/implementer-notes.md` §5.5). The
    [Validation document](tests/VALIDATION.md) has the full details.
 

@@ -57,46 +57,53 @@ The parameter tables are cross-checked against Tinker's
 
 ## 4. Validation against Halgren's own suite
 
-The library is validated against the MMFF94 Validation Suite
-(753 molecules, the CCL archive version), using the BatchMin 5.5
-per-component energies as the reference. Every molecule's atom types
-are assigned independently and compared:
+The library is validated against the MMFF94 Validation Suite (761
+molecules, the November 1998 revision of the CCL archive), using the
+BatchMin 5.5 per-component energies as the reference. Every
+molecule's atom types are assigned independently and compared:
 
-- **Atom typing**: 753/753 molecules match OpenBabel's canonical
-  MMFF94 types; 749/753 are byte-identical to the original program's
-  own types (the four remaining atoms are parameter-inert
+- **Atom typing**: 761/761 molecules match OpenBabel's canonical
+  MMFF94 types; the original program's own per-atom types agree
+  wherever checked — the 753-suite audit was byte-identical on
+  749/753 (the four remaining atoms are parameter-inert
   oxidation-state and dative-bonding cases, proven parameter-identical
-  by the energy checks).
+  by the energy checks), and the 761-suite's 16 revision-affected
+  molecules are byte-identical to the new log's own assignments.
 
 ### 4.1 Per-component energy residuals
 
-For each of the seven terms, the table shows the absolute residual
-against BatchMin across the suite (typing-exact molecules; the four
-documented anomaly exclusions in section 5 applied):
+For each of the seven terms, the table shows the residual statistics
+against BatchMin across the suite (typing-exact molecules; the two
+documented anomaly exclusions in section 5 applied to the van der
+Waals and electrostatic rows):
 
-| Term | Molecules | Worst | Mean | RMS |
+| Term | Molecules ≤1e-4 | Worst | Mean | RMS |
 |---|---|---|---|---|
-| Bond stretch | 753 | 4.97e-5 | 7.0e-6 | 1.0e-5 |
-| Angle bend | 753 | 3.45e-5 | 6.0e-6 | 8.4e-6 |
-| Stretch-bend | 753 | 4.34e-5 | 4.7e-6 | 7.1e-6 |
-| Torsion | 753 | 4.69e-5 | 1.2e-6 | 2.6e-6 |
-| Out-of-plane | 753 | 1.64e-5 | 6.0e-7 | 1.6e-6 |
-| Van der Waals | 751 | 4.37e-5 | 6.7e-6 | 9.4e-6 |
-| Electrostatic | 751 | 6.76e-5 | 7.1e-6 | 1.1e-5 |
+| Bond stretch | 759 of 761 | 1.97e-3 | 9.9e-6 | 7.3e-5 |
+| Angle bend | 761 of 761 | 4.30e-5 | 6.0e-6 | 8.6e-6 |
+| Stretch-bend | 760 of 761 | 3.36e-4 | 5.0e-6 | 1.4e-5 |
+| Torsion | 761 of 761 | 4.69e-5 | 1.2e-6 | 2.8e-6 |
+| Out-of-plane | 761 of 761 | 1.61e-5 | 5.8e-7 | 1.5e-6 |
+| Van der Waals | 759 of 761 | 4.35e-5 | 6.7e-6 | 9.3e-6 |
+| Electrostatic | 759 of 761 | 7.08e-5 | 7.0e-6 | 1.2e-5 |
 
-At the ±5e-5 gate — the accuracy Wavefunction claims for Spartan —
-**745 of 753 molecules match all seven components**. Every component
-of every molecule is within 1e-4.
+The two stretch/strbnd rows above 1e-4 are the empirical-rule
+generated P–Si and F–N bonds of the ERULE fragments, whose reference
+values are printed to three decimals — our generated rows sit within
+that print precision. At the ±5e-5 gate — the accuracy Wavefunction
+claims for Spartan — **751 of 761 molecules match all seven
+components**, and 755 of 761 are within 1e-4 on every comparable
+term.
 
 ### 4.2 Total energies
 
-The total-energy residuals (the 749 molecules without excluded terms):
+The total-energy residuals (the 757 molecules without excluded terms):
 
 | Statistic | Value |
 |---|---|
-| Worst | 5.10e-4 kcal/mol |
-| Mean | 2.48e-4 kcal/mol |
-| RMS | 2.86e-4 kcal/mol |
+| Worst | 2.52e-3 kcal/mol (ERULE_03, the generated P–Si bond at the reference's print precision) |
+| Mean | 2.51e-4 kcal/mol |
+| RMS | 3.01e-4 kcal/mol |
 
 We do **not** claim the Wavefun-level ±5e-5 on totals; the per-term
 residuals accumulate to the ~2.5e-4 mean shown.
@@ -104,7 +111,9 @@ residuals accumulate to the ~2.5e-4 mean shown.
 ### 4.3 Partial charges
 
 BCI partial charges match the suite's reference charges to better
-than 1e-3 on all 749 charge-comparable molecules.
+than 1e-3 on all 757 charge-comparable molecules (the four
+documented charge exclusions — the dative-adjustment pair and the
+type-76 anion pair — are in section 5).
 
 ### 4.4 Gradients
 
