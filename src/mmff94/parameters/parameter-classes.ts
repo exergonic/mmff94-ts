@@ -49,17 +49,39 @@ import {
   type AngleParams,
 } from './index.js';
 import { empirical_bond_length, empirical_ka, empirical_theta0 } from './empirical.js';
+import {
+  find_aromatic_rings,
+  find_ring_atoms,
+  type AromaticRing,
+} from '../assign-atom-types.js';
 
-/** Per-term call context: molecule, adjacency, and the memoized
- *  in-ring checks shared by every class query in one energy pass. */
+/** Per-term call context: molecule, adjacency, and the aromatic-ring
+ *  perception shared by every class query in one energy pass. The
+ *  BTij rule (part V p. 620) distinguishes "same aromatic ring"
+ *  (BTij = 0) from "different aromatic rings" (BTij = 1), so the
+ *  context carries the per-atom aromatic RING sets, not just
+ *  membership. */
 export interface ClassContext {
   mol: TypedMolecule;
   adj: number[][];
-  ringMemo: Map<string, boolean>;
+  /** The aromatic rings containing each atom (shared ring objects —
+   *  identity comparison is ring equality). */
+  aromatic_rings: Map<number, AromaticRing[]>;
 }
 
 export function make_class_context(mol: TypedMolecule, adj: number[][]): ClassContext {
-  return { mol, adj, ringMemo: new Map() };
+  // The aromatic perception walks the neighbor list with bond orders;
+  // rebuild it from the molecule's bonds (the passed adjacency is
+  // order-free and shared with the pair-enumeration loops).
+  const n = mol.atoms.length;
+  const adj_ordered: { nbr: number; order: number }[][] = Array.from({ length: n }, () => []);
+  for (const bond of mol.bonds) {
+    adj_ordered[bond.atom1].push({ nbr: bond.atom2, order: bond.bond_order });
+    adj_ordered[bond.atom2].push({ nbr: bond.atom1, order: bond.bond_order });
+  }
+  const is_ring = find_ring_atoms(adj_ordered, n);
+  const aromatic = find_aromatic_rings(adj_ordered, mol, is_ring);
+  return { mol, adj, aromatic_rings: aromatic.rings_of };
 }
 
 /** Bond order of (i, j) — 0 when the pair is not bonded. */
@@ -71,69 +93,60 @@ export function get_bond_order(ctx: ClassContext, i: number, j: number): number 
   return bond ? bond.bond_order : 0;
 }
 
-/** Is bond (i, j) part of any ring? BFS for an alternate path, capped
- *  at ring size 64 (MMFF ring classes only reach 5-membered rings and
- *  the validation suite's largest rings are 8-membered; the cap only
- *  bounds the search — any alternate path of two or more bonds proves
- *  ring membership, so a cap below the real alternate-path length
- *  would silently misread a large fused/macrocyclic ring bond as
- *  external). Only consulted for aromatic-type pairs, so the
- *  answer distinguishes an aromatic ring bond (BTij = 0) from an
- *  external aromatic-aromatic bond like biphenyl's (BTij = 1). */
-function in_ring(ctx: ClassContext, i: number, j: number): boolean {
-  const key = i < j ? `${i}-${j}` : `${j}-${i}`;
-  const memoized = ctx.ringMemo.get(key);
-  if (memoized !== undefined) return memoized;
-
-  const { adj } = ctx;
-  let found = false;
-  const queue: [number, number][] = [];
-  const seen = new Set<number>([i]);
-  // Start from i's neighbors, skipping the direct edge to j.
-  for (const nb of adj[i]) {
-    if (nb !== j && !seen.has(nb)) {
-      seen.add(nb);
-      queue.push([nb, 1]);
-    }
-  }
-  while (queue.length > 0 && !found) {
-    const [node, depth] = queue.shift()!;
-    if (depth >= 64) continue;
-    for (const nb of adj[node]) {
-      if (nb === j) {
-        found = true;
-        break;
-      }
-      if (!seen.has(nb)) {
-        seen.add(nb);
-        queue.push([nb, depth + 1]);
-      }
-    }
-  }
-  ctx.ringMemo.set(key, found);
-  return found;
-}
-
-/** Is bond (i, j) part of an aromatic ring? Both endpoints are
- *  aromatic-typed and the bond lies in a ring (Kekulé input files
- *  carry no aromatic flags; BatchMin's perception marks ring bonds).
- *  CIM+ (80) is an aromatic ring type whose par entry lacks the arom
- *  flag — treat it as aromatic, mirroring bond_type_flag. Without
- *  this the torsion class-2 branch fires on aromatic ring bonds
- *  (TAJSUS's triazole C(80)–N(81) resolves class 2 / V2 = 4.8 where
- *  the reference skips to class 0 / V2 = 4.0). */
+/** Is bond (i, j) part of an aromatic ring? Pure ring perception —
+ *  the bond's ring is in the aromatic set (Kekulé input files carry
+ *  no aromatic flags; BatchMin's perception marks ring bonds). This
+ *  is the MMFF meaning of an "aromatic bond": the torsion class-2
+ *  branch must not fire on one (TAJSUS's triazole C(80)–N(81)
+ *  resolves class 2 / V2 = 4.8 where the reference skips to class 0 /
+ *  V2 = 4.0), and the class-5 ring test checks ring aromaticity by
+ *  every bond of the ring (FILNOD's thiazolidine). */
 export function is_aromatic_bond(ctx: ClassContext, i: number, j: number): boolean {
-  const { mol } = ctx;
-  const pi = ATOM_TYPE_PROPERTIES[mol.atom_types[i]];
-  const pj = ATOM_TYPE_PROPERTIES[mol.atom_types[j]];
-  if (!pi || !pj) return false;
-  const a_i = pi.arom || mol.atom_types[i] === 80;
-  const a_j = pj.arom || mol.atom_types[j] === 80;
-  if (!a_i || !a_j) return false;
-  return in_ring(ctx, i, j);
+  return in_aromatic_ring(ctx, i, j);
 }
 
-/** GetBondType — the BTij flag for bond (i, j), see the header. */
+/** Is bond (i, j) an edge of an aromatic ring? */
+function in_aromatic_ring(ctx: ClassContext, i: number, j: number): boolean {
+  const rings = ctx.aromatic_rings.get(i);
+  if (!rings) return false;
+  return rings.some(r => is_edge_of_ring(r, i, j));
+}
+
+/** Are i and j consecutive atoms of the ring's cycle? */
+function is_edge_of_ring(ring: AromaticRing, i: number, j: number): boolean {
+  const p = ring.path;
+  const idx = p.indexOf(i);
+  if (idx < 0) return false;
+  const prev = p[(idx - 1 + p.length) % p.length];
+  const next = p[(idx + 1) % p.length];
+  return j === prev || j === next;
+}
+
+/** Do i and j belong to DIFFERENT sets of aromatic rings? The part-V
+ *  p. 620 clause (b) — "between pairs of atoms belonging to different
+ *  aromatic rings" — is a SET comparison, not disjointness: an atom
+ *  shared with the partner's ring is fine (naphthalene's fusion bond
+ *  stays BTij = 0 because both atoms sit in the same two rings), and
+ *  one side with NO aromatic ring counts as different (DAKCEX's
+ *  37–63 bond: C8 in the benzene ring, C9 in none → conjugated).
+ *  The ring objects are shared across atoms, so identity compares
+ *  rings. */
+function different_aromatic_rings(ctx: ClassContext, i: number, j: number): boolean {
+  const ri = ctx.aromatic_rings.get(i) ?? [];
+  const rj = ctx.aromatic_rings.get(j) ?? [];
+  if (ri.length !== rj.length) return true;
+  return ri.some(r => !rj.includes(r)) || rj.some(r => !ri.includes(r));
+}
+
+/** GetBondType — the BTij flag for bond (i, j), see the header.
+ *
+ *  Part V p. 620: BTij = 1 for a single bond (formal bond order 1)
+ *  (a) between atoms of types that are not both aromatic and for
+ *  which the sbmb flag is set in Table I, or (b) between pairs of
+ *  atoms belonging to different aromatic rings (biphenyl's central
+ *  bond). A bond inside an aromatic ring is an aromatic bond and
+ *  reads 0 — including fused rings, where both atoms share the same
+ *  aromatic-ring set (naphthalene). */
 export function bond_type_flag(ctx: ClassContext, i: number, j: number): number {
   const { mol } = ctx;
   if (get_bond_order(ctx, i, j) !== 1) return 0;
@@ -147,16 +160,20 @@ export function bond_type_flag(ctx: ClassContext, i: number, j: number): number 
   // BCI table keys them 0-80-81).
   const a_i = pi.arom || mol.atom_types[i] === 80;
   const a_j = pj.arom || mol.atom_types[j] === 80;
+
+  // An aromatic ring bond is never a conjugated single bond.
+  if (in_aromatic_ring(ctx, i, j)) return 0;
+
   if (a_i && a_j) {
-    // Aromatic pair: 0 inside an aromatic ring (BatchMin's ring bonds
-    // are aromatic), 1 for a non-aromatic bond like biphenyl's.
-    return in_ring(ctx, i, j) ? 0 : 1;
+    // Both aromatic-flagged: conjugated only across DIFFERENT
+    // aromatic rings (biphenyl's central bond, biphenylene's
+    // 4-ring bonds). Same ring, no rings, or one side ringless:
+    // 0 — e.g. two acyclic aromatic-typed N's (DAKCEX's N1–N2).
+    return different_aromatic_rings(ctx, i, j) ? 1 : 0;
   }
-  // Case (a): both types have the sbmb flag — the code returns 1 for
-  // ANY sbmb pair (the "not aromatic" clause in the part-V comment is
-  // not enforced; aromaticity only enters through the ring-bond check
-  // above). This is what makes C(=O)-C(ar) and C=C-C(ar) angles
-  // class 1/2 and conjugated single bonds class 1.
+  // Case (a): both types have the sbmb flag — what makes C(=O)-C(ar)
+  // and C=C-C(ar) angles class 1/2 and conjugated single bonds
+  // class 1.
   if (pi.sbmb && pj.sbmb) return 1;
   return 0;
 }

@@ -626,7 +626,7 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
  * survive are in at least one ring. This is O(n) and does not require
  * ring-size information — just membership.
  */
-function find_ring_atoms(
+export function find_ring_atoms(
   adj: { nbr: number; order: number }[][],
   n: number,
 ): boolean[] {
@@ -666,18 +666,20 @@ function find_ring_atoms(
  * N=9, pyrrole's ring C's typed 2).
  *
  * Returns the aromatic atoms and, per atom, the aromatic rings
- * containing it (fused systems give more than one).
+ * containing it (fused systems give more than one). Shared with the
+ * parameter-class machinery: the BTij rule (part V p. 620) needs the
+ * aromatic RING sets per atom, not mere membership.
  */
-interface AromaticRing {
+export interface AromaticRing {
   path: number[];
 }
 
-interface AromaticInfo {
+export interface AromaticInfo {
   atoms: Set<number>;
   rings_of: Map<number, AromaticRing[]>;
 }
 
-function find_aromatic_rings(
+export function find_aromatic_rings(
   adj: { nbr: number; order: number }[][],
   molecule: Molecule,
   is_ring: boolean[],
