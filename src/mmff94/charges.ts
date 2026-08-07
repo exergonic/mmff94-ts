@@ -185,6 +185,11 @@ export function assign_bci_charges(
         let terminalO = 0;
         for (const b of adj[nb]) {
           if (molecule.atoms[b].element === 'O' && adj[b].length === 1) terminalO++;
+          // A terminal S2CM thiolate counts as a terminal oxygen on a
+          // phosphorus center: the P(=O)(S⁻) of FAPLUD splits its −1
+          // as −0.5/−0.5 over the two terminal chalcogens (the S2CM
+          // branch above gives the S its −0.5 in sympathy).
+          else if (nbr.element === 'P' && molecule.atoms[b].element === 'S' && adj[b].length === 1 && molecule.atom_types[b] === 72) terminalO++;
         }
         if (terminalO > k) return -(terminalO - k) / terminalO;
       }
@@ -231,10 +236,20 @@ export function assign_bci_charges(
       //    alkyl thiolate, TAJVUV's 5-ring thiolate);
       //  - −0.5 for EACH S of the dithiocarboxylate C(=S)(S⁻)
       //    (CORWUB10 — the two equivalent terminal S's split the −1);
-      //  - 0 on phosphorus (GESCIQ's P–S⁻).
+      //  - 0 on phosphorus (GESCIQ's P–S⁻, SEFYIL, BUPSL — with or
+      //    without a formal S=P double bond);
+      //  - −0.5 on a phosphorus that also bears an O2CM oxygen
+      //    (FAPLUD — the P(=O)(S⁻) −1 splits over the two terminal
+      //    chalcogens, and the O2CM O's own q⁰ halves in sympathy
+      //    via the type-32 rule below).
       for (const nb of adj[i]) {
         const nbr = molecule.atoms[nb];
-        if (nbr.element === 'P') return 0;
+        if (nbr.element === 'P') {
+          for (const b of adj[nb]) {
+            if (molecule.atom_types[b] === 32) return -0.5;
+          }
+          return 0;
+        }
         if (nbr.element === 'C') {
           for (const b of adj[nb]) {
             if (b !== i && molecule.atoms[b].element === 'S' && molecule.atom_types[b] === 72) return -0.5;
