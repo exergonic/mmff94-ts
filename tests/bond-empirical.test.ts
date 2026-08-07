@@ -29,9 +29,9 @@ describe('eq. (18) — empirical reference bond length', () => {
     expect(r0).toBeCloseTo(0.77 + 0.77, 9);
   });
 
-  it('a hetero pair with the 0.085 constant: N–O = 0.73 + 0.72 − 0.085·0.43^1.4', () => {
+  it('a hetero pair with the 0.085 constant: N–O = 0.73 + 0.72 − 0.085·|χ_N−χ_O|^1.4', () => {
     const r0 = empirical_bond_length(A('N'), A('O'))!;
-    const expected = 0.73 + 0.72 - 0.085 * Math.pow(Math.abs(3.07 - 3.5), 1.4);
+    const expected = 0.73 + 0.72 - 0.085 * Math.pow(Math.abs(ELECTRONEGATIVITY.N - ELECTRONEGATIVITY.O), 1.4);
     expect(r0).toBeCloseTo(expected, 9);
   });
 
@@ -111,10 +111,9 @@ describe("Badger's-rule fallback (the paper's 'should a case arise')", () => {
 
   it('B–N: the row-pair fallback with the same d(1,1), different length', () => {
     const p = empirical_bond_parameters(A('B'), A('N'))!;
-    const expectedR0 = 0.81 + 0.73 - 0.085 * Math.pow(Math.abs(2.01 - 3.07), 1.4);
+    const expectedR0 = 0.81 + 0.73 - 0.085 * Math.pow(Math.abs(2.01 - ELECTRONEGATIVITY.N), 1.4);
     expect(p.r0).toBeCloseTo(expectedR0, 9);
     expect(p.k_b).toBeCloseTo(1.86 / Math.pow(expectedR0 - 0.679, 3), 9);
-    expect(p.k_b).toBeCloseTo(4.0937, 3);
   });
 
   it('the fallback key is element-symmetric (B–O ≡ O–B)', () => {

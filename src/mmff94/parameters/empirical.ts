@@ -69,10 +69,15 @@ export const COVALENT_RADII: Record<string, number> = {
   Te: 1.35, I: 1.33,
 };
 
-/** Pauling-scale (Allred-Rochow) electronegativities — the CCL eq. (16) list. */
+/** Pauling-scale (Allred-Rochow) electronegativities — the CCL eq. (16) list.
+ *  The reference's own generated bonds pin two deviations from the posted
+ *  list: P 2.04 (not 2.06) and N 3.05 (not 3.07) reproduce its P–Si
+ *  (√-term 0.30 → r₀ 2.224) and F–N (1.05 → 1.379) empirical rows — the
+ *  761-suite's ERULE fragments are the only generated-bond constraints,
+ *  and the O–H pair (Δχ 1.30 → 0.978) matches the posted values. */
 export const ELECTRONEGATIVITY: Record<string, number> = {
-  H: 2.2, Li: 0.97, Be: 1.47, B: 2.01, C: 2.5, N: 3.07, O: 3.5,
-  F: 4.1, Na: 1.01, Mg: 1.23, Al: 1.47, Si: 1.74, P: 2.06, S: 2.44,
+  H: 2.2, Li: 0.97, Be: 1.47, B: 2.01, C: 2.5, N: 3.05, O: 3.5,
+  F: 4.1, Na: 1.01, Mg: 1.23, Al: 1.47, Si: 1.74, P: 2.04, S: 2.44,
   Cl: 2.83, K: 0.91, Ca: 1.04, Sc: 1.3, Ti: 1.5, V: 1.6, Cr: 1.6,
   Mn: 1.5, Fe: 1.8, Co: 1.8, Ni: 1.8, Cu: 1.9, Zn: 1.6, Ga: 1.82,
   Ge: 2.02, As: 2.2, Se: 2.48, Br: 2.74, Rb: 0.89, Sr: 0.99, Y: 1.3,
@@ -159,8 +164,14 @@ const ELEMENT_U: Record<string, number> = {
   C: 2.0, N: 2.0, O: 2.0, Si: 1.25, P: 1.25, S: 1.25,
 };
 // MMFF part V, table X: V_i — the torsion V3 driving constant.
+// The published table prints S: 0.49, but the suite's own generated
+// rows pin S: 0.48: the (S,C) rows resolve √(0.48·2.12)/N_bc = 0.336
+// and the (N,S) rows √(1.5·0.48)/2 = 0.424 (0.49 would give 0.340 and
+// 0.429 — both outside the reference's 3-decimal print). Tinker and
+// OpenBabel transcribe the published 0.49; the 761-suite's ERULE
+// fragments (the empirical-rule stress set) arbitrate for 0.48.
 const ELEMENT_V: Record<string, number> = {
-  C: 2.12, N: 1.5, O: 0.2, Si: 1.22, P: 2.4, S: 0.49,
+  C: 2.12, N: 1.5, O: 0.2, Si: 1.22, P: 2.4, S: 0.48,
 };
 
 /**
@@ -366,19 +377,19 @@ export function empirical_torsion(
       (pj?.val === 3 && pk?.val === 4) || (pj?.val === 4 && pk?.val === 3) ? 3.0 : 6.0;
     v.v2 = beta * pi_bc * Math.sqrt(ub * uc);
     found = true;
-  } else {
-    // rule (c): the corroborated universal non-aromatic reading. The
-    // paper's text gates on the j-k formal bond order of 2, but BOTH
-    // implementations treat it as the else of the aromatic rule —
-    // every non-aromatic central bond gets eq. (21) with π = 1.0 when
-    // both atoms carry mltb 2 (Tinker's ktors reads only the mltb
-    // flags; OpenBabel reads the i-j bond — both give π = 1.0 for
-    // butadiene's central single), else π = 0.4. Measured on vinyl
-    // phosphine: the C-P dihedrals resolve 6·0.4·√(U_C·U_P) = 3.795
-    // in both references (vs the paper's rule (g) case (5) π = 0.15
-    // → 1.423); the suite never exercises the rules, so the
-    // corroboration is the arbiter. The paper's rules (d)-(h) below
-    // are unreachable for non-aromatic bonds — kept as the spec.
+  } else if (order_jk === 2) {
+    // rule (c): formal bond order 2 — eq. (21) with β = 6 and π = 1.0
+    // when both central atoms carry mltb 2 (a full double bond), else
+    // π = 0.4. GATED ON THE BOND ORDER: the paper's text applies this
+    // rule only to j-k bonds of formal bond order 2 — a single bond
+    // falls through to rules (d)-(h). The old "universal reading"
+    // (the else of the aromatic rule — π = 1.0/0.4 for every
+    // non-aromatic bond) was measured on vinyl phosphine's C–P
+    // dihedrals, whose 3.795 V2 actually comes from rule (g) case (4)
+    // (P's mltb = 1 and P is not carbon → π = 0.4); the 761-suite's
+    // ERULE fragments proved the single-bond case resolves through
+    // eq. (22) instead (ERULE_03's P–Si: V3 = √(V_P·V_Si)/N_bc =
+    // √(2.4·1.22)/6 = 0.285, the reference's generated row).
     const pi_bc = pj?.mltb === 2 && pk?.mltb === 2 ? 1.0 : 0.4;
     v.v2 = 6.0 * pi_bc * Math.sqrt(ub * uc);
     found = true;

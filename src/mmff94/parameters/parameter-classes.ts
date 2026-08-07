@@ -216,10 +216,13 @@ export function torsion_class(ctx: ClassContext, i: number, j: number, k: number
   const bt_bc = bond_type_flag(ctx, j, k);
   const bt_cd = bond_type_flag(ctx, k, l);
 
-  if (bt_bc === 1) return 1;
-
-  // 4-ring: the closing bond i-l makes i-j-k-l a 4-cycle.
+  // 4-ring: the closing bond i-l makes i-j-k-l a 4-cycle. Checked
+  // BEFORE the BT class: the reference's class for a 4-ring torsion
+  // with a conjugated central bond is 4 (CEWYIM30's C1-C6-C12-C7 —
+  // BT(C6-C12) = 1, class 4, V2 = 6.0), not 1.
   if (ctx.adj[i].includes(l)) return 4;
+
+  if (bt_bc === 1) return 1;
 
   if (get_bond_order(ctx, j, k) === 1 && !is_aromatic_bond(ctx, j, k)) {
     if (bt_ab || bt_cd) return 2;
