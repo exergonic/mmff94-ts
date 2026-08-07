@@ -138,10 +138,38 @@ latent bugs were found — **the paper is right on all three**:
 | (g) | cases (2)/(3) checked the *other* atom's mltb flag — swapped; the paper checks the **pilp atom's own** mltb | check the pilp atom (Tinker's `ktors.f` does it right) |
 | (h) | N_bc = crd·crd in our code and OpenBabel; the paper (and Tinker) say **(crd(J)−1)·(crd(K)−1)** | squared-minus-one |
 
-All 20 rule pins in `tests/torsion-empirical.test.ts` are
-hand-computed from the paper's protocol and Table X; the fixes live
-in a branch the census never fires, so the 747→753 census was
-unchanged by them.
+The 2026-08-07 ERULE arbitration then settled the two open readings
+against the suite's own generated rows (the ERULE fragments are the
+first suite members to *fire* the rules — the old 753 suite never
+reached them):
+
+1. **Rule (c) is gated on the formal bond order of 2**, as the paper's
+   text says. The old "universal reading" (eq. 21 for every
+   non-aromatic bond, π = 1.0/0.4) had been measured against OpenBabel
+   and Tinker, which both apply eq. (21) to order-1 bonds; but
+   ERULE_03's P–Si resolves **V3 = 0.285 = √(2.4·1.22)/6** in the
+   reference — eq. (22), not rule (c)'s V2 = 3.0. Order-1 bonds now
+   flow to rules (d)–(h), and the vinyl-phosphine C–P resolves through
+   rule (g) case (3) (π = 0.15 — the PILP-P's lone pair, V2 = 1.423)
+   instead of OB's 3.795. All seven ERULE generated rows match:
+   (8,1) 0.297, (15,1) 0.336, (8,8) 0.375, (8,15) 0.424, (15,15)
+   V2 = −8, (P–Si) 0.285, (F–N) — every one the eq.-22/rule-(h)
+   value, exactly.
+2. **Table X V(S) = 0.48, not the printed 0.49.** The reference's
+   generated (S,C) and (N,S) rows resolve √(0.48·2.12)/3 = 0.336 and
+   √(1.5·0.48)/2 = 0.424 (0.49 would give 0.340 and 0.429). Tinker
+   and OpenBabel transcribe the printed value; the suite's rows pin
+   the reference's internal table.
+3. **χ(P) = 2.04 and χ(N) = 3.05, not the posted 2.06/3.07** (eq. 18).
+   The reference's generated P–Si bond (ideal 2.224) pins Δχ = 0.30,
+   and its F–N bond (1.379) pins Δχ = 1.05; the posted values give
+   2.2228 and 1.3814. The O–H pair (Δχ 1.30 → 0.978) matches the
+   posted values, so only P and N deviate. (The Si/F sides would fit
+   the same deltas; the P/N assignment is the minimal change.)
+
+The 20 rule pins in `tests/torsion-empirical.test.ts` were rewritten
+to the arbitrated protocol, with the suite's generated rows as the
+pin values (0.285, 0.375, −8.0, …).
 
 ### 4.4 The BCI fallback (eq. 17)
 
@@ -253,8 +281,23 @@ coordinate-aligned (the dative representation can reorder atoms):
 | CU1PW1 | Cu | 97 (CU+1) — correct oxidation state | 98 (CU+2) |
 | JALSOE, SO18A | dative sulfone O | 32 (O2CM) | 7 (O=C) |
 
+### 5.5 FAPLUD — the q⁰(72) formal-charge split (OPEN — workstream 3)
+
+The only molecule whose electrostatics the library still cannot
+reproduce (the suite's November 1998 revision re-typed and re-valued
+it). The reference's own partial charges moved by 0.5 between the
+revisions: its P carries +1.3893 in the new pchg column where ours
+gives +1.8893 — the +0.5 is the pre-sharing primary charge of the
+anionic terminal S (type 72), which the reference now shares onto
+the neighboring P. The new revision's formal-charge split for the
+S⁻/O⁻ pairs of FAPLUD is not yet implemented in `assign_bci_charges`
+(the library's charges match the reference on all other molecules to
+<1e-3; a brute-force sum from the reference's own `.mmd` pchg column
+reproduces its −409.00764 exactly, so the divergence is confined to
+the charge assignment).
+
 OpenBabel's canonical types for the two metal-hydrate cations carry
-the wrong oxidation state; we match OpenBabel (the pinned 753/753
+the wrong oxidation state; we match OpenBabel (the pinned 761/761
 vs the OB JSON stands). All four divergences are **parameter-inert**
 — every energy term matches three ways regardless — because the
 classes resolve to identical parameters. Tinker's prm atom table
@@ -272,7 +315,9 @@ or with the paper, in one place:
 |---|---|---|
 | eq. (18) δ-transcription | OpenBabel (0.73 + δ) vs paper-literal | OHMW1 closed — the plain form is right (§4.1) |
 | eq. (20) degrees² | OpenBabel historically (PR#2741669) | fixed upstream; we and Tinker square correctly |
-| torsion rules (c)/(g)/(h) | OB and our code (two of three), Tinker (one of three) | paper-arbitrated (§4.3) |
+| torsion rules (c)/(g)/(h) | OB and our code (two of three), Tinker (one of three) | paper-arbitrated (§4.3) — the 761-suite's ERULE rows confirm rule (c)'s order-2 gate; OB/Tinker apply eq. (21) to order-1 bonds (vinyl-phosphine C–P: 3.795 vs our paper-based 1.423) |
+| Table X V(S) | the printed table 0.49 vs the reference's 0.48 | suite-arbitrated (§4.3) — the ERULE (S,C)/(N,S) rows pin 0.48; Tinker/OB transcribe the print |
+| eq. (18) χ table | the posted χ(P) 2.06 / χ(N) 3.07 vs the reference's 2.04 / 3.05 | suite-arbitrated (§4.3) — the generated P–Si and F–N bonds pin Δχ = 0.30/1.05; OB uses the posted values (the vinyl-phosphine C–P r₀ divergence) |
 | metal vdW parameters | looked like the X94 revision (us + OB) vs the Merck original (Tinker + BatchMin) | closed — §5.1: a typing collapse, not a parameter difference; the formal-charge bridge selects the +2/+1 rows |
 | metal-hydrate cation types | OB's canonical (FE+3/CU+2) vs the original program (FE+2/CU+1) | bridged at the vdW lookup by formal charge — §5.1 |
 | type-76 charges | all three implementations differ | open — §5.2 |

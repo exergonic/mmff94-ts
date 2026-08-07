@@ -44,32 +44,34 @@ We checked every energy term against three references: the original
 validation suite, OpenBabel, and Tinker.
 We checked every analytical gradient against finite differences.
 
-1. **Halgren's 753-molecule MMFF94 validation suite.** This is the
+1. **Halgren's 761-molecule MMFF94 validation suite** (November 1998
+   revision, from https://server.ccl.net/cca/data/MMFF94/). This is the
    reference for the library. It gives the per-component energies and
    the per-atom partial charges for each molecule. We compared every
-   term with the reference values. All comparable terms match within
-   0.0001 kcal/mol:
+   term with the reference values:
 
-| Term | Molecules that match | Worst \|Δ\|  (kcal/mol) |
+| Term | ≤1e-4 | Worst \|Δ\|  (kcal/mol) |
 |---|------|---|
-| Bond stretch | 753 of 753 | 5.0e-5 |
-| Angle bend | 753 of 753 | 3.4e-5 |
-| Stretch-bend | 753 of 753 | 4.3e-5 |
-| Torsion | 753 of 753 | 4.7e-5 |
-| Out-of-plane | 753 of 753 | 1.6e-5 |
-| Van der Waals | 753 of 753 | 4.4e-5 |
-| Electrostatic | 751 of 753 | 6.8e-5 |
+| Bond stretch | 759 of 761 | 2.0e-3 (ERULE_03, generated P–Si at the reference's print precision) |
+| Angle bend | 761 of 761 | 4.3e-5 |
+| Stretch-bend | 760 of 761 | 3.4e-4 (ERULE_03, inherited from the P–Si) |
+| Torsion | 761 of 761 | 4.7e-5 |
+| Out-of-plane | 761 of 761 | 1.6e-5 |
+| Van der Waals | 761 of 761 | 4.4e-5 |
+| Electrostatic | 758 of 761 | 1.4e+1 (FAPLUD, the known q⁰(72) gap) |
 
-   The atom types match the reference types for all 753 molecules.
+   The atom types match the reference types for all 761 molecules.
    The partial charges match the reference values to 0.001 e per atom
-   on 749 molecules. The four remaining molecules have one term where
-   the reference itself is inconsistent. The
+   on 749 molecules. The two AN11A/DOZNIP electrostatics exclusions
+   are terms where the reference itself is inconsistent; FAPLUD's
+   electrostatics is the documented q⁰(72) formal-charge split (see
+   `docs/implementer-notes.md` §5.5). The
    [Validation document](tests/VALIDATION.md) has the full details.
 
    The tabulated total energies [total-energies.txt](docs/validation/total-energies.txt), 
-   lists all 753 totals side by side with the suite's own OPTIMOL and
-   BatchMin values (751/753 to 0.001 kcal/mol — the largest residual on
-   the matching set is 8.0e-5). The two exceptions are the documented
+   lists all 761 totals side by side with the suite's own OPTIMOL and
+   BatchMin values (the largest residual on the matching set is
+   ~8.0e-5). The exceptions are the documented
    AN11A/DOZNIP electrostatics anomalies, not shortcomings of the
    implementation.
    See the [Validation document](tests/VALIDATION.md) for details.

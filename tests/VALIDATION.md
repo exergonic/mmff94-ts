@@ -57,27 +57,36 @@ geometries.
 Therefore, a difference on a correctly typed molecule is a bug in
 that term.
 
-The table gives the results at the 0.0001 kcal/mol level.
+The table gives the results at the 0.0001 kcal/mol level, against the
+761-molecule November 1998 revision (ERULE_01–08 + the eight corrected
+members included).
 
-| Term | Molecules that match |
-|---|---|
-| Bond stretch | 753 of 753 |
-| Angle bend | 753 of 753 |
-| Stretch-bend | 753 of 753 |
-| Torsion | 753 of 753 |
-| Out-of-plane bend | 753 of 753 |
-| Van der Waals | 753 of 753 |
-| Electrostatic | 751 of 753 |
+| Term | ≤1e-4 | ≤1e-3 | ≤1e-2 | >1e-2 |
+|---|---|---|---|---|
+| Bond stretch | 759 | 1 (ERULE_06, generated F–N at the reference's print precision) | 1 (ERULE_03, generated P–Si at the reference's print precision) | 0 |
+| Angle bend | 761 | 0 | 0 | 0 |
+| Stretch-bend | 760 | 1 (ERULE_03, inherited from the P–Si) | 0 | 0 |
+| Torsion | 761 | 0 | 0 | 0 |
+| Out-of-plane bend | 761 | 0 | 0 | 0 |
+| Van der Waals | 761 | 0 | 0 | 0 |
+| Electrostatic | 758 | 0 | 0 | 1 (FAPLUD, q⁰(72) — workstream 3) |
 
-All comparable terms match within the 0.0001 kcal/mol tolerance for
-all 753 molecules. The two electrostatics exclusions (AN11A, DOZNIP)
-are the delocalized-anion reference anomalies below.
+The two stretch/strbnd residuals are the generated P–Si and F–N bonds
+of the ERULE fragments, whose reference values are printed to three
+decimals — our generated rows sit within that print precision (the
+remaining deltas are ±0.0005 Å of reference round-off). The single
+electrostatics exclusion set (AN11A, DOZNIP) is the delocalized-anion
+reference anomaly below; FAPLUD is the known q⁰(72) formal-charge split
+(see implementer-notes §4.3).
 
-The suite has one bond with parameters from the MMFF94 empirical
-rules (part V of the papers).
-This bond is the hydroxide O–H bond of OHMW1.
-The library generates those parameters with the published rules.
-The bond matches to 0.0000014 kcal/mol.
+The suite exercises the MMFF94 empirical rules in five places: the
+hydroxide O–H bond of OHMW1, the P–Si and F–N bonds of ERULE_03/06,
+and the empirical torsion rows of ERULE_01–04/07 (the class-5 ring
+torsions and ERULE_03's P–Si torsions). The library generates those
+parameters with the published rules; all match the reference's own
+generated rows (O–H to 1.4e-6; the torsion rows to <1e-4; the P–Si/F–N
+bonds to the reference's print precision). The ERULE-generated rows
+also arbitrate the rules themselves — see implementer-notes §4.3.
 
 We also compared the fixture molecules with OpenBabel's energy
 output.

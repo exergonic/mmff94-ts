@@ -129,17 +129,27 @@ molecules (δ = 1e-6 Å; relative error < 1e-5; worst observed 8e-8).
    implementation does not apply them, and the validation suite
    reflects that. This library matches the reference implementation,
    not the literal printed equation. Tinker's transcription agrees.
-4. **The empirical torsion rules**: the corroborated universal rule
-   (c) reading — every non-aromatic central bond gets eq. (21) with
-   π = 1.0 for mltb-2/2 pairs, else 0.4 — matching both OpenBabel and
-   Tinker on the measured cases. The paper's rules (d)-(h) are
-   unreachable for non-aromatic bonds and are kept as the spec. The
-   suite never exercises the empirical torsion rules.
+   The suite's generated bonds also pin two deviations from the
+   posted χ table: χ(P) = 2.04 and χ(N) = 3.05 (not 2.06/3.07) —
+   the reference's P–Si (2.224) and F–N (1.379) rows require Δχ =
+   0.30 and 1.05; the posted values give 2.2228 and 1.3814.
+4. **The empirical torsion rules**: the ERULE fragments (the first
+   suite members to exercise the rules) arbitrate them. Rule (c) is
+   gated on the formal j–k bond order of 2, as the paper's text says
+   — the reference's P–Si resolves eq. (22) (V3 = 0.285), not rule
+   (c)'s V2. Table X's V(S) is 0.48 in the reference (not the printed
+   0.49; Tinker and OpenBabel transcribe the printed value), and the
+   order-1 cases flow to rules (d)–(h), whose values the suite's
+   generated rows pin exactly. OpenBabel and Tinker apply eq. (21) to
+   order-1 bonds (e.g. the vinyl-phosphine C–P: 3.795 vs our
+   paper-based 1.423) — a documented deviation from the reference.
 5. **OpenBabel divergences on phosphorus bonds**: on the vinyl
-   phosphine C–P bond, OpenBabel's empirical bond length and
-   stretch-bend constants differ from the reference behavior; Tinker
-   and this library agree to four decimals. The finding is documented
-   in `docs/implementer-notes.md` §4.1.
+   phosphine C–P bond, OpenBabel's empirical bond length (its χ(P)
+   is the posted 2.06), stretch-bend constants, and torsion constant
+   (rule (c) on the order-1 bond) differ from the reference behavior;
+   Tinker and this library agree on the bond and strbnd to four
+   decimals. The findings are documented in
+   `docs/implementer-notes.md` §4.1 and §4.3.
 6. **Small-ring and linear-center edge cases**: the near-linear angle
    and out-of-plane guards return the true limit values (the 2026-08
    fixes), and the 3- and 4-ring class parameters follow the published
