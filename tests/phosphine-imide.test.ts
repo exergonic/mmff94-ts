@@ -61,23 +61,23 @@ describe('phosphine imide typing (P=N → 75/62, 2026-08-10)', () => {
     expect(t?.v3).toBe(0);
   });
 
-  it('documents the N–O term: our rule-(h) V3 where OpenBabel reads V2 = 4.8', () => {
-    // The C–O–N=P torsion (central N–O single bond): both central
-    // types carry pilp and no mltb (62, 6), so our rule-(g) gate
-    // (which requires an mltb) falls through to rule (h):
-    // V3 = √(V_O·V_N)/N_bc = √(0.2·1.5)/1 = 0.5477. OpenBabel's rule-(g)
-    // reading gives this pair π = 0.4 → V2 = 4.8 (its log lists 4.800).
-    // The paper's literal case (1) (both pilp → skip) matches neither
-    // implementation; the suite cannot arbitrate (no N(62)–O(6) pair
-    // among the 761). Documented divergence — do not "fix" without a
-    // reference pin.
+  it('zeroes the C–O–N=P torsion — the Tinker-arbitrated case (1)', () => {
+    // The C–O–N=P torsion (central N(62)–O(6) single bond): both
+    // central types carry pilp and no mltb, so rule (g) case (1)
+    // applies — no torsion at all. Arbitrated 2026-08-10 with
+    // Tinker's ktors (lenovo build): its branch chain zeroes any
+    // both-pilp pair (tors1/2/3 = 0) with no mltb requirement, and
+    // its prm has no mmfftorsion row for original 169 (class 62).
+    // OpenBabel's rule-(g) reading gives this pair V2 = 4.8 (its log
+    // lists 4.800) — wrong per Tinker; our old mltb-gated fallback
+    // gave rule (h)'s V3 = 0.548 — also wrong. The suite cannot
+    // arbitrate: every both-pilp-no-mltb bond in the 761 resolves via
+    // a table row or never forms a dihedral.
     const typed = assign_atom_types(METHOXYIMINOPHOSPHINE);
     const adj: number[][] = Array.from({ length: typed.atoms.length }, () => []);
     for (const b of typed.bonds) { adj[b.atom1].push(b.atom2); adj[b.atom2].push(b.atom1); }
     const ctx = make_class_context(typed, adj);
     const t = torsion_terms(ctx, typed, 3, 1, 2, 0); // C–O–N=P
-    expect(t?.v1).toBe(0);
-    expect(t?.v2).toBe(0);
-    expect(t?.v3).toBeCloseTo(0.5477, 3);
+    expect(t).toBeUndefined();
   });
 });

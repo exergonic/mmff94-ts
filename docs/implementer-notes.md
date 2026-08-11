@@ -415,17 +415,22 @@ mltb 0 the empirical rule (c) gives π = 0.4:
   H–P=N–O 0.4°, P=N–O–C −2.1°, E −8.07 (OpenBabel's planar total
   is −7.58, modulo its half-factor conversion constants).
 
-The N–O side stays an OPEN RULE QUESTION: the C–O–N=P torsion
-(central N(62)–O(6) single bond — both pilp, no mltb) resolves under
-our rules to rule (h)'s V3 = √(V_O·V_N)/N_bc = √(0.2·1.5) = 0.5477,
-while OpenBabel's rule-(g) reading gives that pair π = 0.4 → V2 =
-4.800 (its log). The paper's literal case (1) (both pilp → skip)
-matches NEITHER implementation; the suite cannot arbitrate (no
-N(62)–O(6) pair among the 761). The two implementations therefore
-disagree on the O–CH₃ rotation profile (ours: weak 3-fold stagger;
-OB: strong 2-fold planarity) — pinned by
-`tests/phosphine-imide.test.ts`, do not "fix" without a reference
-pin (Tinker's ktors reading of rule (g) would decide).
+The N–O side is CLOSED by Tinker arbitration (2026-08-10): the
+C–O–N=P torsion (central N(62)–O(6) single bond — both pilp, no
+mltb) is NO TORSION at all — rule (g) case (1) fires without any
+mltb requirement, matching Tinker's ktors (its branch chain sets
+tors1/2/3 = 0 for any both-pilp pair, and its prm has no mmfftorsion
+row for original 169 = class 62). OpenBabel's rule-(g) reading
+(π = 0.4 → V2 = 4.800, its log) is wrong per Tinker, and our old
+mltb-gated fallback (rule (h)'s V3 = √(0.2·1.5) = 0.548) was wrong
+too. The suite cannot arbitrate: its both-pilp-no-mltb empirical
+dihedrals (ERULE_02/04/08's (8,15)/(8,8) rows) all sit at τ ≈ 60° in
+the reference geometries, where the old V3 term vanishes — the
+per-term comparison is green both ways (measured), so the earlier
+"pinned by the suite" claims for (8,8)/(15,15) were wrong. The gate
+fix (case (1) checked before the mltb requirement) is implemented in
+empirical.ts and pinned by tests/phosphine-imide.test.ts +
+tests/torsion-empirical.test.ts; the suite stays 761-green.
 
 Also probed, untouched: OpenBabel types the P=S analog
 H–P(=S)–O–CH₃ as P=26 / S=72 (ours: 25) — a second P-typing

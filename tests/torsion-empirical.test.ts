@@ -4,7 +4,15 @@
 // rules the old suite never reached: ERULE_03's P–Si resolves through
 // eq. (22) (V3 = 0.285 — NOT rule (c)'s V2 = 3.0), proving rule (c) is
 // gated on the formal bond order of 2 as the paper's text says, and
-// the (8,1)/(15,1)/(8,8)/(8,15)/(15,15) rows pin rules (d)-(h).
+// the (8,1)/(15,1) rows pin rules (d)-(h). The both-pilp cases
+// (6,6)/(15,15)/(8,8)/(8,15) are case (1) — NO torsion — arbitrated
+// 2026-08-10 with Tinker's ktors (its chain zeroes any both-pilp pair
+// without an mltb requirement; the paper's case (1) precedes rule
+// (h)). The suite cannot arbitrate those pairs: their empirical
+// dihedrals all sit at τ ≈ 60° in the reference geometries, where the
+// old rule-(h) V3 term vanishes — the per-term energy comparison is
+// green both ways (measured 2026-08-10), so the earlier "pinned by
+// the suite" claims for them were wrong.
 //
 // The 2026-08-06 vinyl-phosphine arbitration is SUPERSEDED: the old
 // "universal reading" (rule (c) as the else of the aromatic rule — π =
@@ -103,23 +111,32 @@ describe('rules (d)-(h) — order-1 non-aromatic central bonds', () => {
     expect(tor(2, 26, 1).v2).toBeCloseTo(6 * 0.15 * Math.sqrt(2.0 * 1.25), 9);
   });
 
-  it('the O–O pair (6-6): rule (h) O/S special → V2 = −√(2·2) = −2.0', () => {
-    // No mltb/pilp resonant combination (the gate needs mltb on one
-    // side) → rule (h), and the O/O pair takes the twofold O special.
+  it('the O–O pair (6-6): rule (g) case (1) — both pilp, no mltb → no torsion', () => {
+    // Both central atoms carry lone pairs (pilp 1) and no mltb, so
+    // rule (g) case (1) fires regardless of the mltb gate — the
+    // torsion is skipped. Arbitrated 2026-08-10 with Tinker's ktors
+    // (it zeroes tors1/2/3 for any both-pilp pair) and the paper's
+    // case-(1) ordering before rule (h). The old mltb-gated fallback
+    // gave rule (h)'s O/S special V2 = −√(2·2) = −2 — wrong per the
+    // reference transcription.
     const r = tor(6, 6, 1);
-    expect(r.v2).toBeCloseTo(-2.0, 9);
-    expect(r.v3).toBe(0);
+    expect(r.skip).toBe(true);
   });
 
-  it('the S–S pair (15-15): rule (h) O/S special → V2 = −√(8·8) = −8.0', () => {
-    // Pinned by the suite: ERULE_04's S–S row resolves V2 = −8.000.
-    expect(tor(15, 15, 1).v2).toBeCloseTo(-8.0, 9);
+  it('the S–S pair (15-15): rule (g) case (1) — both pilp, no mltb → no torsion', () => {
+    // Same arbitration as (6,6): the old rule-(h) O/S special gave
+    // V2 = −√(8·8) = −8; Tinker + the paper's case (1) say no torsion.
+    const r = tor(15, 15, 1);
+    expect(r.skip).toBe(true);
   });
 
-  it('the amine N–N (8-8): rule (h) → V3 = √(1.5·1.5)/4 = 0.375', () => {
-    // Pinned by the suite: ERULE_02's (8,8) row resolves 0.375.
+  it('the amine N–N (8-8): rule (g) case (1) — both pilp, no mltb → no torsion', () => {
+    // ERULE_02/08 contain (8,8)-central empirical torsions; the old
+    // rule-(h) fallback gave V3 = √(1.5·1.5)/4 = 0.375. The suite is
+    // green both ways (those dihedrals sit at τ ≈ 60° in the reference
+    // geometries, where the V3 term vanishes), so the suite cannot
+    // arbitrate — Tinker's case (1) decides: no torsion.
     const r = tor(8, 8, 1);
-    expect(r.v3).toBeCloseTo(0.375, 9);
-    expect(r.v2).toBe(0);
+    expect(r.skip).toBe(true);
   });
 });

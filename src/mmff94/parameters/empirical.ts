@@ -419,40 +419,50 @@ export function empirical_torsion(
   }
 
   // rule (g): order-1 central bond between mltb/pilp-carrying types
-  // → V2 (the π value depends on which side carries what)
+  // → V2 (the π value depends on which side carries what). The
+  // both-pilp case (1) is checked FIRST and WITHOUT an mltb
+  // requirement — Tinker's ktors sets tors1/2/3 = 0 for any
+  // both-pilp pair (arbitrated 2026-08-10 on methoxyiminophosphine's
+  // N(62)-O(6): the mltb-gated fallback gave rule (h)'s
+  // V3 = √(0.2·1.5) = 0.548 and OpenBabel reads V2 = 4.8 — neither
+  // matches the reference transcription, and Tinker's prm has no row
+  // for the pair; the suite cannot arbitrate — every both-pilp-
+  // no-mltb bond in the 761 resolves via a table row or never forms
+  // a dihedral (terminal halogens)).
   if (!found) {
     const central_single = order_jk === 1 && !aromatic_jk;
-    if (
-      central_single &&
-      ((pj?.mltb && pk?.mltb) || (pj?.mltb && pk?.pilp) || (pk?.mltb && pj?.pilp))
-    ) {
+    if (central_single) {
       if (pj?.pilp && pk?.pilp) { v.skip = true; return v; } // case (1)
-      let pi_bc = 0.15;
-      if (pj?.pilp && pk?.mltb) { // case (2)
-        // π = 0.5 when the PILP atom (j) is itself a strongly
-        // delocalized single-bond former (mltb(J) = 1 — e.g. the
-        // amide N type 10) — the paper and Tinker's ktors check j's
-        // own mltb; OpenBabel checks k's, which is the wrong atom.
-        if (pj.mltb === 1) pi_bc = 0.5;
-        else if (ELEMENT_ROW[ej] === 1 && ELEMENT_ROW[ek] === 1) pi_bc = 0.3;
-        else pi_bc = 0.15;
+      if (
+        (pj?.mltb && pk?.mltb) || (pj?.mltb && pk?.pilp) || (pk?.mltb && pj?.pilp)
+      ) {
+        let pi_bc = 0.15;
+        if (pj?.pilp && pk?.mltb) { // case (2)
+          // π = 0.5 when the PILP atom (j) is itself a strongly
+          // delocalized single-bond former (mltb(J) = 1 — e.g. the
+          // amide N type 10) — the paper and Tinker's ktors check j's
+          // own mltb; OpenBabel checks k's, which is the wrong atom.
+          if (pj.mltb === 1) pi_bc = 0.5;
+          else if (ELEMENT_ROW[ej] === 1 && ELEMENT_ROW[ek] === 1) pi_bc = 0.3;
+          else pi_bc = 0.15;
+          found = true;
+        }
+        if (pk?.pilp && pj?.mltb) { // case (3)
+          // Indices interchanged from case (2): now k carries the lone
+          // pair, so the 0.5 test reads k's own mltb.
+          if (pk.mltb === 1) pi_bc = 0.5;
+          else if (ELEMENT_ROW[ej] === 1 && ELEMENT_ROW[ek] === 1) pi_bc = 0.3;
+          else pi_bc = 0.15;
+          found = true;
+        }
+        if (!found && (pj?.mltb === 1 || pk?.mltb === 1) && (ej !== 'C' || ek !== 'C')) {
+          pi_bc = 0.4;
+          found = true;
+        }
+        if (!found) pi_bc = 0.15;
+        v.v2 = 6.0 * pi_bc * Math.sqrt(ub * uc);
         found = true;
       }
-      if (pk?.pilp && pj?.mltb) { // case (3)
-        // Indices interchanged from case (2): now k carries the lone
-        // pair, so the 0.5 test reads k's own mltb.
-        if (pk.mltb === 1) pi_bc = 0.5;
-        else if (ELEMENT_ROW[ej] === 1 && ELEMENT_ROW[ek] === 1) pi_bc = 0.3;
-        else pi_bc = 0.15;
-        found = true;
-      }
-      if (!found && (pj?.mltb === 1 || pk?.mltb === 1) && (ej !== 'C' || ek !== 'C')) {
-        pi_bc = 0.4;
-        found = true;
-      }
-      if (!found) pi_bc = 0.15;
-      v.v2 = 6.0 * pi_bc * Math.sqrt(ub * uc);
-      found = true;
     }
   }
 
