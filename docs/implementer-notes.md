@@ -387,6 +387,50 @@ lines. The totals comparisons must use `MMFF94.energies` (5
 decimals); the generator does; do not add a totals comparison at
 fine precision against the log's total line.
 
+### 6.1 The P=N phosphine imide — typing closure + the N–O rule gap (2026-08-10)
+
+Methoxyiminophosphine (H–P=N–O–CH₃, PubChem CID 129800975) exposed a
+typing gap: our P branch gave the doubly bonded P the PO4 type 25 (a
+crd-4 type) because 75 was gated on the double bond going to carbon.
+Type 25's mltb 0 then routed every H–P=N–O dihedral into the par
+file's zero row `0-0-9-25-0` (`terms: []` — a genuine reference row
+for the N(9)=P(25) combo), short-circuiting the empirical rules: the
+P=N rotation was FREE (measured 0.11 kcal/mol across 180°), and the
+refined geometry kept whatever twist the embedding start had — the
+"flat-P" rendering bug. The suite cannot arbitrate this: type 75
+never appears in the 761 molecules (zero P=N in the reference set).
+
+Fix (matches OpenBabel's typing, verified from its HIGH-verbosity
+atom-type columns): P doubly bonded to N → 75 (the crd-2 ylide
+type — the P⁺ of the P⁺=N⁻ formalism), and the imine N doubly
+bonded to P → 62 (NM — the ylidic N⁻; type 9, the imine, would be
+the wrong resonance form and, with its mltb 2, would drive rule (c)
+to π = 1.0 → V2 = 9.49, a barrier no reference supports). With 62's
+mltb 0 the empirical rule (c) gives π = 0.4:
+
+- V2(H–P=N–O) = 6·0.4·√(U_P·U_N) = 6·0.4·√(1.25·2.0) = 3.7947 —
+  OpenBabel's log lists exactly 3.795, and its torsion at the 60°
+  twist (2.846 = 3.795·sin²60°) matches our computed profile.
+- Optimization from a 60°-twisted start now converges planar:
+  H–P=N–O 0.4°, P=N–O–C −2.1°, E −8.07 (OpenBabel's planar total
+  is −7.58, modulo its half-factor conversion constants).
+
+The N–O side stays an OPEN RULE QUESTION: the C–O–N=P torsion
+(central N(62)–O(6) single bond — both pilp, no mltb) resolves under
+our rules to rule (h)'s V3 = √(V_O·V_N)/N_bc = √(0.2·1.5) = 0.5477,
+while OpenBabel's rule-(g) reading gives that pair π = 0.4 → V2 =
+4.800 (its log). The paper's literal case (1) (both pilp → skip)
+matches NEITHER implementation; the suite cannot arbitrate (no
+N(62)–O(6) pair among the 761). The two implementations therefore
+disagree on the O–CH₃ rotation profile (ours: weak 3-fold stagger;
+OB: strong 2-fold planarity) — pinned by
+`tests/phosphine-imide.test.ts`, do not "fix" without a reference
+pin (Tinker's ktors reading of rule (g) would decide).
+
+Also probed, untouched: OpenBabel types the P=S analog
+H–P(=S)–O–CH₃ as P=26 / S=72 (ours: 25) — a second P-typing
+divergence outside this closure.
+
 ---
 
 ## 7. Parameter-resolution subtleties

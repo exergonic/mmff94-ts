@@ -591,8 +591,21 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
         // share it — phosphates, phosphonates, phosphine oxides);
         // tricoordinate P(III) is the phosphine 26; a C=P double
         // bond is the ylide 75 (-P=C).
-        if (has_double && double_nbrs.some(nb => molecule.atoms[nb.nbr].element === 'C')) {
-          atom_types[i] = 75; // -P=C
+        if (has_double && double_nbrs.some(nb => {
+          const el = molecule.atoms[nb.nbr].element;
+          return el === 'C' || el === 'N';
+        })) {
+          // -P=C and -P=N both take the ylide type 75. The P=N case
+          // (phosphine imides — methoxyiminophosphine, 2026-08-10):
+          // OpenBabel types P doubly bonded to N as 75, and the
+          // crd-2 doubly-bonded P has no other home — type 25 is a
+          // crd-4 type, and typing P=N as 25 routes the H-P=N-O
+          // torsion into the par file's zero row 0-0-9-25-0, leaving
+          // the P=N rotation free (a measured 0.11 kcal/mol across
+          // 180° — the flat-P bug). The suite has no P=N (type 75
+          // never appears in the 761 molecules), so this branch was
+          // unvalidated until this case.
+          atom_types[i] = 75; // -P=C / -P=N (ylide family)
         } else if (n_neighbors >= 4 || has_double) {
           atom_types[i] = 25; // PO4 family
         } else {
@@ -1176,6 +1189,14 @@ function type_nitrogen(
     // ring N — the imine wins over the sulfonyl).
     const dbl_nbr = double_nbrs[0].nbr;
     const dbl_el = molecule.atoms[dbl_nbr].element;
+    // The N=P phosphine imide (iminophosphorane) is the ylidic N⁻:
+    // the negative formal charge lives on N (P⁺=N⁻), so it takes the
+    // sulfonamide-anion type 62 (NM) — OpenBabel's typing for P=N.
+    // The type choice drives the planarity barrier: 62's mltb 0 makes
+    // the empirical rule-(c) π = 0.4, V2 = 3.795 kcal/mol — exactly
+    // OpenBabel's measured barrier (2026-08-10); type 9 (imine,
+    // mltb 2) would give π = 1.0 and a 9.49 V2 no reference supports.
+    if (dbl_el === 'P') return 62; // NM — the phosphine-imide N⁻
     if (dbl_el === 'C' || dbl_el === 'N') return 9; // imine / azo
     // The double goes to S.
     const to = count_terminal_oxygens(dbl_nbr, adj, molecule);
