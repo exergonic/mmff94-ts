@@ -589,23 +589,33 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
         // 4-coordinate P, or P with a double bond to O or S, is the
         // phosphate family (25: the spec's PO4/PO3/PO2/PO/PTET all
         // share it — phosphates, phosphonates, phosphine oxides);
-        // tricoordinate P(III) is the phosphine 26; a C=P double
-        // bond is the ylide 75 (-P=C).
+        // tricoordinate P(III) is the phosphine 26; the 2-σ P=C/P=N
+        // ylide is 75 (-P=C).
         if (has_double && double_nbrs.some(nb => {
           const el = molecule.atoms[nb.nbr].element;
           return el === 'C' || el === 'N';
         })) {
-          // -P=C and -P=N both take the ylide type 75. The P=N case
-          // (phosphine imides — methoxyiminophosphine, 2026-08-10):
-          // OpenBabel types P doubly bonded to N as 75, and the
-          // crd-2 doubly-bonded P has no other home — type 25 is a
-          // crd-4 type, and typing P=N as 25 routes the H-P=N-O
-          // torsion into the par file's zero row 0-0-9-25-0, leaving
-          // the P=N rotation free (a measured 0.11 kcal/mol across
-          // 180° — the flat-P bug). The suite has no P=N (type 75
-          // never appears in the 761 molecules), so this branch was
-          // unvalidated until this case.
-          atom_types[i] = 75; // -P=C / -P=N (ylide family)
+          if (n_neighbors <= 2) {
+            // The ylide P is crd-2: H-P=N-OCH3 (2026-08-10) and the
+            // 2-σ phosphine imides. The rule is crd-aware, matching
+            // OpenBabel (measured 2026-08-12 on
+            // methylenetriphenylphosphorane): P doubly bonded to C/N
+            // with 4 σ types 25 (Ph3P=CH2, R3P=N-R — phosphonium/
+            // phosphorane), with 2 σ types 75. Tinker's prm
+            // corroborates: class 25 is the tetracoordinate PO4
+            // family, class 75 is "-P=C" with crd 2. Forcing 75
+            // (crd 2) onto a 4-coordinate center makes the empirical
+            // angle protocol emit θ₀ = 94.9° at P, and the
+            // potential's minimum becomes an asymmetric tripod
+            // (measured three-way: P–C spread 0.13 Å, C–P–C
+            // 93.7–125.3° in Tinker too — the render the app
+            // showed). The suite has no P=C/P=N (type 75 never
+            // appears in the 761 molecules), so this branch was
+            // unvalidated until these cases.
+            atom_types[i] = 75; // -P=C / -P=N (ylide family, crd 2)
+          } else {
+            atom_types[i] = 25; // tetracoordinate P (phosphonium/phosphorane)
+          }
         } else if (n_neighbors >= 4 || has_double) {
           atom_types[i] = 25; // PO4 family
         } else {
