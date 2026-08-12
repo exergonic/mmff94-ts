@@ -13,6 +13,12 @@ export {
 } from './assign-atom-types.js';
 
 export {
+  parameter_gap_report,
+  type ParameterGapReport,
+  type AtomParameterGap,
+} from './parameter-gaps.js';
+
+export {
   assign_bci_charges,
 } from './charges.js';
 

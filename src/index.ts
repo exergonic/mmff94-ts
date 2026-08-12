@@ -32,6 +32,7 @@ export {
   assign_bci_charges,
   calc_energy,
   calc_gradient,
+  parameter_gap_report,
 } from './mmff94/index.js';
 
 // Geometry optimizers — L-BFGS is the primary minimizer; steepest
