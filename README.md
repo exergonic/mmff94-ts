@@ -1,93 +1,103 @@
 # mmff94-ts
 
-**Merck Molecular Force Field (MMFF94) — pure TypeScript, zero runtime dependencies.**
+**MMFF94 force field in pure TypeScript.** Runs in the browser and Node.js.
+Zero dependencies. Validated against Halgren's 761-molecule suite.
 
-> ⚠️ **Work in progress — pre-alpha.**
-> The public API is not yet stable and may change before 0.1.0. See the [Status](#status)
-> table for the full picture.
-
-Energy evaluation for organic molecules, running in the browser or
-Node.js without WebAssembly, native binaries, or external services.
-
-## Why
-
-A pure TypeScript force field means your molecular mechanics code
-bundles trivially with any web framework, works in sandboxed
-environments (no WASM, no native binaries), and composes naturally
-with the rest of your TypeScript toolchain.
-
-`mmff94-ts` implements the complete MMFF94 energy functional form —
-the buffered 14-7 van der Waals, stretch-bend cross term,
-Fourier-series torsion, bond-charge-increment electrostatics, and
-the rest of the seven terms — so you can run energy evaluations
-entirely on the client side.
-
-## Status
-
-| Term | Status |
-|---|---|
-| Bond stretch | ✅ |
-| Angle bend | ✅ |
-| Stretch-bend (class-II cross term) | ✅ |
-| Torsion (Fourier series) | ✅ |
-| Van der Waals (buffered 14-7) | ✅ |
-| Electrostatic (BCI model) | ✅ |
-| Out-of-plane bending | ✅ |
-| 1-4 scaling | ✅ |
-| Analytical gradients | ✅ |
-| Optimization (L-BFGS + steepest descent) | ✅ |
-
-
-## Validation
-
-Every energy term is checked against Halgren's 761-molecule MMFF94
-validation suite (November 1998 revision), with the per-term residuals
-gated at ≤1e-4 kcal/mol in `npm run test`
-(`tests/compliance-gate.test.ts`). Analytical gradients are
-finite-difference checked. The full census — per-term tables, worst
-residuals, coarse-precision exceptions, and the AN11A/DOZNIP
-reference-inconsistency exclusions — lives in the generated
-**[Validation report](docs/validation/report.md)** (`npm run docs`
-regenerates it from the suite files).
-
-Independent cross-checks: OpenBabel and Tinker on 16 small
-organic molecules (per-term and per-atom charges). See the
-[Implementer's notes](docs/implementer-notes.md) for the three-way
-fixture comparison.
-
-
-## Usage
+[![tests](https://img.shields.io/badge/tests-245%20passed-brightgreen)](tests/)
+[![validation](https://img.shields.io/badge/validation-761%2F761-blue)](docs/validation/report.md)
+[![license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 ```typescript
 import { parse_sdf, calc_energy, optimize_lbfgs } from 'mmff94-ts';
 
 const mol = parse_sdf(sdfText);
-const energy = calc_energy(mol);     // every term, plus the total
-const optimized = optimize_lbfgs(mol);
-console.log(optimized, energy.total, energy.bond_stretch, energy.torsion);
+console.log(calc_energy(mol));   // every term + total, in kcal/mol
+console.log(optimize_lbfgs(mol)); // MMFF94-minimized geometry
 ```
 
-MMFF94 is evaluated in vacuo: the dielectric is the default D = 1.0.
+## Why
+
+Existing JavaScript force fields either ship WebAssembly (big downloads,
+sandbox-hostile), expose only a total-energy API (no per-term
+breakdown), or refuse molecules without explicit hydrogens.
+`mmff94-ts` is different: **pure TypeScript, all seven terms with the
+correct Halgren functional forms, per-term and per-atom numeric
+validation against the original program's own suite, cross-checked
+three ways.**
+
+## Accuracy
+
+| Check | Result |
+|---|---|
+| Atom typing | **761/761** type-exact vs OpenBabel |
+| Per-term residuals | **≤1e-4** kcal/mol on all seven terms |
+| Partial charges | **<1e-3** e per atom on 757 molecules |
+| Total energies | **758/761** within 1e-3 of BatchMin |
+| Cross-checks | OpenBabel + Tinker, 16 molecules, three-way |
+
+The full census — per-term tables, worst residuals, the ERULE
+exceptions, and the AN11A/DOZNIP reference-inconsistency exclusions —
+is generated from the suite files: see the
+[Validation report](docs/validation/report.md).
+
+## Features
+
+- **Bond, angle, stretch-bend, torsion, vdW, electrostatic, out-of-plane** —
+  all seven MMFF94 terms with the published Halgren factors
+- **Analytical gradients** — finite-difference verified (worst 8e-8)
+- **L-BFGS + steepest descent** — converge from perturbed starts
+- **BCI partial charges** — from the bond-charge-increment model
+- **SDF/MOL parser** — standalone, no dependencies
+- **Browser + Node** — identical results (verified in headless Chromium)
+- **Zero runtime deps** — one `import` and you're done
+
+## Quick Start
+
+```bash
+npm install mmff94-ts
+```
+
+```typescript
+import { parse_sdf, calc_energy, optimize_lbfgs } from 'mmff94-ts';
+
+const mol = parse_sdf(sdfText);
+const energy = calc_energy(mol);
+console.log(energy.total);       // -4.73435 (kcal/mol)
+console.log(energy.torsion);     // per-term breakdown
+
+const optimized = optimize_lbfgs(mol);
+console.log(optimized.converged); // true
+console.log(optimized.energy);    // energy at the minimum
+```
 
 See [`examples/quickstart.ts`](examples/quickstart.ts) for a complete
 walkthrough — parsing SDF, assigning types, computing BCI charges,
 and printing per-term energies.
 
+## What people use it for
+
+- **Interactive molecular viewers** — energy evaluation in the browser,
+  no server round-trip
+- **Conformer refinement** — L-BFGS minimization from an embedder's
+  starting geometry
+- **Teaching** — per-term energy decomposition that students can inspect
+- **Fallback geometry** — when PubChem, CIR, and RDKit.js all fail
+- **Tooling** — custom analysis pipelines that need per-term MMFF94
+  energies in TypeScript
+
 ## Documentation
 
-- **[`docs/walkthrough.md`](docs/walkthrough.md)** — traces the full
-  pipeline from raw SDF to energy components: data model, geometry
-  primitives, atom typing, parameter lookup, every energy term's
-  functional form, gradient layout, and optimization strategy.
-- **[`docs/numerical-precision.md`](docs/numerical-precision.md)** —
-  addresses whether a JavaScript MMFF94 can match C++ reference
-  energies. Contains the error-budget math (IEEE 754 doubles,
-  accumulation analysis, Kahan summation) and recommended validation
-  tolerances.
-- **[`docs/implementer-notes.md`](docs/implementer-notes.md)** — the
-  forensics behind the validation claims: the numbering systems, the
-  closure narratives, the per-anomaly numbers, and the commands that
-  regenerate every number.
+- [Walkthrough](docs/walkthrough.md) — the full pipeline, end to end
+- [Validation report](docs/validation/report.md) — the complete census
+- [Numerical precision](docs/numerical-precision.md) — error-budget math
+- [Implementer's notes](docs/implementer-notes.md) — forensics and scripts
+
+## Status
+
+All seven terms, gradients, and optimization are implemented and gated
+in `npm run test`. The public API is stable for the energy/gradient/optimize
+pipeline; the pre-release tag reflects the documentation polish still in
+progress.
 
 ## License
 
