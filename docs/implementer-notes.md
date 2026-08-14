@@ -1,522 +1,99 @@
-# Implementer's Notes: Validation Internals
+# Implementer's Notes: Validation Reference
 
-The gory details behind the claims in
-[`tests/VALIDATION.md`](../tests/VALIDATION.md) — the numbering
-systems, the reference resources, the closure narratives, and the
-forensics on every remaining divergence. Written for implementers and
-future maintainers of MMFF94; nothing here is needed to *use* the
-library. Every claim below is reproducible — the regeneration recipes
-are at the end.
-
----
+A concise map of where validation knowledge lives. The narratives that
+once filled this file now live in code commits (the "why") and the
+generated report (the numbers). This file points at them.
 
 ## 1. The three type numberings
 
-MMFF94 exists in three numeric languages, and conflating them has
-cost real debugging hours:
+Conflating these has cost real debugging hours:
 
-| numbering | range | where it appears |
+| numbering | range | where |
 |---|---|---|
-| **original Halgren** | 1–178 | The Tinker `mmff94.prm` atom table's **first** column; the Merck parameter files' native numbering. Water O = 177, alkoxide O⁻ = 124, hydroxide H = 75. |
-| **class / OpenBabel** | 1–110 | What this library assigns; the OpenBabel canonical types (`mmff94-atom-types.json`); the Tinker prm's **second** column; the OPTIMOL log's `# ty` listings. Water O = 70, alkoxide O⁻ = 35. |
-| **bmin / OPTIMOL-internal** | — | The `.mmd`'s first column per atom (OHMW1's atoms read 16/42/42/18/45). **Not a public numbering** — do not feed it to anything. |
+| **original Halgren** | 1–178 | Tinker `mmff94.prm` first column; Merck native. Water O = 177. |
+| **class / OpenBabel** | 1–110 | What this library assigns; OB canonical types; OPTIMOL `# ty`. |
+| **bmin / OPTIMOL-internal** | — | The `.mmd` first column. **Not public** — do not feed to anything. |
 
-Related trap: the CCL `MMFF94.empirical_rule_parameters` file's entry
-"Empirical rule bond parameters: 0 4 5" refers to **atom numbers**
-(O #4, H #5 — the same numbering the BatchMin log's "O #4 AND H #5"
-uses), not bmin types.
-
-## 2. The three representations of the suite molecules
+## 2. The three representations
 
 | file | representation | used by |
 |---|---|---|
-| `MMFF94.mmd` | hypervalent (S=O double bonds) | BatchMin; our energy census and typing |
-| `MMFF94_dative.mol2` | dative (four single bonds to S) | OPTIMOL (native); the Tinker runs |
-| `MMFF94_opti.log` | dative (same input as the mol2) | the original program's per-atom types and symbols; the per-interaction listings |
+| `MMFF94.mmd` | hypervalent (S=O doubles) | BatchMin; our energy census and typing |
+| `MMFF94_dative.mol2` | dative (four S singles) | OPTIMOL; Tinker runs |
+| `MMFF94_opti.log` | dative | original program's per-atom types and symbols |
 
-The representations can reorder atoms relative to each other, so
-cross-representation comparisons must align by **coordinates**, not
-by index (see §5.4).
+Cross-representation comparisons must align by **coordinates**, not index.
 
-## 3. Reference resources and tooling inventory
+## 3. Reference resources
 
-| resource | what it is | where it lives |
-|---|---|---|
-| Halgren validation suite (761 molecules) | the definitive reference | `tests/fixtures/validation-suite/` (committed: mmd, mol2s, bmin log, energies, titles, atom-types.json) |
-| `MMFF94_opti.log` (24.7 MB) | the OPTIMOL run — per-atom types, components, every interaction | CCL archive only; local copy at `<TINKER_ROOT>/MMFF94_opti.log` |
-| Tinker build + `mmff94.prm` | the second independent transcription | `<TINKER_ROOT>/` (local; `source/analyze.x` built) |
-| OpenBabel `.par` files | parameter source for the extraction script | `temp_ob/data/` (OB install), wheel's `bin/data` |
+| resource | location |
+|---|---|
+| Validation suite (761 molecules) | `tests/fixtures/validation-suite/` (mmd, mol2s, bmin log, energies, titles, atom-types.json) |
+| `MMFF94_opti.log` (24.7 MB) | CCL archive only; local copy at `<TINKER_ROOT>/MMFF94_opti.log` |
+| Tinker build + `mmff94.prm` | `<TINKER_ROOT>/` (local) |
+| OpenBabel `.par` files | `temp_ob/data/` (OB install) |
 
 Scripts:
 
 | script | purpose |
 |---|---|
-| `tests/scripts/energy-scoreboard.ts` | per-term coverage gate (≤1e-4) vs BatchMin |
-| `tests/scripts/residual-census.ts` | per-term ≤10⁻⁴ census with worst residuals |
-| `tests/scripts/generate-validation-doc.ts` | writes `docs/validation/` (side-by-side totals + per-term/charge deltas; `npm run validation:doc`) |
-| `tests/scripts/bmin-log.ts` | shared BatchMin log parser (components; the total line is 2-decimal rounded — see §6) |
-| `tests/scripts/gen-tinker-fixtures.ts` | Tinker xyz/prm/key inputs for the 16 fixtures (original-type numbering, §6.1) |
-| `tests/scripts/tinker-fixture-comparison.ts` | three-way table (ours vs OpenBabel vs Tinker) on the 16 fixtures |
-| `tests/scripts/ob_fixture_angle_breakdown.py` | OpenBabel per-interaction angle log for an SDF fixture (the per-angle workhorse) |
-| `tests/scripts/ob_energy_breakdown.py` | the OpenBabel diagnostic (per-term + per-interaction) |
+| `tests/scripts/energy-scoreboard.ts` | per-term coverage gate |
+| `tests/scripts/residual-distribution.ts` | per-term ≤10⁻⁴ census + worst residuals |
+| `tests/scripts/generate-validation-doc.ts` | writes `docs/validation/` (`npm run docs`) |
+| `tests/scripts/bmin-log.ts` | shared BatchMin log parser |
+| `tests/scripts/gen-tinker-fixtures.ts` | Tinker xyz/prm/key for 16 fixtures |
+| `tests/scripts/tinker-fixture-comparison.ts` | three-way fixture table |
+| `tests/scripts/ob_energy_breakdown.py` | OB per-term + per-interaction diagnostic |
 
 ---
 
-## 4. The empirical-rule closures
-
-### 4.1 OHMW1 — the empirical bond (part V eqs. 18–19)
-
-OHMW1 (sodium hydroxide monohydrate) is the suite's **only** molecule
-whose bond parameters are generated by the empirical rules — no
-stored row exists in any numbering. BatchMin's log flags it outright:
-"NO CHARGE INCREMENT CAN BE FOUND FOR THE BOND BETWEEN ATOMS O #4 AND
-H #5" and "low quality stretch parameters = 1". (The CCL file lists
-"0 4 5" — one of only three original-suite molecules exercising any
-empirical rule, with CEWYIM30/KEPKIZ angles.)
-
-The reference values: r₀ = 0.9778 Å, stretch 0.765397246118 kcal/mol.
-
-**The measured form is not the paper's literal eq. (18).** The paper
-adds a δ = 0.008 Å shrinkage and the mltb/BOij radius reductions;
-the reference matches the *plain* Schomaker-Stevenson/Blom-Haaland
-form to 1.4×10⁻⁶:
-
-```
-r₀ = r₀a + r₀b − c·|χa − χb|^1.4   (c = 0.05 if either atom is H, else 0.085)
-   = 0.72 + 0.33 − 0.050·1.30^1.4 = 0.977808
-k  = k_ref·(r_ref/r₀)⁶ = 9.10·(0.947/0.977808)⁶ = 7.5097
-```
-
-Tinker's `kbond.f` implements exactly the plain form (no δ, no
-corrections) and reproduces the reference's Bond Stretching (0.7654)
-on its own build — two independent transcriptions agree on the plain
-reading. OpenBabel is the outlier (0.73 + δ = 0.008 → 1.33×10⁻⁴ off).
-The published tables are used as-is: r(O) = 0.72 per the CCL errata,
-and Tinker's `mmffcovrad` agrees.
-
-The finding generalizes: **the paper and Halgren's own reference
-implementation disagree with each other.** Part V's eq. (18) prints a
-δ = 0.008 Å shrinkage plus hybridization corrections; BatchMin never
-applied them, and the 753-molecule validation suite (generated by
-BatchMin) reflects the plain form. The de facto standard the field
-calibrates against — the suite, Tinker, and this library — follows
-the reference, not the literal equation. OpenBabel appears to
-implement the letter of eq. (18), which is defensible as a fidelity
-choice but diverges from the reference behavior on every empirical
-bond to an sp² carbon — the user-authored vinyl phosphine fixture
-(CH₂=CH–PH₂, swept by the reference-comparison suite) shows the same
-pattern at the C–P bond, where the deviation reaches ~0.13 kcal/mol
-on one bond at the shared reference geometry.
-
-The BCI side of the same bond needs no empirical code: `charges.ts`'s
-unparametrized fallback `w = pbci(I) − pbci(K)` IS the paper's
-refined eq. (17) — pinned by the hydroxide reference charges
-(q(H) = +0.113, q(O⁻) = −1.113).
-
-### 4.2 The θ₀ protocol and eq. (20) — the degrees² conversion
-
-Eq. (20) states mdyn·Å/rad² but the θ₀ protocol outputs degrees, so
-the implemented form squares the conversion: `rad2 = (π/180)²`, and
-**both** the numerator and denominator are squared. Without the conversion an
-empirical angle would be off by (180/π)² ≈ 3283×.
-
-Both other transcriptions confirm the reading: Tinker `kangle.f`
-squares `(0.01745329252d0*anat(i))`, and OpenBabel's
-`forcefieldmmff94.cpp` carries the literal comment "Theta2 is in
-Degrees^2, but parameters are expecting radians — PR#2741669"
-(OpenBabel had this exact bug; the PR fixed it).
-
-### 4.3 The torsion rules (part V, pp. 631–632, Table X)
-
-All four transcriptions were compared rule-by-rule (the paper, our
-code, OpenBabel `forcefieldmmff94.cpp`, Tinker `ktors.f`), and three
-latent bugs were found — **the paper is right on all three**:
-
-| rule | the bug | the fix |
-|---|---|---|
-| (c) | our code and OpenBabel keyed the π_jk = 1.0 branch on the **i–j** bond order; the paper says the **j–k** bond | key on `order_jk` (Tinker omits the order check entirely) |
-| (g) | cases (2)/(3) checked the *other* atom's mltb flag — swapped; the paper checks the **pilp atom's own** mltb | check the pilp atom (Tinker's `ktors.f` does it right) |
-| (h) | N_bc = crd·crd in our code and OpenBabel; the paper (and Tinker) say **(crd(J)−1)·(crd(K)−1)** | squared-minus-one |
-
-The 2026-08-07 ERULE arbitration then settled the two open readings
-against the suite's own generated rows (the ERULE fragments are the
-first suite members to *fire* the rules — the old 753 suite never
-reached them):
-
-1. **Rule (c) is gated on the formal bond order of 2**, as the paper's
-   text says. The old "universal reading" (eq. 21 for every
-   non-aromatic bond, π = 1.0/0.4) had been measured against OpenBabel
-   and Tinker, which both apply eq. (21) to order-1 bonds; but
-   ERULE_03's P–Si resolves **V3 = 0.285 = √(2.4·1.22)/6** in the
-   reference — eq. (22), not rule (c)'s V2 = 3.0. Order-1 bonds now
-   flow to rules (d)–(h), and the vinyl-phosphine C–P resolves through
-   rule (g) case (3) (π = 0.15 — the PILP-P's lone pair, V2 = 1.423)
-   instead of OB's 3.795. All seven ERULE generated rows match:
-   (8,1) 0.297, (15,1) 0.336, (8,8) 0.375, (8,15) 0.424, (15,15)
-   V2 = −8, (P–Si) 0.285, (F–N) — every one the eq.-22/rule-(h)
-   value, exactly.
-2. **Table X V(S) = 0.48, not the printed 0.49.** The reference's
-   generated (S,C) and (N,S) rows resolve √(0.48·2.12)/3 = 0.336 and
-   √(1.5·0.48)/2 = 0.424 (0.49 would give 0.340 and 0.429). Tinker
-   and OpenBabel transcribe the printed value; the suite's rows pin
-   the reference's internal table.
-3. **χ(P) = 2.04 and χ(N) = 3.05, not the posted 2.06/3.07** (eq. 18).
-   The reference's generated P–Si bond (ideal 2.224) pins Δχ = 0.30,
-   and its F–N bond (1.379) pins Δχ = 1.05; the posted values give
-   2.2228 and 1.3814. The O–H pair (Δχ 1.30 → 0.978) matches the
-   posted values, so only P and N deviate. (The Si/F sides would fit
-   the same deltas; the P/N assignment is the minimal change.)
-
-The 20 rule pins in `tests/torsion-empirical.test.ts` were rewritten
-to the arbitrated protocol, with the suite's generated rows as the
-pin values (0.285, 0.375, −8.0, …).
-
-### 4.4 The BCI fallback (eq. 17)
-
-See §4.1's last paragraph — the hydroxide pin doubles as the eq.-17
-unit test.
-
----
-
-## 5. The reference anomalies — full forensics
-
-The census excludes terms, not molecules: six of seven terms are
-verified on **all 761**; electrostatics on 759 (the two type-76
-anion electrostatics, §5.2). The former hydrated-metal vdW split
-(§5.1) is closed — both molecules rejoin the census.
-
-### 5.1 FE2PW3 / CU1PW1 — the hydrated-metal van der Waals (CLOSED)
-
-The vdW component used to split **2-vs-2**:
-
-| | ours (old) | OpenBabel | Tinker | BatchMin |
-|---|---|---|---|---|
-| FE2PW3 | 55.84481 | 55.8448 | 45.92859 | 45.92859 |
-| CU1PW1 | 6.94628 | — | 6.04850 | 6.04850 |
-
-The story looked like a parameter-version split: the X94 revision
-(us + OB) vs the Merck original (Tinker + BatchMin), with the paper
-arbitration open. The closure (2026-08-05) found the split was a
-**typing collapse, not a parameter difference**:
-
-- The +2/+1 cation rows (87 FE+2, 97 CU+1) and the +3/+2 rows
-  (88 FE+3, 98 CU+2) share the same radius (A_i = 4.0) and differ
-  **only in the polarizability** (α = 0.45/0.35 vs 0.55/0.40).
-- OpenBabel's canonical typing types every hydrate cation as the
-  +3/+2 class (FE2PW3's Fe → 88, CU1PW1's Cu → 98), so the +2/+1
-  rows — the ones the original program's own types (FE+2/CU+1) use —
-  were never reached. Both us and OB therefore evaluated the +3/+2
-  polarizability (55.84/6.95); Tinker and BatchMin evaluated the
-  +2/+1 (45.93/6.05).
-- Fix: the vdW lookup bridges classes 88→87 and 98→97 when the
-  atom's formal charge says +2/+1 (the .mmd carries the oxidation
-  state; the same bridge pattern as the sulfinate 7→32). No
-  parameter table change — the transcribed rows were right all
-  along. Result: FE2PW3 vdW 45.92859 (Δ 2.6e-6), CU1PW1 6.04850
-  (Δ 4.9e-6), and the vdW term is 753/753 at ≤1e-4.
-
-Every *other* term of both molecules was already three-way verified.
-
-### 5.2 AN11A / DOZNIP — the type-76 anion electrostatics
-
-Anionic 5-ring N⁻ (type 76). Halgren himself flags the case — no
-uniform primary charge q⁰(76) exists for "unsymmetrical but strongly
-delocalized anions". The three-way numbers (DOZNIP):
-
-| | ours | Tinker | BatchMin |
-|---|---|---|---|
-| electrostatic | −286.532 | −286.373 | −286.479 |
-
-**Three implementations, three values** — the charge model is
-implementation-specific at this atom. The Tinker drops the
-electrostatic term for AN11A entirely (its charge machinery fails on
-the type-76 anion), which is itself informative. All six *other*
-terms of both molecules are three-way verified.
-
-The nine type-76 atoms in the suite show that the reference itself
-uses environment-dependent q⁰(76) — matching our fixed model exactly
-where the anion is symmetric, deviating where it is not:
-
-| molecule | atom | ours | reference (.mmd pchg) | Δ |
-|---|---|---|---|---|
-| JILWUW | 0 | −0.7750 | −0.7750 | 0.0 |
-| JILWUW | 1 | −0.7750 | −0.7750 | 0.0 |
-| DOZNIP | 6 | −0.7750 | −0.6500 | 1.3e-1 |
-| DOZNIP | 7 | −0.7750 | −0.6500 | 1.3e-1 |
-| DOZNIP | 8 | −1.0500 | −0.9667 | 8.3e-2 |
-| AN11A | 0 | −0.5000 | −0.2500 | 2.5e-1 |
-| AN11A | 1 | −0.7750 | −0.5875 | 1.9e-1 |
-| AN11A | 3 | −0.7750 | −0.5875 | 1.9e-1 |
-| AN11A | 4 | −0.5000 | −0.2500 | 2.5e-1 |
-
-JILWUW is the symmetric dianion — our q⁰(76) = −0.5 with the fcadj
-sharing reproduces its reference charges exactly. AN11A and DOZNIP
-are precisely Halgren's "unsymmetrical but strongly delocalized"
-cases: the reference's own q⁰ choice there differs from the
-symmetric-case value, so **no single q⁰(76) can match all three**
-(ours = the paper's symmetric definition, the reference = its own
-environment-dependent choice, Tinker = a third value). The
-electrostatics exclusion for these two molecules is therefore
-permanent: the parameter is underdetermined by the paper.
-
-### 5.3 JALSOE / SO18A — the dative S–S charges
-
-BatchMin adjusts these S–S bonds to the "MMFF dative representation"
-(its log states this), so the reference's partial charges are not
-comparable to any BCI model. The **energies** are a different story:
-all seven terms are three-way verified (ours ≈ Tinker ≈ BatchMin,
-≤ 10⁻⁵; the electrostatics are identically zero in all three), and
-the pair re-entered the energy census on 2026-08-05.
-
-### 5.4 The typing divergences (the OPTIMOL-log cross-check)
-
-The original program's own per-atom types (`MMFF94_opti.log` `# ty`
-sections) agree with our assignments on **749/753** atoms
-byte-for-byte (a throwaway probe, since deleted). The four remaining atoms,
-coordinate-aligned (the dative representation can reorder atoms):
-
-| molecule | atom | original program | OpenBabel canonical (ours) |
-|---|---|---|---|
-| FE2PW3 | Fe | 87 (FE+2) — correct oxidation state | 88 (FE+3) |
-| CU1PW1 | Cu | 97 (CU+1) — correct oxidation state | 98 (CU+2) |
-| JALSOE, SO18A | dative sulfone O | 32 (O2CM) | 7 (O=C) |
-
-### 5.5 FAPLUD — the q⁰(72) formal-charge split (CLOSED 2026-08-07)
-
-The last molecule whose electrostatics the library could not
-reproduce (the suite's November 1998 revision re-typed and re-valued
-it). The reference's own partial charges moved by 0.5 between the
-revisions: its P carries +1.3893 in the new pchg column where the old
-model gave +1.8893, and its S(72) and O2CM O(32) each moved −0.25.
-The reference's model: when a phosphorus bears BOTH an O2CM oxygen
-and a terminal S2CM thiolate, the P(=O)(S⁻) −1 splits −0.5/−0.5 over
-the two terminal chalcogens:
-
-- q⁰(S72) = −0.5 when the P also bears a type-32 oxygen; else 0 on
-  phosphorus (the 13-atom P25 set — GESCIQ, SEFYIL, FUWTUM, GETJOE,
-  … — is unchanged, with or without a formal S=P double bond);
-- q⁰(O32) = −(n−k)/n counts a terminal S2CM as a second terminal
-  oxygen on a P center (n = 2, k = 1 → −0.5; the O2CM formula's
-  "two terminal oxygens are equivalent" extended to the chalcogen).
-
-Landscape-verified: all 45 S(72) atoms in the suite match the
-reference pchg to <1e-3 (`probe-s72-landscape.ts`), the JALSOE/SO18A
-dative-S–S pair remaining the only documented charge exclusion.
-Electrostatics census: 759/761 at ≤1e-4 — FAPLUD closed; the two
-type-76 anion exclusions (§5.2) remain. Full suite: 223 passed,
-5 skipped, 0 failed.
-
-OpenBabel's canonical types for the two metal-hydrate cations carry
-the wrong oxidation state; we match OpenBabel (the pinned 761/761
-vs the OB JSON stands). All four divergences are **parameter-inert**
-— every energy term matches three ways regardless — because the
-classes resolve to identical parameters. Tinker's prm atom table
-shares the class numbering, so the parameter-level checks exercise
-the same assignments.
-
----
-
-## 6. Known transcription divergences (the catalog)
-
-Everything found where the implementations disagree with each other
-or with the paper, in one place:
-
-| topic | who diverges | status |
-|---|---|---|
-| eq. (18) δ-transcription | OpenBabel (0.73 + δ) vs paper-literal | OHMW1 closed — the plain form is right (§4.1) |
-| eq. (20) degrees² | OpenBabel historically (PR#2741669) | fixed upstream; we and Tinker square correctly |
-| torsion rules (c)/(g)/(h) | OB and our code (two of three), Tinker (one of three) | paper-arbitrated (§4.3) — the 761-suite's ERULE rows confirm rule (c)'s order-2 gate; OB/Tinker apply eq. (21) to order-1 bonds (vinyl-phosphine C–P: 3.795 vs our paper-based 1.423) |
-| Table X V(S) | the printed table 0.49 vs the reference's 0.48 | suite-arbitrated (§4.3) — the ERULE (S,C)/(N,S) rows pin 0.48; Tinker/OB transcribe the print |
-| eq. (18) χ table | the posted χ(P) 2.06 / χ(N) 3.07 vs the reference's 2.04 / 3.05 | suite-arbitrated (§4.3) — the generated P–Si and F–N bonds pin Δχ = 0.30/1.05; OB uses the posted values (the vinyl-phosphine C–P r₀ divergence) |
-| metal vdW parameters | looked like the X94 revision (us + OB) vs the Merck original (Tinker + BatchMin) | closed — §5.1: a typing collapse, not a parameter difference; the formal-charge bridge selects the +2/+1 rows |
-| metal-hydrate cation types | OB's canonical (FE+3/CU+2) vs the original program (FE+2/CU+1) | bridged at the vdW lookup by formal charge — §5.1 |
-| type-76 charges | all three implementations differ | open — §5.2 |
-| OB 3.2.1 API | per-term energy methods removed; only `Energy()` | worked around in `ob_energy_breakdown.py` (stderr capture) |
-| OB datadir | `BABEL_DATADIR` must point at the wheel's `bin/data` | issue #3003 upstream |
-| angle cubic constant | OpenBabel uses the rounded −0.007 deg⁻¹ (the paper's literal) vs the precise −0.4 rad⁻¹ = −0.0069813… (us, BatchMin, Tinker) | closed — §6.1; it is the whole cause of the three N-sp3 fixtures' angle deltas (6e-5…7e-4) |
-| bmin log Total Energy print | the log's total line is 2-decimal rounded (Fortran F9.2) | compare totals against `MMFF94.energies` (5 decimals), never the log's total line |
-
-### 6.1 The fixture-level three-way cross-check (2026-08-05)
-
-The 16 fixture molecules (the SDFs that have obenergy logs — the
-`*_non-optimized` fixtures are excluded; they exist for the geometry
-optimizers) were run through the local Tinker build and compared
-three ways. The committed artifacts: the Tinker logs in
-`tests/references/tinker/`, the input generator
-(`gen-tinker-fixtures.ts`), and the comparison table
-(`tinker-fixture-comparison.ts`).
-
-The generator's one trap: Tinker's MMFF94 needs the ORIGINAL 1–178
-type numbering in its xyz files, while our typing (and the OB par
-files) is class-numbered. The map comes from the prm's atom section
-(`atom <original> <class> <name>`): the first original per class.
-Any original with the right class is equivalent — Tinker's lookups
-are class-keyed (`kbondm` does `ita = class(ia)`), which is why the
-OHMW1 runs could use the specific originals (177/106/124/75) without
-special handling. The key file carries `MMFF94` + `MMFF-PIBOND`
-(the conjugated fixtures — benzene, pyridine, pyrrole, ethene,
-formamide, nicotine — need the pibond assignment; it is inert for
-saturated molecules).
-
-Result (ours vs Tinker, which prints 4 decimals):
-
-- totals: all 16 within 5e-5 (worst: piperidine).
-- per-term: 111/112 within 5e-5. The exception is nicotine's
-  angle-bend at 1.1e-4 — and there Tinker agrees with us six times
-  better than OpenBabel does.
-
-Result (ours vs OpenBabel, which prints 5 decimals): exact on 13 of
-the 16 molecules. The three N-sp3 molecules (trimethylamine,
-piperidine, nicotine) differ in the angle term: 6e-5, 6e-5, and
-7e-4. The cause is OpenBabel's angle cubic constant: the paper gives
-cb = −0.007 deg⁻¹ "(or, more precisely, −0.4 rad⁻¹)"; BatchMin,
-Tinker, and we use the precise form −0.4·(π/180) = −0.0069813…,
-OpenBabel uses the rounded −0.007. The deviation grows with Δθ³ (the
-cubic term), which is why the strained angles of nicotine's
-pyrrolidine ring show the largest gap. Proven computationally:
-recomputing our angle totals with cb = −0.007 lands on OpenBabel's
-values to 1.3e-5 (trimethylamine, piperidine) and shrinks nicotine's
-gap tenfold. Nicotine's residual 6.8e-5 at the rounded constant is a
-4th-decimal detail (class resolution or accumulation order) — the
-per-angle parameters and valence angles are identical at every
-printed digit.
-
-The bmin log footnote: its `Total Energy` line is printed 2-decimal
-rounded (F9.2, e.g. −51.42700), unlike the 5-decimal component
-lines. The totals comparisons must use `MMFF94.energies` (5
-decimals); the generator does; do not add a totals comparison at
-fine precision against the log's total line.
-
-### 6.1 The P=N phosphine imide — typing closure + the N–O rule gap (2026-08-10)
-
-Methoxyiminophosphine (H–P=N–O–CH₃, PubChem CID 129800975) exposed a
-typing gap: our P branch gave the doubly bonded P the PO4 type 25 (a
-crd-4 type) because 75 was gated on the double bond going to carbon.
-Type 25's mltb 0 then routed every H–P=N–O dihedral into the par
-file's zero row `0-0-9-25-0` (`terms: []` — a genuine reference row
-for the N(9)=P(25) combo), short-circuiting the empirical rules: the
-P=N rotation was FREE (measured 0.11 kcal/mol across 180°), and the
-refined geometry kept whatever twist the embedding start had — the
-"flat-P" rendering bug. The suite cannot arbitrate this: type 75
-never appears in the 761 molecules (zero P=N in the reference set).
-
-Fix (matches OpenBabel's typing, verified from its HIGH-verbosity
-atom-type columns): P doubly bonded to N → 75 (the crd-2 ylide
-type — the P⁺ of the P⁺=N⁻ formalism), and the imine N doubly
-bonded to P → 62 (NM — the ylidic N⁻; type 9, the imine, would be
-the wrong resonance form and, with its mltb 2, would drive rule (c)
-to π = 1.0 → V2 = 9.49, a barrier no reference supports). With 62's
-mltb 0 the empirical rule (c) gives π = 0.4:
-
-- V2(H–P=N–O) = 6·0.4·√(U_P·U_N) = 6·0.4·√(1.25·2.0) = 3.7947 —
-  OpenBabel's log lists exactly 3.795, and its torsion at the 60°
-  twist (2.846 = 3.795·sin²60°) matches our computed profile.
-- Optimization from a 60°-twisted start now converges planar:
-  H–P=N–O 0.4°, P=N–O–C −2.1°, E −8.07 (OpenBabel's planar total
-  is −7.58, modulo its half-factor conversion constants).
-
-The N–O side is CLOSED by Tinker arbitration (2026-08-10): the
-C–O–N=P torsion (central N(62)–O(6) single bond — both pilp, no
-mltb) is NO TORSION at all — rule (g) case (1) fires without any
-mltb requirement, matching Tinker's ktors (its branch chain sets
-tors1/2/3 = 0 for any both-pilp pair, and its prm has no mmfftorsion
-row for original 169 = class 62). OpenBabel's rule-(g) reading
-(π = 0.4 → V2 = 4.800, its log) is wrong per Tinker, and our old
-mltb-gated fallback (rule (h)'s V3 = √(0.2·1.5) = 0.548) was wrong
-too. The suite cannot arbitrate: its both-pilp-no-mltb empirical
-dihedrals (ERULE_02/04/08's (8,15)/(8,8) rows) all sit at τ ≈ 60° in
-the reference geometries, where the old V3 term vanishes — the
-per-term comparison is green both ways (measured), so the earlier
-"pinned by the suite" claims for (8,8)/(15,15) were wrong. The gate
-fix (case (1) checked before the mltb requirement) is implemented in
-empirical.ts and pinned by tests/phosphine-imide.test.ts +
-tests/torsion-empirical.test.ts; the suite stays 761-green.
-
-Also probed, untouched: OpenBabel types the P=S analog
-H–P(=S)–O–CH₃ as P=26 / S=72 (ours: 25) — a second P-typing
-divergence outside this closure.
-
----
-
-## 7. Parameter-resolution subtleties
-
-### 7.1 TAJSUS — the class-2 torsion vs aromatic ring bonds
-
-TAJSUS's torsion residual was 1.2×10⁻⁴ until 2026-08-04. Root cause:
-the class-2 torsion branch must **not** fire when the central bond is
-an aromatic ring bond. Type 80 (CIM+) lacks the `arom` par flag, so
-`is_aromatic_bond` was taught to treat it as aromatic (mirroring the
-`bond_type_flag` reading); the triazole ring bonds then resolve class
-0 and the reference's V₂ = 4.0 rows.
-
-### 7.2 The step-down chains and conversion factors
-
-Within a parameter class, resolution walks exact types → the
-EqLvl3/4/5 equivalence levels of the terminal types → the empirical
-rules. `lookup_param()`'s wildcards (leading → trailing → both
-terminal zeros) are the **class-0 fallback only** — the class must be
-selected explicitly before any lookup.
-
-The energy unit conversions use the exact factors —
-143.9325·(π/180)² = 0.0438443467… for angle/oop, never the rounded
-0.043844. The rounded form left all 168 bend components ~1e-5
-relative low; the exact form is why the census reaches 10⁻⁴.
-
-BatchMin's log is a single-point calculation at the `.mmd` geometry,
-so any delta on a typing-exact molecule is a term or lookup bug by
-construction.
-
-### 7.3 Out-of-plane regression pins
-
-The out-of-plane term had the most transcription-sensitive history —
-its historical ~1e-3 residuals (a conversion-factor rounding) closed
-with the exact-factor fix, and all pins now sit at ~1e-6, asserted at
-the 1e-4 gate. Current values vs BatchMin:
-
-| code | ours | BatchMin | Δ |
-|---|---|---|---|
-| DADDAN | 0.255550 | 0.255547 | +2.4e-6 |
-| GIDJUY | 0.216938 | 0.216938 | +4.6e-8 |
-| VEJWOW | 0.177152 | 0.177154 | −2.1e-6 |
-| DIKGAF | 0.158924 | 0.158925 | −1.1e-6 |
-| FAXVAB | 0.126658 | 0.126658 | +7.6e-8 |
-| GEXGIZ | 0.123820 | 0.123820 | +3.1e-7 |
-| VIRBON | 0.102968 | 0.102969 | −8.1e-7 |
-| AMHTAR01 | 0.224485 | 0.224486 | −8.8e-7 |
-
----
-
-## 8. Regeneration recipes
-
-Every number in VALIDATION.md, regenerated:
-
-```
-npm run test                      # the suite (208 passed | 4 skipped)
-npx tsx tests/scripts/energy-scoreboard.ts     # the 0.05-gate per-term counts
-npx tsx tests/scripts/residual-census.ts       # the ≤10⁻⁴ bins + worst residuals
-npx tsx tests/scripts/probe-opti-typing.ts     # typing vs the OPTIMOL log
-npx tsx tests/scripts/probe-tinker-anomalies.ts  # the six-molecule three-way table
-python tests/scripts/tinker_energy_breakdown.py DOZNIP --details torsion
-uv run ob_energy_breakdown.py COYVIV --verbose strbnd   # from tests/scripts
+## Where the narratives live
+
+The empirical-rule closures, reference anomalies, and transcription
+divergences that used to fill this file are now documented where they
+cannot drift:
+
+| topic | lives in |
+|---|---|
+| Empirical-rule closures (OHMW1 bond, θ₀ protocol, torsion rules, BCI fallback) | `empirical.ts` and `charges.ts` code comments + their commit messages |
+| Reference anomalies (FE2PW3 vdW, AN11A/DOZNIP elec, JALSOE/SO18A charges, FAPLUD q⁰) | `docs/validation/report.md` (generated) + code comments that closed them |
+| P=N phosphine imide typing + both-pilp torsion fix | `empirical.ts` comments + `tests/phosphine-imide.test.ts` + `tests/torsion-empirical.test.ts` |
+| Parameter-resolution subtleties (TAJSUS, step-down chains, OOP pins) | `parameter-classes.ts` and `out-of-plane.ts` code comments |
+
+When investigating a discrepancy, read the code comment in the
+implementing file first — the narrative is there, with the commit hash
+that introduced it.
+
+## Known transcription divergences
+
+| topic | status |
+|---|---|
+| eq. (18) δ-transcription | closed — plain form is right (empirical.ts comment) |
+| eq. (20) degrees² | closed upstream (OB PR#2741669); we and Tinker square correctly |
+| torsion rules (c)/(g)/(h) | paper-arbitrated (empirical.ts comment); ERULE rows confirm |
+| Table X V(S) = 0.48 | suite-arbitrated (empirical.ts comment) |
+| χ(P) = 2.04, χ(N) = 3.05 | suite-arbitrated (empirical.ts comment) |
+| metal vdW parameters | closed — typing collapse, formal-charge bridge (van-der-waals.ts comment) |
+| type-76 charges | open — all three implementations differ (report.md) |
+| OB 3.2.1 API (per-term methods removed) | worked around in `ob_energy_breakdown.py` |
+| angle cubic constant | closed — OB uses rounded −0.007; we use precise −0.4·π/180 (angle-bend.ts comment) |
+
+## Regeneration recipes
+
+Every number in the validation docs, regenerated:
+
+```bash
+npm run test                      # the suite + compliance gate
+npm run docs                      # docs/validation/report.md, total-energies.txt, per-term-and-charges.txt
+npm run docs:check                # CI guard: fails if committed report differs from fresh run
+npx tsx tests/scripts/energy-scoreboard.ts   # per-term coverage
+npx tsx tests/scripts/residual-distribution.ts  # ≤10⁻⁴ bins + worst residuals
 ```
 
-The Tinker runs need `<TINKER_ROOT>` (default `C:/Users/mccan/Code/
-tinker`; override with the `TINKER_ROOT` env var for the Python
-script, edit the constant in the TS probes) with the built
-`analyze` binary and the opti log present. Each run gets a workdir
-under `<TINKER_ROOT>/analyze/<CODE>/` with the xyz, a renamed prm,
-the key file, and the binary. Pitfalls encoded in the script: the
-xyz must use `\n` line endings (CRLF corrupts the connectivity
-column and every pair becomes a vdW pair), and the mol2's aromatic
-bonds carry `"am"` orders.
+The Tinker runs need `<TINKER_ROOT>` with the built `analyze` binary
+and the opti log present.
 
-## 9. Open questions
+## Open questions
 
-1. **The metal vdW**: which parameter set does Halgren's part III
-   table actually specify — the X94 revision (us + OB) or the Merck
-   original (Tinker + BatchMin)? The paper arbitration would close
-   the last excluded vdW terms.
-2. **The type-76 q⁰**: Halgren's own caveat — no uniform primary
-   charge reproduces the reference charges. Three implementations,
-   three answers; unlikely to be closable without the original
-   derivation.
+1. **The metal vdW**: which parameter set does Halgren's part III table specify — the X94 revision or the Merck original?
+2. **The type-76 q⁰**: Halgren's own caveat — no uniform primary charge reproduces the reference charges. Three implementations, three answers.
