@@ -124,7 +124,7 @@ molecules (δ = 1e-6 Å; relative error < 1e-5; worst observed 8e-8).
    (rule (c) on the order-1 bond) differ from the reference behavior;
    Tinker and this library agree on the bond and strbnd to four
    decimals. The findings are documented in
-   `docs/implementer-notes.md` §4.1 and §4.3.
+   `../docs/implementer-notes.md` §4.1 and §4.3.
 6. **Small-ring and linear-center edge cases**: the near-linear angle
    and out-of-plane guards return the true limit values (the 2026-08
    fixes), and the 3- and 4-ring class parameters follow the published

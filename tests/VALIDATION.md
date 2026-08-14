@@ -2,7 +2,7 @@
 
 This document describes **where** the validation data lives and **how**
 the tolerances are defined. The actual numbers live in the generated
-**[Validation report](docs/validation/report.md)** (`npm run docs`
+**[Validation report](../docs/validation/report.md)** (`npm run docs`
 regenerates it from the suite files) — this document never restates
 its counts, so the two cannot disagree.
 
@@ -16,9 +16,9 @@ the atom types from the original program.
 The molecule-by-molecule comparison is committed as generated
 documentation:
 
-- `docs/validation/report.md` — the full census (single source of truth).
-- `docs/validation/total-energies.txt` — all 761 totals side by side.
-- `docs/validation/per-term-and-charges.txt` — per-term + charge deltas.
+- `../docs/validation/report.md` — the full census (single source of truth).
+- `../docs/validation/total-energies.txt` — all 761 totals side by side.
+- `../docs/validation/per-term-and-charges.txt` — per-term + charge deltas.
 
 Regenerate them with `npm run docs`. CI checks they're current
 (`npm run docs:check`).
@@ -48,13 +48,13 @@ The two AN11A/DOZNIP electrostatics exclusions and the JALSOE/SO18A
 dative-adjusted charges are the reference's own inconsistencies —
 documented in the report. The former FE2PW3/CU1PW1 vdW split is
 closed (the +2/+1 cation rows carry their own parameters; the bridge
-is by formal charge — `docs/implementer-notes.md` §5.1).
+is by formal charge — `../docs/implementer-notes.md` §5.1).
 
 ## Method
 
 - Atom typing: `assign_atom_types`, cross-checked against OpenBabel's
   canonical types and the original program's own assignments
-  (`docs/implementer-notes.md` §5.4).
+  (`../docs/implementer-notes.md` §5.4).
 - The compliance gate is the load-bearing check for term-level
   regressions; the report is the full evidence. If a number changes,
   regenerate the report — don't edit it by hand.
