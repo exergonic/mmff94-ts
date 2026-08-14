@@ -61,23 +61,28 @@ describe('phosphine imide typing (P=N → 75/62, 2026-08-10)', () => {
     expect(t?.v3).toBe(0);
   });
 
-  it('zeroes the C–O–N=P torsion — the Tinker-arbitrated case (1)', () => {
+  it('gives the C–O–N=P torsion rule (h)\'s V3 = √(0.2·1.5) = 0.5477 — the suite-arbitrated both-pilp reading', () => {
     // The C–O–N=P torsion (central N(62)–O(6) single bond): both
     // central types carry pilp and no mltb, so rule (g) case (1)
-    // applies — no torsion at all. Arbitrated 2026-08-10 with
-    // Tinker's ktors (lenovo build): its branch chain zeroes any
-    // both-pilp pair (tors1/2/3 = 0) with no mltb requirement, and
-    // its prm has no mmfftorsion row for original 169 (class 62).
-    // OpenBabel's rule-(g) reading gives this pair V2 = 4.8 (its log
-    // lists 4.800) — wrong per Tinker; our old mltb-gated fallback
-    // gave rule (h)'s V3 = 0.548 — also wrong. The suite cannot
-    // arbitrate: every both-pilp-no-mltb bond in the 761 resolves via
-    // a table row or never forms a dihedral.
+    // suppresses the V2 — but the rules continue to rule (h), which
+    // assigns V3 = √(V_O·V_N)/N_bc = √(0.2·1.5)/1 = 0.5477 (crd 2/2
+    // → N_bc = 1). The 2026-08-10 "no torsion" reading was arbitrated
+    // with Tinker's ktors, which zeroes any both-pilp pair — but the
+    // suite's ERULE fragments (ERULE_01/02/04/08's central
+    // (15,8)/(8,15)/(8,8) pairs) prove BatchMin computes the rule-(h)
+    // V3 for both-pilp bonds: the reference torsion totals match
+    // √(V_b·V_c)/N_bc to 5 decimals (measured 2026-08-13). Tinker's
+    // zeroing is a Tinker deviation from the reference. OpenBabel's
+    // V2 = 4.8 for this pair remains wrong (its case-(2) check reads
+    // the wrong atom's mltb).
     const typed = assign_atom_types(METHOXYIMINOPHOSPHINE);
     const adj: number[][] = Array.from({ length: typed.atoms.length }, () => []);
     for (const b of typed.bonds) { adj[b.atom1].push(b.atom2); adj[b.atom2].push(b.atom1); }
     const ctx = make_class_context(typed, adj);
     const t = torsion_terms(ctx, typed, 3, 1, 2, 0); // C–O–N=P
-    expect(t).toBeUndefined();
+    expect(t).not.toBeUndefined();
+    expect(t!.v3).toBeCloseTo(Math.sqrt(0.2 * 1.5), 9);
+    expect(t!.v2).toBe(0);
+    expect(t!.v1).toBe(0);
   });
 });

@@ -3,16 +3,15 @@
 // ERULE fragments (added in the suite's Nov 1998 revision) exercise the
 // rules the old suite never reached: ERULE_03's P–Si resolves through
 // eq. (22) (V3 = 0.285 — NOT rule (c)'s V2 = 3.0), proving rule (c) is
-// gated on the formal bond order of 2 as the paper's text says, and
-// the (8,1)/(15,1) rows pin rules (d)-(h). The both-pilp cases
-// (6,6)/(15,15)/(8,8)/(8,15) are case (1) — NO torsion — arbitrated
-// 2026-08-10 with Tinker's ktors (its chain zeroes any both-pilp pair
-// without an mltb requirement; the paper's case (1) precedes rule
-// (h)). The suite cannot arbitrate those pairs: their empirical
-// dihedrals all sit at τ ≈ 60° in the reference geometries, where the
-// old rule-(h) V3 term vanishes — the per-term energy comparison is
-// green both ways (measured 2026-08-10), so the earlier "pinned by
-// the suite" claims for them were wrong.
+// gated on the formal bond order of 2 as the paper's text says, the
+// (8,1)/(15,1) rows pin rules (d)-(h), and the both-pilp dihedrals of
+// ERULE_01/02/04/08 (central (15,8)/(8,15)/(8,8), τ = 7.8-22.7° in the
+// reference geometries) pin rule (g) case (1): NO V2 from rule (g) —
+// but rule (h) still assigns the V3 = √(V_b·V_c)/N_bc (measured
+// 2026-08-13: a both-pilp skip left the reference's torsion 0.29-0.41
+// kcal/mol higher on those four molecules; the earlier "τ ≈ 60°, green
+// both ways" claim was never checked). Tinker's ktors zeroes both-pilp
+// torsions entirely — a Tinker deviation from the reference.
 //
 // The 2026-08-06 vinyl-phosphine arbitration is SUPERSEDED: the old
 // "universal reading" (rule (c) as the else of the aromatic rule — π =
@@ -111,32 +110,46 @@ describe('rules (d)-(h) — order-1 non-aromatic central bonds', () => {
     expect(tor(2, 26, 1).v2).toBeCloseTo(6 * 0.15 * Math.sqrt(2.0 * 1.25), 9);
   });
 
-  it('the O–O pair (6-6): rule (g) case (1) — both pilp, no mltb → no torsion', () => {
-    // Both central atoms carry lone pairs (pilp 1) and no mltb, so
-    // rule (g) case (1) fires regardless of the mltb gate — the
-    // torsion is skipped. Arbitrated 2026-08-10 with Tinker's ktors
-    // (it zeroes tors1/2/3 for any both-pilp pair) and the paper's
-    // case-(1) ordering before rule (h). The old mltb-gated fallback
-    // gave rule (h)'s O/S special V2 = −√(2·2) = −2 — wrong per the
-    // reference transcription.
+  it('the O–O pair (6-6): rule (g) case (1) — both pilp, no mltb → no V2; rule (h) gives V2 = −√(2·2) = −2', () => {
+    // Case (1) suppresses only rule (g)'s V2; rule (h)'s O/S special
+    // still assigns the negative V2 (the paper's W = 2 for O). No
+    // suite case exercises this pair — the ERULE both-pilp pairs are
+    // (15,8)/(8,15)/(8,8) — the value follows the paper. (The
+    // 2026-08-10 Tinker-arbitrated "no torsion" reading was
+    // disproven by the suite; see the header.)
     const r = tor(6, 6, 1);
-    expect(r.skip).toBe(true);
+    expect(r.skip).toBe(false);
+    expect(r.v2).toBeCloseTo(-2.0, 9);
+    expect(r.v3).toBe(0);
   });
 
-  it('the S–S pair (15-15): rule (g) case (1) — both pilp, no mltb → no torsion', () => {
-    // Same arbitration as (6,6): the old rule-(h) O/S special gave
-    // V2 = −√(8·8) = −8; Tinker + the paper's case (1) say no torsion.
+  it('the S–S pair (15-15): rule (h) gives V2 = −√(8·8) = −8', () => {
+    // Same arbitration as (6,6): rule (h)'s O/S special applies.
     const r = tor(15, 15, 1);
-    expect(r.skip).toBe(true);
+    expect(r.skip).toBe(false);
+    expect(r.v2).toBeCloseTo(-8.0, 9);
+    expect(r.v3).toBe(0);
   });
 
-  it('the amine N–N (8-8): rule (g) case (1) — both pilp, no mltb → no torsion', () => {
-    // ERULE_02/08 contain (8,8)-central empirical torsions; the old
-    // rule-(h) fallback gave V3 = √(1.5·1.5)/4 = 0.375. The suite is
-    // green both ways (those dihedrals sit at τ ≈ 60° in the reference
-    // geometries, where the V3 term vanishes), so the suite cannot
-    // arbitrate — Tinker's case (1) decides: no torsion.
+  it('the amine N–N (8-8): rule (h) gives V3 = √(1.5·1.5)/4 = 0.375', () => {
+    // Suite-pinned: ERULE_08's both-pilp (8,8) dihedral sits at
+    // τ = 14.9° in the reference geometry, where the V3 term is near
+    // its maximum — the BatchMin torsion total matches
+    // 0.375·(1+cos3τ)/2 to 5 decimals.
     const r = tor(8, 8, 1);
-    expect(r.skip).toBe(true);
+    expect(r.skip).toBe(false);
+    expect(r.v3).toBeCloseTo(1.5 / 4, 9);
+    expect(r.v2).toBe(0);
+  });
+
+  it('the amine N–S (8-15): rule (h) gives V3 = √(1.5·0.48)/2 = 0.4243', () => {
+    // Suite-pinned: ERULE_01/02/04's both-pilp (15,8)/(8,15)
+    // dihedrals (τ = 7.8-22.7° in the reference geometries) match
+    // √(1.5·0.48)/((3−1)·(2−1)) = 0.4243 to 5 decimals in the
+    // BatchMin torsion totals.
+    const r = tor(8, 15, 1);
+    expect(r.skip).toBe(false);
+    expect(r.v3).toBeCloseTo(Math.sqrt(1.5 * 0.48) / 2, 9);
+    expect(r.v2).toBe(0);
   });
 });

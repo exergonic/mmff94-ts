@@ -24,9 +24,11 @@
 //   the torsion rules (pp. 631-632) — the V2/V3 barrier heights from
 //     the Table X U_i/V_i constants and the W values (2 for O, 8 for
 //     S), by the central bond's aromaticity, the sp2/sp3 character of
-//     j and k, and their mltb/pilp flags; rules (a)/(e)/(f)/(g-case-1)
-//     SKIP the torsion (linear centers, unsaturated sp2 pairs, and
-//     specific mltb/pilp combinations).
+//     j and k, and their mltb/pilp flags; rules (a)/(e)/(f) SKIP the
+//     torsion (linear centers and unsaturated sp2 pairs); rule (g)
+//     case (1) (both central atoms pilp, no mltb) suppresses only the
+//     V2, and rule (h) then assigns the V3 (or the O/S negative V2) —
+//     the suite's ERULE_01/02/04/08 fragments pin this.
 //
 // The bond form here is MEASURED against the reference, not the
 // paper's literal eq. (18): the paper adds a δ = 0.008 Å shrinkage and
@@ -341,13 +343,13 @@ export function empirical_ka(
  * The empirical torsion barrier heights for i-j-k-l (part V,
  * pp. 631-632 — the extension of the part IV torsion parameterization;
  * the U_i/V_i constants are Table X), or skip = true when the rules
- * say this torsion does not exist (linear centers, and the rule
- * (e)/(f)/(g) exclusions). Rule (c) always fires for non-aromatic
- * central bonds (the corroborated universal reading), so the paper's
- * rules (d)-(h) below are unreachable for non-aromatic bonds — kept
- * as the spec. The graph queries — the j-k bond order and
- * aromaticity — are gathered by the caller; the properties and
- * elements of j and k arrive as arguments.
+ * say this torsion does not exist (linear centers and the rule
+ * (e)/(f) unsaturated-sp2 exclusions). Rule (c) is gated on the
+ * formal j-k bond order of 2 (the paper's text; the suite's ERULE_03
+ * P–Si row proves the order-1 case resolves eq. (22) instead), so
+ * the order-1 rules (d)-(h) carry the single-bond cases. The graph
+ * queries — the j-k bond order and aromaticity — are gathered by the
+ * caller; the properties and elements of j and k arrive as arguments.
  */
 export function empirical_torsion(
   pj: Pick<AtomTypeProperties, 'lin' | 'pilp' | 'val' | 'mltb' | 'crd'> | undefined,
@@ -419,20 +421,24 @@ export function empirical_torsion(
   }
 
   // rule (g): order-1 central bond between mltb/pilp-carrying types
-  // → V2 (the π value depends on which side carries what). The
-  // both-pilp case (1) is checked FIRST and WITHOUT an mltb
-  // requirement — Tinker's ktors sets tors1/2/3 = 0 for any
-  // both-pilp pair (arbitrated 2026-08-10 on methoxyiminophosphine's
-  // N(62)-O(6): the mltb-gated fallback gave rule (h)'s
-  // V3 = √(0.2·1.5) = 0.548 and OpenBabel reads V2 = 4.8 — neither
-  // matches the reference transcription, and Tinker's prm has no row
-  // for the pair; the suite cannot arbitrate — every both-pilp-
-  // no-mltb bond in the 761 resolves via a table row or never forms
-  // a dihedral (terminal halogens)).
+  // → V2 (the π value depends on which side carries what). Case (1) —
+  // BOTH central atoms carry lone pairs (pilp) and no mltb — assigns
+  // NO V2; the rules continue to rule (h), which supplies the V3 (or
+  // the O/S negative V2). The suite arbitrates: ERULE_01/02/04/08's
+  // both-pilp dihedrals (central (15,8)/(8,15)/(8,8), τ = 7.8-22.7°
+  // in the reference geometries) reproduce rule (h)'s
+  // V3 = √(V_b·V_c)/N_bc to 5 decimals in the BatchMin totals — a
+  // both-pilp SKIP left the reference's torsion 0.29-0.41 kcal/mol
+  // higher than ours on those four molecules (measured 2026-08-13;
+  // the earlier "τ ≈ 60°, green both ways" claim was never checked).
+  // Tinker's ktors zeroes tors1/2/3 for any both-pilp pair — a
+  // Tinker deviation from the reference, like its universal rule-(c)
+  // reading. (The 2026-08-10 methoxyiminophosphine N(62)-O(6)
+  // arbitration had no suite case to consult; the ERULE fragments
+  // are the suite cases, and they side with rule (h).)
   if (!found) {
     const central_single = order_jk === 1 && !aromatic_jk;
     if (central_single) {
-      if (pj?.pilp && pk?.pilp) { v.skip = true; return v; } // case (1)
       if (
         (pj?.mltb && pk?.mltb) || (pj?.mltb && pk?.pilp) || (pk?.mltb && pj?.pilp)
       ) {
