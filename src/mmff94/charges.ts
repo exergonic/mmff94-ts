@@ -41,7 +41,7 @@
  *
  * The q⁰ values below were verified against the validation suite's
  * reference partial charges (the .mmd pchg column): solving eq. (15)
- * for q⁰ across all 550 reference molecules reproduces these values
+ * for q⁰ across all 761 reference molecules reproduces these values
  * to machine precision, and the environment rule for type 32
  * (carboxylate O: −0.5; sulfone/nitro/nitrate O: 0) is the clean
  * bimodal split the reference shows. Types absent from the table

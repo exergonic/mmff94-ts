@@ -83,9 +83,9 @@ is the same everywhere: clamp the dot product before passing it to `acos`.
 ## 3. Where real differences come from
 
 The Halgren validation suite reference says OPTIMOL and BatchMin agree to
-within **0.0001 kcal/mol** for 738/753 molecules, and at most 0.0035 kcal/mol
-for the remaining 15. The discrepancies are **not from floating-point
-arithmetic** but from:
+within **0.0001 kcal/mol** for 746/761 molecules, and at most 0.0035 kcal/mol
+for the remaining 15 (the file marks them with an asterisk). The
+discrepancies are **not from floating-point arithmetic** but from:
 
 | Source | Magnitude | Why |
 |---|---|---|

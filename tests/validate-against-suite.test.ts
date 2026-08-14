@@ -6,10 +6,9 @@
  * and reports per-component comparison against BatchMin 5.5 references.
  *
  * All seven terms are implemented; the per-component assertions run on
- * the subset of molecules whose atom typing reproduces the reference
- * types exactly (241/550 in the suite scoreboard — see
- * atom-types-suite.test.ts), so the comparison isolates the terms
- * themselves rather than the typing gaps.
+ * the typing-exact subset — since 2026-08-07 that is the whole suite
+ * (761/761 — see atom-types-suite.test.ts), so the comparison isolates
+ * the terms themselves rather than the typing gaps.
  *
  * Sulfinate note: the S=O oxygen of an anionic sulfinate (73) is
  * typed 7 by the reference typing rules but is keyed 32 in every

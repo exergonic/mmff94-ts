@@ -9,7 +9,7 @@ The Implementer's Notes document has the detailed technical records.
 ## Reference Data
 
 We validated the library against Halgren's MMFF94 validation suite.
-The suite has 753 molecules.
+The suite has 761 molecules (the November 1998 revision).
 It gives the structure, the total energy, the seven energy
 components, and the partial charges for each molecule.
 It also gives the atom types from the original program.
@@ -18,7 +18,7 @@ The molecule-by-molecule comparison is committed as generated
 documentation (`npm run validation:doc` regenerates it from the suite
 files via `tests/scripts/generate-validation-doc.ts`):
 
-- `docs/validation/total-energies.txt` — all 753 totals, ours side by
+- `docs/validation/total-energies.txt` — all 761 totals, ours side by
   side with the suite's OPTIMOL and BatchMin columns.
 - `docs/validation/per-term-and-charges.txt` — every per-term energy
   delta and per-atom charge delta, molecule by molecule.
@@ -97,7 +97,7 @@ All seven terms and the total match to five decimal places.
 ## Partial Charges
 
 The partial charges come from the bond charge increment (BCI) model.
-They match the reference values to 0.001 e on 749 molecules.
+They match the reference values to 0.001 e on 757 molecules.
 
 ## Gradients
 

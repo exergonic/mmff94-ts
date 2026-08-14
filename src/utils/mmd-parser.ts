@@ -21,9 +21,12 @@ import type { Molecule, Atom, Bond } from '../types.js';
 // MacroModel atom type (the .mmd first column) → element symbol.
 // Extracted from OpenBabel's data/types.txt MMD column — OpenBabel's
 // mmd reader uses exactly this table, so elements agree with the
-// typing reference by construction. Types not listed here (31, 51,
-// 201+) are ones OpenBabel cannot translate either; their molecules
-// never make it into the reference.
+// typing reference by construction. The table also carries the
+// amended codes of the types.txt patch (tests/scripts/
+// extract_suite_types.py): the mmd uses a wider MacroModel code set
+// than OB's stock table covered (21/31/51/201/204/206/65-67/70/
+// 207-212), and the patch is what lets all 761 suite molecules
+// translate.
 const MMD_ELEMENT: Record<number, string> = {
   1: 'C', 2: 'C', 3: 'C', 10: 'C', 11: 'C', 12: 'C',
   15: 'O', 16: 'O', 18: 'O', 20: 'O', 21: 'O', 23: 'O',
@@ -134,9 +137,7 @@ export function parse_mmd(mmd_text: string): Molecule[] {
         // Fallback: derive from the atom name field ("C1", "Cl1"). The
         // strict pattern (one letter + optional lowercase) rejects
         // residue prefixes like "UNCH" or "CE05" so the scan reaches
-        // the element field. Types outside the table (31, 51, 201+)
-        // are ones OpenBabel cannot translate either — such molecules
-        // never appear in the typing reference.
+        // the element field.
         const nameFields = parts.slice(cursor);
         for (const field of nameFields) {
           const match = field.match(/^([A-Z][a-z]?)\d*$/);

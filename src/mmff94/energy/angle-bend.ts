@@ -9,7 +9,10 @@
  *   k_a   = force constant in mdyn·Å/rad²
  *   Δθ    = θ − θ₀, the deviation from the reference angle (degrees)
  *   θ₀    = equilibrium bond angle in degrees
- *   cb    = cubic bend constant = −0.007 deg⁻¹ ( −0.4 rad⁻¹ )
+ *   cb    = cubic bend constant = −0.4·π/180 deg⁻¹ = −0.0069813…
+ *          (the paper prints −0.007 deg⁻¹ "(or, more precisely,
+ *          −0.4 rad⁻¹)"; BatchMin uses the precise radian value,
+ *          which is what this library implements — see below)
  *   0.043844 = unit conversion factor: (mdyn·Å/rad²) → (kcal/mol)/deg²
  *
  * The ½ factor is part of Halgren's definition (same as bond stretch).

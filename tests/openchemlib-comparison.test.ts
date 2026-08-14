@@ -193,7 +193,7 @@ describe('openchemlib-js cross-validation', () => {
 
   it('reports how much of the full suite openchemlib can type at all', () => {
     // The typing-exact set above is where our typing is proven right. The
-    // full suite is the harder question: of 753 molecules, how many can the
+    // full suite is the harder question: of 761 molecules, how many can the
     // only other JS MMFF94 even construct a force field for?
     const molecules = parse_mmd(readFileSync(join(suiteDir, 'MMFF94.mmd'), 'utf-8'));
     let accepted = 0;

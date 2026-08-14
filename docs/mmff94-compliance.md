@@ -74,8 +74,8 @@ molecule's atom types are assigned independently and compared:
 
 For each of the seven terms, the table shows the residual statistics
 against BatchMin across the suite (typing-exact molecules; the two
-documented anomaly exclusions in section 5 applied to the van der
-Waals and electrostatic rows):
+documented anomaly exclusions in section 5 applied to the
+electrostatic row):
 
 | Term | Molecules ≤1e-4 | Worst | Mean | RMS |
 |---|---|---|---|---|
@@ -84,20 +84,20 @@ Waals and electrostatic rows):
 | Stretch-bend | 760 of 761 | 3.36e-4 | 5.0e-6 | 1.4e-5 |
 | Torsion | 761 of 761 | 4.69e-5 | 1.2e-6 | 2.8e-6 |
 | Out-of-plane | 761 of 761 | 1.61e-5 | 5.8e-7 | 1.5e-6 |
-| Van der Waals | 759 of 761 | 4.35e-5 | 6.7e-6 | 9.3e-6 |
+| Van der Waals | 761 of 761 | 4.35e-5 | 6.7e-6 | 9.3e-6 |
 | Electrostatic | 759 of 761 | 7.08e-5 | 7.0e-6 | 1.2e-5 |
 
 The two stretch/strbnd rows above 1e-4 are the empirical-rule
 generated P–Si and F–N bonds of the ERULE fragments, whose reference
 values are printed to three decimals — our generated rows sit within
 that print precision. At the ±5e-5 gate — the accuracy Wavefunction
-claims for Spartan — **751 of 761 molecules match all seven
-components**, and 755 of 761 are within 1e-4 on every comparable
+claims for Spartan — **753 of 761 molecules match all seven
+components**, and 757 of 761 are within 1e-4 on every comparable
 term.
 
 ### 4.2 Total energies
 
-The total-energy residuals (the 757 molecules without excluded terms):
+The total-energy residuals (the 759 molecules without excluded terms):
 
 | Statistic | Value |
 |---|---|

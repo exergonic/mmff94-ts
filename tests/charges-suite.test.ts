@@ -75,7 +75,7 @@ describe('partial charges vs the validation-suite reference (pchg)', () => {
       const refTypes = refs.molecules[mol.name];
       if (!refTypes || refTypes.length !== mol.atoms.length) continue;
       // The charge model is validated on every typing-exact molecule
-      // (all 753 since the typing is complete), minus the anomaly set
+      // (all 761 since the typing is complete), minus the anomaly set
       // above.
       const typed = assign_atom_types(mol);
       if (!typed.atom_types.every((t, i) => t === refTypes[i])) continue;

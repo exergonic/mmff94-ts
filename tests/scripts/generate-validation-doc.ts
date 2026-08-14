@@ -1,5 +1,5 @@
 // Generate the hard validation documentation: side-by-side total
-// energies for all 753 suite molecules (mmff94-ts vs the suite's own
+// energies for all 761 suite molecules (mmff94-ts vs the suite's own
 // OPTIMOL and BatchMin totals) and per-molecule per-term energy +
 // per-atom charge deltas against the BatchMin log and the .mmd
 // reference charges.

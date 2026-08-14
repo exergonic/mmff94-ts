@@ -42,7 +42,7 @@ by index (see §5.4).
 
 | resource | what it is | where it lives |
 |---|---|---|
-| Halgren validation suite (753 molecules) | the definitive reference | `tests/fixtures/validation-suite/` (committed: mmd, mol2s, bmin log, energies, titles, atom-types.json) |
+| Halgren validation suite (761 molecules) | the definitive reference | `tests/fixtures/validation-suite/` (committed: mmd, mol2s, bmin log, energies, titles, atom-types.json) |
 | `MMFF94_opti.log` (24.7 MB) | the OPTIMOL run — per-atom types, components, every interaction | CCL archive only; local copy at `<TINKER_ROOT>/MMFF94_opti.log` |
 | Tinker build + `mmff94.prm` | the second independent transcription | `<TINKER_ROOT>/` (local; `source/analyze.x` built) |
 | OpenBabel `.par` files | parameter source for the extraction script | `temp_ob/data/` (OB install), wheel's `bin/data` |
@@ -181,7 +181,7 @@ unit test.
 ## 5. The reference anomalies — full forensics
 
 The census excludes terms, not molecules: six of seven terms are
-verified on **all 753**; electrostatics on 751 (the two type-76
+verified on **all 761**; electrostatics on 759 (the two type-76
 anion electrostatics, §5.2). The former hydrated-metal vdW split
 (§5.1) is closed — both molecules rejoin the census.
 

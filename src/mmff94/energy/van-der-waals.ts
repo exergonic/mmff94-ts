@@ -36,7 +36,8 @@
  * 1-4 SCALING: none. Halgren 1996 (p. 496): "1,4-vdW interactions are
  * not differentially scaled in MMFF94" — unlike MM2/MM3/GAFF, no 0.5
  * factor is applied at three-bond separation. (Only the electrostatic
- * term carries a 1-4 factor, 0.75, applied in total.ts.)
+ * term carries a 1-4 factor, 0.75, applied inside its own term —
+ * electrostatic.ts — since the terms return totals, not pair lists.)
  */
 
 import type { TypedMolecule } from '../../types.js';
@@ -150,7 +151,9 @@ export function vdw_pair_parameters(
  * Calculate the total van der Waals energy between all non-bonded atom pairs.
  *
  * Excludes 1-2 (bonded) and 1-3 (angle) pairs. 1-4 pairs are included
- * at full strength (0.5 scaling applied externally in total.ts).
+ * at full strength — MMFF94 applies no vdW scaling at 1-4 (the 0.75
+ * factor that exists in the model belongs to electrostatics only, and
+ * lives inside electrostatic.ts).
  */
 export function calc_vdw_energy(molecule: TypedMolecule): number {
   let total_energy = 0.0;
