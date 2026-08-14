@@ -1,147 +1,60 @@
 # Validation
 
-## Purpose
+This document describes **where** the validation data lives and **how**
+the tolerances are defined. The actual numbers live in the generated
+**[Validation report](docs/validation/report.md)** (`npm run docs`
+regenerates it from the suite files) — this document never restates
+its counts, so the two cannot disagree.
 
-This document describes the validation of the mmff94-ts library.
-It states what matches the reference and what does not.
-The Implementer's Notes document has the detailed technical records.
+## Reference data
 
-## Reference Data
-
-We validated the library against Halgren's MMFF94 validation suite.
-The suite has 761 molecules (the November 1998 revision).
-It gives the structure, the total energy, the seven energy
-components, and the partial charges for each molecule.
-It also gives the atom types from the original program.
+We validated the library against Halgren's MMFF94 validation suite
+(761 molecules, the November 1998 revision). It gives the structure,
+total energy, the seven energy components, the partial charges, and
+the atom types from the original program.
 
 The molecule-by-molecule comparison is committed as generated
-documentation (`npm run validation:doc` regenerates it from the suite
-files via `tests/scripts/generate-validation-doc.ts`):
+documentation:
 
-- `docs/validation/total-energies.txt` — all 761 totals, ours side by
-  side with the suite's OPTIMOL and BatchMin columns.
-- `docs/validation/per-term-and-charges.txt` — every per-term energy
-  delta and per-atom charge delta, molecule by molecule.
+- `docs/validation/report.md` — the full census (single source of truth).
+- `docs/validation/total-energies.txt` — all 761 totals side by side.
+- `docs/validation/per-term-and-charges.txt` — per-term + charge deltas.
 
-The claims below are the summary of those files; if the two ever
-disagree, the generated files and the generator are the truth.
+Regenerate them with `npm run docs`. CI checks they're current
+(`npm run docs:check`).
 
 ## Tolerances
 
-We use a three-layer tolerance strategy:
+A three-layer strategy (full detail in the report):
 
-1. **Hard suite gate** (`tests/compliance-gate.test.ts`, runs in `npm run test`):
-   every typing-exact suite molecule's per-term residual must be ≤ 1e-4
-   kcal/mol. The two documented anomaly exclusions (AN11A/DOZNIP
-   electrostatics — the reference itself is inconsistent) and the
-   coarse-precision generated-bond rows of ERULE_03/06 (where the
-   reference prints the generated parameter to 3 decimals) pin at
-   measured tolerances with the reason stated.
-2. **Pinned-molecule regression rows**: the ERULE fragments'
-   torsion totals assert against BatchMin's printed value. These
-   catch the class of rule change the suite comparison is
-   structurally blind to (a dihedral sitting at a stationary point
-   where every reading is green).
+1. **Hard suite gate** (`tests/compliance-gate.test.ts`, runs in
+   `npm run test`): every typing-exact molecule's per-term residual
+   ≤ 1e-4 kcal/mol. AN11A/DOZNIP electrostatics excluded (reference
+   itself inconsistent). ERULE_03/06 generated-bond rows pin at
+   measured tolerances (reference 3-dp print precision).
+2. **Pinned-molecule regression rows**: the ERULE fragments' torsion
+   totals assert against BatchMin's printed value (catches the
+   structurally-blind class of rule change).
 3. **Empirical fixtures** (`tests/wittig-ylide.test.ts`,
-   `tests/phosphine-imide.test.ts`, and the three-way fixture
-   comparison): chemistry the suite was never stressed on, arbitrated
-   against the reference's printed total with OpenBabel and Tinker as
-   cross-checks.
+   `tests/phosphine-imide.test.ts`, three-way fixture comparison):
+   chemistry the suite was never stressed on.
 
-Partial charges: 0.001 e per atom.
-
-## Atom Types
-
-The library assigns the MMFF94 atom type to every atom of every
-molecule.
-We compared the assignments with two independent references:
-
-1. OpenBabel's canonical types. All 761 molecules match exactly.
-2. The original program's own assignments. 757 molecules match
-   exactly. The remaining four atoms have different type labels,
-   but their parameters are identical. The energy checks prove
-   this. The 16 revision-affected molecules (ERULE_01–08 and the
-   eight corrected members) are byte-identical to the new log's
-   own assignments.
-
-## Energies
-
-The library computes all seven MMFF94 energy terms: bond stretch,
-angle bend, stretch-bend, torsion, out-of-plane bend, van der Waals,
-and electrostatic.
-
-We compared each term with the reference components.
-The reference components are single-point calculations at the stored
-geometries.
-Therefore, a difference on a correctly typed molecule is a bug in
-that term.
-
-The table gives the results at the 0.0001 kcal/mol level, against the
-761-molecule November 1998 revision (ERULE_01–08 + the eight corrected
-members included).
-
-| Term | ≤1e-4 | ≤1e-3 | ≤1e-2 | >1e-2 |
-|---|---|---|---|---|
-| Bond stretch | 759 | 1 (ERULE_06, generated F–N at the reference's print precision) | 1 (ERULE_03, generated P–Si at the reference's print precision) | 0 |
-| Angle bend | 761 | 0 | 0 | 0 |
-| Stretch-bend | 760 | 1 (ERULE_03, inherited from the P–Si) | 0 | 0 |
-| Torsion | 761 | 0 | 0 | 0 |
-| Out-of-plane bend | 761 | 0 | 0 | 0 |
-| Van der Waals | 761 | 0 | 0 | 0 |
-| Electrostatic | 759 | 0 | 0 | 0 |
-
-The two stretch/strbnd residuals are the generated P–Si and F–N bonds
-of the ERULE fragments, whose reference values are printed to three
-decimals — our generated rows sit within that print precision (the
-remaining deltas are ±0.0005 Å of reference round-off). The two
-electrostatics exclusions (AN11A, DOZNIP) are the delocalized-anion
-reference anomaly below (FAPLUD's q⁰(72) split closed 2026-08-07 —
-see implementer-notes §5.5).
-
-The suite exercises the MMFF94 empirical rules in five places: the
-hydroxide O–H bond of OHMW1, the P–Si and F–N bonds of ERULE_03/06,
-and the empirical torsion rows of ERULE_01–04/07 (the class-5 ring
-torsions and ERULE_03's P–Si torsions). The library generates those
-parameters with the published rules; all match the reference's own
-generated rows (O–H to 1.4e-6; the torsion rows to <1e-4; the P–Si/F–N
-bonds to the reference's print precision). The ERULE-generated rows
-also arbitrate the rules themselves — see implementer-notes §4.3.
-
-We also compared the fixture molecules with OpenBabel's energy
-output.
-All seven terms and the total match to five decimal places.
-
-## Partial Charges
-
-The partial charges come from the bond charge increment (BCI) model.
-They match the reference values to 0.001 e on 757 molecules.
-
-## Gradients
-
-We verified every analytical gradient with a finite-difference
-calculation.
-We perturbed each coordinate of each atom of each reference molecule
-by 0.000001 Å.
-The worst relative error is 8.5e-8.
+Partial charges: 0.001 e per atom. Gradients: finite-difference
+checked (δ = 1e-6 Å; relative error < 1e-5; worst 8.5e-8).
 
 ## Outliers
 
-Two molecules have one energy term that we cannot reproduce: for
-each, the reference itself is inconsistent for that term. We verified
-all other terms of these molecules against two independent
-implementations: Tinker and OpenBabel — both agree with our values.
-Two further molecules (JALSOE, SO18A) have all seven energy terms
-reproduced; only their reference partial charges are not comparable
-(the reference adjusts them to the dative representation).
+The two AN11A/DOZNIP electrostatics exclusions and the JALSOE/SO18A
+dative-adjusted charges are the reference's own inconsistencies —
+documented in the report. The former FE2PW3/CU1PW1 vdW split is
+closed (the +2/+1 cation rows carry their own parameters; the bridge
+is by formal charge — `docs/implementer-notes.md` §5.1).
 
-| Molecules | Term | Reason |
-|---|---|---|
-| AN11A, DOZNIP | Electrostatic | The anionic five-ring nitrogen has no uniform primary charge (Halgren states this). Each implementation gives a different value. Tinker does not give the term for AN11A. |
-| JALSOE, SO18A | Partial charges | The reference adjusts the sulfur-sulfur bonds to the dative representation. The reference charges are therefore not comparable. All seven energy terms match. |
+## Method
 
-The former FE2PW3/CU1PW1 van der Waals split is closed: the +2/+1
-metal-hydrate cations carry their own vdW rows (which differ from the
-+3/+2 rows only in the polarizability). OpenBabel's canonical typing
-collapses them onto the +3/+2 classes; the vdW term now bridges to
-the +2/+1 rows by formal charge (see implementer-notes §5.1), and
-both molecules rejoin the census on all terms.
+- Atom typing: `assign_atom_types`, cross-checked against OpenBabel's
+  canonical types and the original program's own assignments
+  (`docs/implementer-notes.md` §5.4).
+- The compliance gate is the load-bearing check for term-level
+  regressions; the report is the full evidence. If a number changes,
+  regenerate the report — don't edit it by hand.

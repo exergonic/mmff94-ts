@@ -5,13 +5,13 @@ BatchMin 5.5). No cutoffs on nonbonded interactions were used. All energies are
 in kcal/mol, computed at the .mmd geometries (single-point, like the references).
 
 mmff94-ts totals match BatchMin to |Δ| <= 1e-3 kcal/mol on 758/761 molecules
-(largest residual over the matching set: 3.5e-4 kcal/mol).
+(largest residual over the matching set: -3.53e-4 kcal/mol).
 The *-marked rows are the ones BatchMin itself diverges from OPTIMOL on (its
 single-precision charge sharing — up to 0.0035 kcal/mol); mmff94-ts computes in
 double precision, so on those rows the Δ column is against a reference carrying
 its own rounding artifact.
 
-Regenerate with:  npm run validation:doc
+Regenerate with:  npm run docs
 
               mmff94-ts     OPTIMOL     BatchMin   Δ vs BatchMin
 --------------------------------------------------------------
@@ -777,4 +777,4 @@ ERULE_06       1.58137     1.58172     1.58172  -0.00035
 ERULE_07       3.16775     3.16775     3.16775   0.00000  
 ERULE_08      34.41382    34.41382    34.41382  -0.00000  
 
-* |Δ| vs BatchMin exceeds 1e-3 — see the header of per-term-and-charges.txt
+* |Δ| vs BatchMin exceeds 1e-3 — see report.md

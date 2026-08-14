@@ -40,52 +40,20 @@ entirely on the client side.
 
 ## Validation
 
-We checked every energy term against three references: the original
-validation suite, OpenBabel, and Tinker.
-We checked every analytical gradient against finite differences.
+Every energy term is checked against Halgren's 761-molecule MMFF94
+validation suite (November 1998 revision), with the per-term residuals
+gated at ≤1e-4 kcal/mol in `npm run test`
+(`tests/compliance-gate.test.ts`). Analytical gradients are
+finite-difference checked. The full census — per-term tables, worst
+residuals, coarse-precision exceptions, and the AN11A/DOZNIP
+reference-inconsistency exclusions — lives in the generated
+**[Validation report](docs/validation/report.md)** (`npm run docs`
+regenerates it from the suite files).
 
-1. **Halgren's 761-molecule MMFF94 validation suite** (November 1998
-   revision, from https://server.ccl.net/cca/data/MMFF94/). This is the
-   reference for the library. It gives the per-component energies and
-   the per-atom partial charges for each molecule. We compared every
-   term with the reference values:
-
-| Term | ≤1e-4 | Worst \|Δ\|  (kcal/mol) |
-|---|------|---|
-| Bond stretch | 759 of 761 | 2.0e-3 (ERULE_03, generated P–Si at the reference's print precision) |
-| Angle bend | 761 of 761 | 4.3e-5 |
-| Stretch-bend | 760 of 761 | 3.4e-4 (ERULE_03, inherited from the P–Si) |
-| Torsion | 761 of 761 | 4.7e-5 |
-| Out-of-plane | 761 of 761 | 1.6e-5 |
-| Van der Waals | 761 of 761 | 4.4e-5 |
-| Electrostatic | 759 of 761 | 7.1e-5 |
-
-   The atom types match the reference types for all 761 molecules.
-   The partial charges match the reference values to 0.001 e per atom
-   on 757 molecules. The two AN11A/DOZNIP electrostatics exclusions
-   are terms where the reference itself is inconsistent (FAPLUD's
-   q⁰(72) split closed 2026-08-07 — see
-   `docs/implementer-notes.md` §5.5). The
-   [Validation document](tests/VALIDATION.md) has the full details.
-
-   The tabulated total energies [total-energies.txt](docs/validation/total-energies.txt), 
-   lists all 761 totals side by side with the suite's own OPTIMOL and
-   BatchMin values (the largest residual on the matching set is
-   ~8.0e-5). The exceptions are the documented
-   AN11A/DOZNIP electrostatics anomalies, not shortcomings of the
-   implementation.
-   See the [Validation document](tests/VALIDATION.md) for details.
-
-2. **OpenBabel.** Per-term energies and per-atom partial charges for
-   16 small organic molecules. Most values match to five decimal
-   places. The angle term differs by up to 0.0007 kcal/mol for three
-   molecules. OpenBabel uses a rounded constant in the angle formula.
-   See the [Implementer's notes](docs/implementer-notes.md).
-
-3. **Tinker.** A second independent implementation. For the same 16
-   molecules, total energies match to four decimal places. This is
-   the print precision of Tinker. One angle term differs by 0.0001
-   kcal/mol. See the [Implementer's notes](docs/implementer-notes.md).
+Independent cross-checks: OpenBabel and Tinker on 16 small
+organic molecules (per-term and per-atom charges). See the
+[Implementer's notes](docs/implementer-notes.md) for the three-way
+fixture comparison.
 
 
 ## Usage

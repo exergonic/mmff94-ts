@@ -16,7 +16,7 @@ Per-term |Δ| <= 1e-4:
   elec     759/759 at |Δ| <= 1e-4
 Charges: 757/757 molecules with max|Δq| <= 1e-3 e⁻ per atom
 
-Regenerate with:  npm run validation:doc
+Regenerate with:  npm run docs
 
 CODE           bond    angle   strbnd  torsion      oop      vdw     elec  Δ total  max|Δq|
 ─────────────────────────────────────────────────────────────────────────  ───────  ───────

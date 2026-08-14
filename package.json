@@ -22,7 +22,9 @@
     "test:watch": "vitest",
     "test:ocl": "vitest run tests/openchemlib-comparison.test.ts",
     "bench": "npx tsx bench/energy.bench.ts",
-    "validation:doc": "npx tsx tests/scripts/generate-validation-doc.ts",
+    "docs": "npx tsx tests/scripts/generate-validation-doc.ts",
+    "validation:doc": "npm run docs",
+    "docs:check": "npm run docs && git diff --exit-code docs/validation/ || (echo 'docs/validation/ is stale — regenerate with npm run docs' && exit 1)",
     "typecheck": "tsc --noEmit",
     "extract-params": "python scripts/extract-mmff94-par.py",
     "prepublishOnly": "npm run build && npm test"

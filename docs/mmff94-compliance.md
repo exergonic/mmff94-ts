@@ -64,58 +64,24 @@ molecule's atom types are assigned independently and compared:
 
 - **Atom typing**: 761/761 molecules match OpenBabel's canonical
   MMFF94 types; the original program's own per-atom types agree
-  wherever checked — the 753-suite audit was byte-identical on
-  749/753 (the four remaining atoms are parameter-inert
-  oxidation-state and dative-bonding cases, proven parameter-identical
-  by the energy checks), and the 761-suite's 16 revision-affected
-  molecules are byte-identical to the new log's own assignments.
+  wherever checked.
 
-### 4.1 Per-component energy residuals
-
-For each of the seven terms, the table shows the residual statistics
-against BatchMin across the suite (typing-exact molecules; the two
-documented anomaly exclusions in section 5 applied to the
-electrostatic row):
-
-| Term | Molecules ≤1e-4 | Worst | Mean | RMS |
-|---|---|---|---|---|
-| Bond stretch | 759 of 761 | 1.97e-3 | 9.9e-6 | 7.3e-5 |
-| Angle bend | 761 of 761 | 4.30e-5 | 6.0e-6 | 8.6e-6 |
-| Stretch-bend | 760 of 761 | 3.36e-4 | 5.0e-6 | 1.4e-5 |
-| Torsion | 761 of 761 | 4.69e-5 | 1.2e-6 | 2.8e-6 |
-| Out-of-plane | 761 of 761 | 1.61e-5 | 5.8e-7 | 1.5e-6 |
-| Van der Waals | 761 of 761 | 4.35e-5 | 6.7e-6 | 9.3e-6 |
-| Electrostatic | 759 of 761 | 7.08e-5 | 7.0e-6 | 1.2e-5 |
+The full census — per-term residuals at ≤1e-5/≤5e-5/≤1e-4, total
+energies, partial charges, and the documented anomaly exclusions —
+lives in the generated **[Validation report](../validation/report.md)**
+(`npm run docs` regenerates it). The per-term gate is enforced in
+`npm run test` (`tests/compliance-gate.test.ts`); the report is the
+evidence behind it.
 
 The two stretch/strbnd rows above 1e-4 are the empirical-rule
 generated P–Si and F–N bonds of the ERULE fragments, whose reference
 values are printed to three decimals — our generated rows sit within
-that print precision. At the ±5e-5 gate — the accuracy Wavefunction
-claims for Spartan — **753 of 761 molecules match all seven
-components**, and 757 of 761 are within 1e-4 on every comparable
-term.
-
-### 4.2 Total energies
-
-The total-energy residuals (the 759 molecules without excluded terms):
-
-| Statistic | Value |
-|---|---|
-| Worst | 2.52e-3 kcal/mol (ERULE_03, the generated P–Si bond at the reference's print precision) |
-| Mean | 2.51e-4 kcal/mol |
-| RMS | 3.01e-4 kcal/mol |
+that print precision.
 
 We do **not** claim the Wavefun-level ±5e-5 on totals; the per-term
-residuals accumulate to the ~2.5e-4 mean shown.
+residuals accumulate to the ~2.5e-4 mean.
 
-### 4.3 Partial charges
-
-BCI partial charges match the suite's reference charges to better
-than 1e-3 on all 757 charge-comparable molecules (the four
-documented charge exclusions — the dative-adjustment pair and the
-type-76 anion pair — are in section 5).
-
-### 4.4 Gradients
+### 4.1 Gradients
 
 Analytical gradients exist for all seven terms and are
 finite-difference checked on every fixture and the pinned suite
