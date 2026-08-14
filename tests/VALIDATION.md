@@ -28,10 +28,27 @@ disagree, the generated files and the generator are the truth.
 
 ## Tolerances
 
-We use two tolerances:
+We use a three-layer tolerance strategy:
 
-- Energies: 0.0001 kcal/mol per term.
-- Partial charges: 0.001 e per atom.
+1. **Hard suite gate** (`tests/compliance-gate.test.ts`, runs in `npm run test`):
+   every typing-exact suite molecule's per-term residual must be ≤ 1e-4
+   kcal/mol. The two documented anomaly exclusions (AN11A/DOZNIP
+   electrostatics — the reference itself is inconsistent) and the
+   coarse-precision generated-bond rows of ERULE_03/06 (where the
+   reference prints the generated parameter to 3 decimals) pin at
+   measured tolerances with the reason stated.
+2. **Pinned-molecule regression rows**: the ERULE fragments'
+   torsion totals assert against BatchMin's printed value. These
+   catch the class of rule change the suite comparison is
+   structurally blind to (a dihedral sitting at a stationary point
+   where every reading is green).
+3. **Empirical fixtures** (`tests/wittig-ylide.test.ts`,
+   `tests/phosphine-imide.test.ts`, and the three-way fixture
+   comparison): chemistry the suite was never stressed on, arbitrated
+   against the reference's printed total with OpenBabel and Tinker as
+   cross-checks.
+
+Partial charges: 0.001 e per atom.
 
 ## Atom Types
 
