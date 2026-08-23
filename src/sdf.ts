@@ -43,6 +43,11 @@ export function parse_sdf(sdf_text: string): Molecule {
 
   // Parse atom block: lines 4 through 4 + num_atoms - 1
   const atoms: Atom[] = [];
+  // Declared V2000 position (0-based) → compacted atoms[] index, −1 when
+  // the line was skipped. Bond lines address the DECLARED positions, so
+  // this map is what keeps connectivity aligned when a bad atom line
+  // shifts every later atom.
+  const atom_slot = new Array<number>(num_atoms).fill(-1);
   const atom_start = 4;
   let next_index = 0;   // real atom counter — a skipped line must not shift indices
   for (let i = 0; i < num_atoms; i++) {
@@ -72,9 +77,14 @@ export function parse_sdf(sdf_text: string): Molecule {
       z: isNaN(z) ? 0 : z,
       formal_charge,
     });
+    atom_slot[i] = atoms.length - 1;
   }
 
-  // Parse bond block: starts after the atom block.
+  // Parse bond block: starts after the atom block. Bond indices are
+  // 1-based file indices into the DECLARED atom block; when an atom
+  // line was skipped above, the compacted atoms[] array no longer
+  // matches those indices — a bond naming a skipped atom is dropped,
+  // not shifted onto the wrong atom.
   const bond_start = atom_start + num_atoms;
   const bonds: Bond[] = [];
   for (let i = 0; i < num_bonds; i++) {
@@ -85,10 +95,15 @@ export function parse_sdf(sdf_text: string): Molecule {
     const a2 = parseInt(line.substring(3, 6).trim(), 10) - 1;
     const order = parseInt(line.substring(6, 9).trim(), 10) || 1;
 
-    // Skip bonds that reference atoms outside our parsed range
-    if (a1 < 0 || a1 >= atoms.length || a2 < 0 || a2 >= atoms.length) continue;
+    // Bond lines address DECLARED atom positions; remap through
+    // atom_slot so a skipped atom line drops the bond (slot −1)
+    // instead of silently re-pointing it at the wrong compacted atom.
+    if (a1 < 0 || a1 >= num_atoms || a2 < 0 || a2 >= num_atoms) continue;
+    const s1 = atom_slot[a1];
+    const s2 = atom_slot[a2];
+    if (s1 < 0 || s2 < 0) continue;
 
-    bonds.push({ atom1: a1, atom2: a2, bond_order: order });
+    bonds.push({ atom1: s1, atom2: s2, bond_order: order });
   }
 
   // First line of the SDF is typically the molecule name

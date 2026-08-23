@@ -4,7 +4,8 @@
  * See energy/angle-bend.ts for the energy — two forms:
  *
  *   Regular (eq. 3):  E = 0.043844 · (k_a/2) · Δθ² · (1 + cb·Δθ)
- *     with Δθ = θ_deg − θ₀ (degrees) and cb = −0.007 deg⁻¹:
+ *     with Δθ = θ_deg − θ₀ (degrees) and cb = −0.4·π/180 deg⁻¹ (the
+ *     precise radian value, matching energy/angle-bend.ts):
  *     dE/dθ_deg = 0.043844 · k_a · Δθ · (1 + cb·Δθ)
  *               + 0.043844 · (k_a/2) · Δθ² · cb
  *
@@ -23,7 +24,7 @@
 
 import type { TypedMolecule } from '../../types.js';
 import { Vec3, angle_in_radians } from '../../utils/vector.js';
-import { make_class_context, angle_parameters } from '../parameters/parameter-classes.js';
+import { class_context_for, angle_parameters } from '../parameters/parameter-classes.js';
 import { angle_derivatives, RAD_PER_DEG } from './derivatives.js';
 
 const ANGLE_UNIT = 143.9325 * (Math.PI / 180) ** 2; // exact form of the published 0.043844
@@ -45,7 +46,7 @@ export function calc_angle_bend_gradient(molecule: TypedMolecule): number[][] {
     adj[bond.atom1].push(bond.atom2);
     adj[bond.atom2].push(bond.atom1);
   }
-  const ctx = make_class_context(molecule, adj);
+  const ctx = class_context_for(molecule, adj);
 
   for (let j = 0; j < molecule.atoms.length; j++) {
     const neighbors = adj[j];

@@ -1330,7 +1330,7 @@ function estimate_ring_size(
   adj: { nbr: number; order: number }[][],
   molecule: Molecule,
 ): number {
-  void molecule;  // accepted for the planned API; unused until implemented
+  void molecule;  // accepted so callers can pass the molecule uniformly; unused
   const depth = new Map<number, number>();
   const parent = new Map<number, number>();
   const queue: number[] = [];

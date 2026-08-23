@@ -149,7 +149,12 @@ The decision tree follows Halgren 1996 (J. Comput. Chem. 17, 520–552) and cons
 in order:
 
 1. **Element** — C, N, O, H, S, P, F, Cl, Br, I, Si, etc.
-2. **Coordination number** — how many immediate neighbors (including implicit H)
+2. **Coordination number** — how many immediate bonded neighbors the input
+   declares. The SDF/MOL parser reads **explicit atoms only**: a structure
+   written without explicit hydrogens (common from sketchers and some
+   converters) types silently wrong — every bare carbon falls to generic
+   type 1, no H types exist, and the energies are meaningless. Feed this
+   library structures with all hydrogens present.
 3. **Bond orders to neighbors** — single, double, triple, aromatic
 4. **Neighbor elements** — e.g., C=O carbonyl vs. C=C alkene
 5. **Neighbor types** — e.g., carbonyl C (type 3) vs. aromatic C (type 37)
@@ -468,7 +473,7 @@ Consumes the `partial_charges[]` attached by `assign_bci_charges()` (the term
 also computes them on demand if they are absent).
 
 Validated against the reference logs (per-atom charges AND energies) and
-against BatchMin: 751/753 suite molecules match the electrostatic
+against BatchMin: 759/761 suite molecules match the electrostatic
 component at |Δ| <= 1e-4 — the two exclusions (AN11A, DOZNIP) are the
 delocalized-anion reference anomalies (see VALIDATION.md).
 
@@ -495,7 +500,7 @@ Applied to every tri-coordinate center (planar or pyramidal) with exactly three
 bonded neighbors. The sign of k_oop encodes real chemistry: zero for amine N
 (pyramidalization comes from angle-bend reference values), negative for amide N
 (MMFF94 gives pyramidal amide nitrogen deliberately). Validated against
-BatchMin: 753/753 suite molecules at |Δ| <= 1e-4.
+BatchMin: 761/761 suite molecules at |Δ| <= 1e-4.
 
 ---
 
@@ -841,14 +846,14 @@ Every energy term is tested **in isolation** before it is tested in combination.
 | Data types | ✅ Complete | — |
 | SDF parser | ✅ Complete | 5 tests |
 | Vector math | ✅ Complete | 13 tests |
-| Atom typing | ✅ Implemented | 3 tests (suite scoreboard: 753/753 type-exact — the full Halgren suite) |
+| Atom typing | ✅ Implemented | suite scoreboard: 761/761 type-exact vs OpenBabel (atom-types-suite.test.ts) |
 | BCI charges | ✅ Implemented (charges.ts) | 6 tests (reference-log pins) |
 | Bond stretch | ✅ Implemented | 2 tests |
 | Angle bend | ✅ Implemented | 2 tests |
 | Stretch-bend | ✅ Implemented | 3 tests |
 | Torsion | ✅ Implemented | 4 tests |
 | Van der Waals | ✅ Implemented | 5 tests |
-| Electrostatic | ✅ Implemented (buffered r+0.05, 1-4 ×0.75) | 5 tests + reference logs + suite 751/753 |
+| Electrostatic | ✅ Implemented (buffered r+0.05, 1-4 ×0.75) | reference logs + suite 759/761 ≤1e-4 (two documented exclusions) |
 | Out-of-plane | ✅ Implemented | 12 tests |
 | 1-4 scaling | ✅ Applied inside the electrostatic term | — |
 | Total energy | ✅ Sums all seven terms | 8 tests (reference + suite comparison) |

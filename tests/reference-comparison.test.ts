@@ -13,7 +13,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { readFileSync, readdirSync } from 'fs';
+import { readFileSync, readdirSync, existsSync } from 'fs';
 import { join, parse } from 'path';
 import { parse_sdf } from '../src/sdf';
 import { assign_atom_types } from '../src/mmff94/assign-atom-types';
@@ -26,6 +26,19 @@ const REF_DIR = join(__dirname, 'references');
 // atom-types.test.ts): energy comparisons are meaningless until the
 // typing lands — the reference log's types are the roadmap targets.
 const TYPING_GAP_SKIPS: Record<string, string> = {};
+
+// Fixtures deliberately left without a reference log. Any OTHER
+// fixture without a <name>.mmff94.log is a missing reference and must
+// fail loudly — a silent it.skip let dimethyl-ether sit untested, and
+// would let future fixtures rot the same way. Generate the log with:
+//   bash tests/scripts/obenergy.sh tests/fixtures/sdf/<name>.sdf
+const INTENTIONALLY_UNREFERENCED: Record<string, string> = {
+  // Zwitterion electrostatics gap vs OpenBabel (~147 kcal/mol on elec):
+  // OB charges the N-terminal NH3+ / COOH differently from our BCI
+  // reading of types 34/57 — see docs/implementer-notes.md, open
+  // question 3. Every non-electrostatic term matches to <0.03.
+  trpcage: 'zwitterion electrostatics gap vs OpenBabel (open question 3)',
+};
 
 function parse_reference_log(filePath: string): Record<string, number> {
   const text = readFileSync(filePath, 'utf-8');
@@ -59,8 +72,17 @@ describe('All benchmark molecules vs OpenBabel references', () => {
       continue;
     }
 
-    if (!readdirSync(REF_DIR).includes(`${name}.mmff94.log`)) {
-      it.skip(`${name} — no reference log found`, () => {});
+    if (!existsSync(refFile)) {
+      if (INTENTIONALLY_UNREFERENCED[name]) {
+        it.skip(`${name} — unreferenced by design (${INTENTIONALLY_UNREFERENCED[name]})`, () => {});
+      } else {
+        it(`${name} — MISSING reference log (run tests/scripts/obenergy.sh)`, () => {
+          throw new Error(
+            `No tests/references/${name}.mmff94.log. Generate it with ` +
+            `bash tests/scripts/obenergy.sh tests/fixtures/sdf/${name}.sdf, ` +
+            `or add the fixture to INTENTIONALLY_UNREFERENCED with a reason.`);
+        });
+      }
       continue;
     }
 

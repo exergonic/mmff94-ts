@@ -1,6 +1,6 @@
 # MMFF94 Validation Report
 
-> **Generated:** 2026-08-14 from the 761-molecule MMFF94 validation suite (November 1998 revision).
+> **Generated:** 2026-08-23 from the 761-molecule MMFF94 validation suite (November 1998 revision).
 > **Regenerate:** `npm run docs` — this file is the single source of truth; all prose docs point at it.
 
 ---
@@ -38,9 +38,9 @@ These rows pin at measured tolerances — the reference prints the
 generated parameter to 3 decimals, so the residual is bounded by
 the reference's own print precision:
 
-- **ERULE_03** bond_stretch: |Δ| = 0.00e+0 (≤ 2.00e-3 — generated P–Si bond at reference 3-dp print precision)
-- **ERULE_03** stretch_bend: |Δ| = 0.00e+0 (≤ 4.00e-4 — inherited from the P–Si generated bond)
-- **ERULE_06** bond_stretch: |Δ| = 0.00e+0 (≤ 2.00e-3 — generated F–N bond at reference 3-dp print precision)
+- **ERULE_03** bond_stretch: |Δ| = 1.97e-3 (≤ 2.00e-3 — generated P–Si bond at reference 3-dp print precision)
+- **ERULE_03** stretch_bend: |Δ| = 3.36e-4 (≤ 4.00e-4 — inherited from the P–Si generated bond)
+- **ERULE_06** bond_stretch: |Δ| = 3.24e-4 (≤ 2.00e-3 — generated F–N bond at reference 3-dp print precision)
 
 ### Documented exclusions
 

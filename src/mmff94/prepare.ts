@@ -14,7 +14,16 @@ import { assign_bci_charges } from './charges.js';
 
 export function prepare_molecule(molecule: Molecule): TypedMolecule {
   let prepared = molecule as TypedMolecule;
-  if (!prepared.atom_types) prepared = assign_atom_types(prepared);
-  if (!prepared.partial_charges) prepared = assign_bci_charges(prepared);
+  // Length-checked guards: an empty or stale annotation array must not
+  // skip typing/charging silently (a re-parsed or hand-edited Molecule
+  // can carry leftovers). A right-length-but-wrong array is
+  // undetectable here — the expert path owns that contract.
+  const needs_typing =
+    !prepared.atom_types || prepared.atom_types.length !== molecule.atoms.length;
+  if (needs_typing) prepared = assign_atom_types(prepared);
+  const needs_charging =
+    !prepared.partial_charges ||
+    prepared.partial_charges.length !== molecule.atoms.length;
+  if (needs_charging) prepared = assign_bci_charges(prepared);
   return prepared;
 }

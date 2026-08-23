@@ -47,11 +47,14 @@ import { calc_energy } from '../src/mmff94/energy/total';
 const SDF_DIR = join(__dirname, 'fixtures', 'sdf');
 const SUITE_DIR = join(__dirname, 'fixtures', 'validation-suite');
 
-// All SDF fixtures, plus the three regression-pinned suite molecules
-// (FUVDOP's 3-ring closure, FILNOD's fused 5-ring, JIYJAC's class-2
-// strbnd) — the molecules where a parameter-resolution subtlety was
-// once wrong are the ones most likely to hide a gradient subtlety.
-const SUITE_MOLECULES = ['FUVDOP', 'FILNOD', 'JIYJAC'];
+// All SDF fixtures, plus the regression-pinned suite molecules — the
+// molecules where a parameter-resolution subtlety was once wrong are
+// the ones most likely to hide a gradient subtlety. FUVDOP's 3-ring
+// closure, FILNOD's fused 5-ring, JIYJAC's class-2 strbnd; CUVJOS is
+// the charged-chemistry representative (methylhydrazinium +1 /
+// trifluoroacetate −1, formal charges ±1 on 10 atoms) — the FD sweep
+// covered only neutral molecules until it was added.
+const SUITE_MOLECULES = ['FUVDOP', 'FILNOD', 'JIYJAC', 'CUVJOS'];
 
 const DELTA = 1e-6; // Å — small enough for 10⁻⁵ relative accuracy, big enough to beat roundoff
 const REL_TOL = 1e-5;

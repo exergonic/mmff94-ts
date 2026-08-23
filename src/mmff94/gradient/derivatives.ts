@@ -37,6 +37,13 @@ export function unit_vec_deriv(v: Vec3, dv: Vec3): Vec3 {
 /**
  * Derivative of the bond length r = |pos_a − pos_b|.
  * Returns dr/dx for each endpoint (same shape as distance()).
+ *
+ * Zero-length guard: r = 0 is a genuine cusp (the one-sided limit of
+ * dr/dx is direction-dependent), so there is no correct finite value.
+ * The zero return keeps the optimizer NaN-free; the energy term stays
+ * finite-but-huge there, so a collapsed pair stalls at high energy
+ * rather than exploding. Degenerate input only — never reached on any
+ * validated geometry.
  */
 export function bond_length_derivatives(
   pos_a: Vec3,

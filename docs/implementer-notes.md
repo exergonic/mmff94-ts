@@ -96,4 +96,16 @@ and the opti log present.
 ## Open questions
 
 1. **The metal vdW**: which parameter set does Halgren's part III table specify — the X94 revision or the Merck original?
+   (Resolved in practice 2026-08-23: the formal-charge bridge — type 88/+2 →
+   row 87, type 98/+1 → row 97, `van-der-waals.ts` — reproduces BatchMin's
+   hydrate energies to ~1e-6; the historical question is which table Halgren
+   *printed*, not which one the reference program uses.)
 2. **The type-76 q⁰**: Halgren's own caveat — no uniform primary charge reproduces the reference charges. Three implementations, three answers.
+3. **The zwitterion electrostatics gap vs OpenBabel** (found 2026-08-23,
+   trp-cage): OB evaluates the N-terminal NH₃⁺ (type 34) with q = +0.333
+   per H and the COOH carbon at +0.6; this library computes −0.844 on the
+   NH₃⁺ N and +1.2 on a carboxylic-acid C(57) — a ~147 kcal/mol elec gap on
+   trp-cage that the BatchMin suite never exposes (all 761 suite molecules
+   close to ≤1e-4). The BCI q⁰/α reading of types 34/57 for neutral-pH
+   terminal groups is the open question; see `tests/fixtures/sdf/trpcage.sdf`
+   (kept unreferenced in reference-comparison until resolved).

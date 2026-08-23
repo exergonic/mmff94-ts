@@ -265,7 +265,11 @@ report.push(
 for (const [code, rows] of Object.entries(COARSE_ROWS)) {
   for (const row of rows) {
     const r = results.find(x => x.code === code)!;
-    const d = Math.abs(r.termDelta[row.term] ?? 0);
+    // termDelta is keyed by the SHORT label ('bond', 'strbnd'), not the
+    // EnergyComponents name — map through TERMS so the delta resolves
+    // (the old direct indexing always hit ?? 0 and printed a false |Δ| = 0).
+    const shortLabel = TERMS.find(([, gk]) => gk === row.term)?.[0];
+    const d = Math.abs((shortLabel ? r.termDelta[shortLabel] : undefined) ?? NaN);
     report.push(`- **${code}** ${row.term}: |Δ| = ${exp(d)} (≤ ${exp(row.tol)} — ${row.reason})`);
   }
 }

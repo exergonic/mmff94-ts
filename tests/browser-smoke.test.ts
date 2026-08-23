@@ -5,7 +5,7 @@
  * plain ESM and must load in a browser WITHOUT a bundler. The historical
  * bug was extension-less relative imports emitted by tsc (browsers reject
  * them with a module-resolution error). The test rebuilds dist with tsc,
- * serves it over HTTP, loads it in headless Chromium (playwright driving
+ * serves it over HTTP, loads it in headless Edge (playwright driving
  * the system Edge via the msedge channel — no browser download), runs the
  * full pipeline in-page, and asserts the results are EXACTLY the numbers
  * the Node path computes (same V8 engine, same code), which are in turn

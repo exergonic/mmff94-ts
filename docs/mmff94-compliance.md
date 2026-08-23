@@ -134,7 +134,7 @@ molecules (δ = 1e-6 Å; relative error < 1e-5; worst observed 8e-8).
 
 Zero runtime dependencies. The library compiles to ESM in `dist/` and
 runs in browsers and Node.js with identical results (verified in
-headless Chromium to 1e-7).
+headless Edge to 1e-7).
 
 ## 7. Reproduction
 

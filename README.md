@@ -48,7 +48,7 @@ is generated from the suite files: see the
 - **L-BFGS + steepest descent** — converge from perturbed starts
 - **BCI partial charges** — from the bond-charge-increment model
 - **SDF/MOL parser** — standalone, no dependencies
-- **Browser + Node** — identical results (verified in headless Chromium)
+- **Browser + Node** — identical results (verified in headless Edge)
 - **Zero runtime deps** — one `import` and you're done
 
 ## Quick Start
