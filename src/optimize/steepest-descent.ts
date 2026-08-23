@@ -32,7 +32,11 @@ import { create_fast_system, FastSystem } from './fast-system.js';
 
 export interface SteepestDescentOptions {
   max_iterations?: number;
-  gradient_tolerance?: number; // kcal/mol/Å
+  gradient_tolerance?: number; // kcal/mol/Å — max |g_i| (default 0.05)
+  /** Optional RMS-gradient convergence criterion — see LbfgsOptions.
+   *  The run stops once EITHER max |g_i| OR the RMS gradient is below
+   *  its threshold. */
+  rms_gradient_tolerance?: number;
   initial_step_size?: number;  // first line-search trial (default 1.0)
 }
 
@@ -46,6 +50,13 @@ function max_gradient_norm(gradient: ArrayLike<number>): number {
   let m = 0;
   for (let i = 0; i < gradient.length; i++) m = Math.max(m, Math.abs(gradient[i]));
   return m;
+}
+
+/** RMS of the force components (kcal/mol/Å) — the TINKER-style signal. */
+function rms_gradient_norm(gradient: ArrayLike<number>): number {
+  let s = 0;
+  for (let i = 0; i < gradient.length; i++) s += gradient[i] * gradient[i];
+  return gradient.length > 0 ? Math.sqrt(s / gradient.length) : NaN;
 }
 
 /**
@@ -69,6 +80,7 @@ export function optimize_steepest_descent(
   const opts = has_oracle ? options : (calc_energy_gradient_or_options ?? options);
   const max_iterations = opts?.max_iterations ?? 1000;
   const gradient_tolerance = opts?.gradient_tolerance ?? 0.05;
+  const rms_gradient_tolerance = opts?.rms_gradient_tolerance;
   const initial_step_size = opts?.initial_step_size ?? 1.0;
 
   // Simple path: type + charge on demand, built-in oracle by default
@@ -123,7 +135,9 @@ export function optimize_steepest_descent(
 
   let state = evaluate_at_coords(x);
   let iterations = 0;
-  let converged = max_gradient_norm(state.grad) < gradient_tolerance;
+  let converged =
+    max_gradient_norm(state.grad) < gradient_tolerance ||
+    (rms_gradient_tolerance !== undefined && rms_gradient_norm(state.grad) < rms_gradient_tolerance);
 
   while (!converged && iterations < max_iterations) {
     iterations++;
@@ -162,7 +176,9 @@ export function optimize_steepest_descent(
       break;
     }
 
-    converged = max_gradient_norm(state.grad) < gradient_tolerance;
+    converged =
+      max_gradient_norm(state.grad) < gradient_tolerance ||
+      (rms_gradient_tolerance !== undefined && rms_gradient_norm(state.grad) < rms_gradient_tolerance);
   }
 
   // Sync the flat coordinates back into the returned molecule.
@@ -178,5 +194,6 @@ export function optimize_steepest_descent(
     iterations,
     converged,
     final_max_gradient: max_gradient_norm(state.grad),
+    final_rms_gradient: rms_gradient_norm(state.grad),
   };
 }

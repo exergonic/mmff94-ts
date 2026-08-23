@@ -82,4 +82,7 @@ export interface OptimizationResult {
   iterations: number;           // Number of optimization cycles
   converged: boolean;           // True if max gradient fell below the threshold
   final_max_gradient: number;   // Largest force component (kcal/mol/Å) at finish
+  /** RMS of the force components (kcal/mol/Å) at finish — the TINKER-style
+   *  convergence signal; NaN when the molecule has no atoms. */
+  final_rms_gradient?: number;
 }

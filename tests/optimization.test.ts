@@ -204,6 +204,30 @@ describe('optimizer behavior', () => {
     expect(charged.atoms.map(a => [a.x, a.y, a.z])).toEqual(before);
   });
 
+  it('rms_gradient_tolerance stops on the TINKER-style RMS signal', () => {
+    // The max|g| criterion is hostage to one stiff coordinate (an H
+    // stretch) long after the structure is converged — nicotine's
+    // last ~40% of iterations polish max|g| 0.058 -> 0.050 for 5e-3
+    // kcal/mol. The RMS gate stops earlier; the energy must still sit
+    // inside the basin.
+    const raw = parse_sdf(readFileSync(join(SDF_DIR, 'nicotine.sdf'), 'utf-8'));
+    const charged = assign_bci_charges(assign_atom_types(raw));
+    const strict = optimize_lbfgs(charged, energy_gradient_fn(), {
+      gradient_tolerance: GRADIENT_TOL,
+    });
+    const rms = optimize_lbfgs(charged, energy_gradient_fn(), {
+      gradient_tolerance: GRADIENT_TOL,
+      rms_gradient_tolerance: 0.02,
+    });
+    expect(strict.converged).toBe(true);
+    expect(rms.converged).toBe(true);
+    expect(rms.final_rms_gradient!).toBeLessThan(0.02);
+    // Earlier stop, same minimum: the energy gap to the strict run is
+    // far below the 0.1 basin tolerance.
+    expect(rms.iterations).toBeLessThan(strict.iterations);
+    expect(Math.abs(rms.energy.total - strict.energy.total)).toBeLessThan(0.1);
+  });
+
   it('steepest descent does not mutate the input molecule', () => {
     const raw = parse_sdf(readFileSync(join(SDF_DIR, 'ethane_non-optimized.sdf'), 'utf-8'));
     const charged = assign_bci_charges(assign_atom_types(raw));

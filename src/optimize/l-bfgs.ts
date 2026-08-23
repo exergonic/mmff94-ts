@@ -43,7 +43,19 @@ import { create_fast_system, FastSystem } from './fast-system.js';
 
 export interface LbfgsOptions {
   max_iterations?: number;
-  gradient_tolerance?: number; // kcal/mol/Å
+  gradient_tolerance?: number; // kcal/mol/Å — max |g_i| (default 0.05)
+  /**
+   * Optional RMS-gradient convergence criterion (kcal/mol/Å). When set,
+   * the run stops once EITHER max |g_i| < gradient_tolerance OR the
+   * RMS gradient < this value. The RMS signal ignores a single stiff
+   * coordinate (an H stretch) that keeps max |g_i| far above the mean
+   * long after the structure is converged — nicotine's last ~40% of
+   * iterations polish max|g| 0.058 → 0.050 for 5e-3 kcal/mol. TINKER's
+   * minimize treats its gradient tolerance as an RMS criterion; this
+   * option restores that behavior without changing the default
+   * (pure max|g|) semantics.
+   */
+  rms_gradient_tolerance?: number;
   history_size?: number; // m in L-BFGS (default 10)
 }
 
@@ -96,6 +108,7 @@ export function optimize_lbfgs(
   const opts = has_oracle ? options : (calc_energy_gradient_or_options ?? options);
   const max_iterations = opts?.max_iterations ?? 1000;
   const gradient_tolerance = opts?.gradient_tolerance ?? 0.05;
+  const rms_gradient_tolerance = opts?.rms_gradient_tolerance;
   const history_size = Math.max(1, Math.min(50, opts?.history_size ?? 10));
 
   // Simple path: a bare Molecule is typed and charged on demand (an
@@ -185,6 +198,11 @@ export function optimize_lbfgs(
   function direction_norm(a: FlatVec): number {
     return Math.sqrt(dot(a, a));
   }
+  function rms_norm(a: Float64Array): number {
+    let s = 0;
+    for (let i = 0; i < a.length; i++) s += a[i] * a[i];
+    return Math.sqrt(s / a.length);
+  }
 
   // ── L-BFGS state ────────────────────────────────────────────────
   const s_history: ArrayLike<number>[] = []; // position changes, newest last
@@ -195,8 +213,14 @@ export function optimize_lbfgs(
   let iterations = 0;
   let converged = false;
   let final_max_gradient = max_abs(state.gradient);
+  let final_rms_gradient = rms_norm(state.gradient);
 
-  if (n === 0 || final_max_gradient < gradient_tolerance) {
+  function converged_now(): boolean {
+    if (final_max_gradient < gradient_tolerance) return true;
+    return rms_gradient_tolerance !== undefined && final_rms_gradient < rms_gradient_tolerance;
+  }
+
+  if (n === 0 || converged_now()) {
     converged = true;
   }
 
@@ -258,7 +282,8 @@ export function optimize_lbfgs(
     state = ls.state_at_alpha;
 
     final_max_gradient = max_abs(state.gradient);
-    if (final_max_gradient < gradient_tolerance) {
+    final_rms_gradient = rms_norm(state.gradient);
+    if (converged_now()) {
       converged = true;
       break;
     }
@@ -295,6 +320,7 @@ export function optimize_lbfgs(
     iterations,
     converged,
     final_max_gradient,
+    final_rms_gradient,
   };
 
   // ── strong-Wolfe line search with cubic zoom ─────────────────────
