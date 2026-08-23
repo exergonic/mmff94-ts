@@ -284,6 +284,10 @@ export function optimize_lbfgs(
 
     let alpha_prev = 0;
     let f_prev = phi0;
+    // The previous trial's state and directional derivative — needed
+    // whenever a bracket forms with alpha_prev as one endpoint.
+    let g_prev_trial = phi0_prime;
+    let state_prev_trial: EvalState | undefined;
     // The first trial step compensates the initial-Hessian scaling γ
     // folded into the direction: p = −γ·r̃, so α₀ = 1/γ makes the
     // trial move α₀·p = −r̃ — the unscaled two-loop direction. Without
@@ -303,9 +307,14 @@ export function optimize_lbfgs(
       const phi_prime = dot(state_at_alpha.gradient, direction);
 
       // Armijo failure (or no progress vs the previous trial):
-      // bracket [alpha_prev, alpha] and zoom.
+      // bracket [alpha_prev, alpha] and zoom. Both endpoints are
+      // already evaluated: alpha_prev is α=0 (start) or the previous
+      // trial; alpha is the trial that just failed.
       if (f > phi0 + C1 * alpha * phi0_prime || (iter > 0 && f >= f_prev)) {
-        const zoomed = zoom(alpha_prev, f_prev, alpha, f, phi0, phi0_prime, direction);
+        const g_prev = iter === 0 ? phi0_prime : g_prev_trial;
+        const prev_state = iter === 0 ? start : state_prev_trial!;
+        // (lo, f_lo, state_lo, g_lo, hi, f_hi, state_hi, …)
+        const zoomed = zoom(alpha_prev, f_prev, prev_state, g_prev, alpha, f, state_at_alpha, phi0, phi0_prime, direction);
         return {
           alpha: zoomed.alpha,
           found: zoomed.found,
@@ -317,9 +326,13 @@ export function optimize_lbfgs(
       if (Math.abs(phi_prime) <= -C2 * phi0_prime) {
         return { alpha, found: true, state_at_alpha, gradient_before: start.gradient };
       }
-      // Derivative turned positive: the minimum is bracketed.
+      // Derivative turned positive: the minimum is bracketed between
+      // the current trial (lo side — it satisfies Armijo and its slope
+      // just went positive) and the previous point (hi side).
       if (phi_prime >= 0) {
-        const zoomed = zoom(alpha, f, alpha_prev, f_prev, phi0, phi0_prime, direction);
+        const prev_state = iter === 0 ? start : state_prev_trial!;
+        // (lo, f_lo, state_lo, g_lo, hi, f_hi, state_hi, …)
+        const zoomed = zoom(alpha, f, state_at_alpha, phi_prime, alpha_prev, f_prev, prev_state, phi0, phi0_prime, direction);
         return {
           alpha: zoomed.alpha,
           found: zoomed.found,
@@ -327,18 +340,21 @@ export function optimize_lbfgs(
           gradient_before: start.gradient,
         };
       }
-      // Still descending: extend the trial step.
+      // Still descending: extend the trial step, keeping this trial's
+      // state and derivative for the next iteration's bracket.
       alpha_prev = alpha;
       f_prev = f;
+      g_prev_trial = phi_prime;
+      state_prev_trial = state_at_alpha;
       alpha = Math.min(2.0 * alpha, MAX_ALPHA);
     }
 
-    // Budget exhausted without a bracket: accept the last trial
-    // point that was actually evaluated (alpha_prev).
+    // Budget exhausted without a bracket: accept the last trial point
+    // that was actually evaluated (alpha_prev) — no re-evaluation.
     return {
       alpha: alpha_prev,
       found: true,
-      state_at_alpha: evaluate_at(alpha_prev, direction),
+      state_at_alpha: state_prev_trial ?? start,
       gradient_before: start.gradient,
     };
   }
@@ -355,25 +371,43 @@ export function optimize_lbfgs(
    * contain a point satisfying the strong Wolfe conditions, choosing
    * trial points by cubic interpolation (eq. 3.59), with bisection as
    * the fallback when the interpolation leaves the bracket.
+   *
+   * Both endpoints arrive WITH their already-evaluated states (the
+   * caller evaluated them to decide the bracket), so no endpoint is
+   * ever re-evaluated; interior trials join the cache as they are
+   * computed.
    */
   function zoom(
     lo: number,
     f_lo: number,
+    state_lo: EvalState,
+    g_lo_in: number,
     hi: number,
     f_hi: number,
+    state_hi: EvalState,
     phi0: number,
     phi0_prime: number,
     direction: number[],
   ): { alpha: number; found: boolean; state: EvalState } {
-    // φ'(lo) is needed by the cubic; lo is either α = 0 (whose
-    // derivative is φ'(0)) or a previously evaluated trial — one
-    // extra evaluation keeps the bookkeeping simple.
-    let g_lo = dot(evaluate_at(lo, direction).gradient, direction);
+    // φ'(lo): a previously evaluated trial carries its own derivative;
+    // the φ'(0) case arrives through the same parameter.
+    let g_lo = g_lo_in;
+    const cache = new Map<number, EvalState>([
+      [lo, state_lo],
+      [hi, state_hi],
+    ]);
+
+    function state_at(a: number): EvalState {
+      let s = cache.get(a);
+      if (!s) {
+        s = evaluate_at(a, direction);
+        cache.set(a, s);
+      }
+      return s;
+    }
 
     for (let iter = 0; iter < MAX_LINE_SEARCH; iter++) {
-      // Cubic interpolation through (lo, f_lo, g_lo) and (hi, f_hi, g_hi).
-      // Equal endpoint values mean a flat interval: bisect.
-      const g_hi = dot(evaluate_at(hi, direction).gradient, direction);
+      const g_hi = dot(state_at(hi).gradient, direction);
       let alpha_j: number;
       if (Math.abs(f_lo - f_hi) < 1e-14) {
         alpha_j = 0.5 * (lo + hi);
@@ -397,7 +431,7 @@ export function optimize_lbfgs(
         alpha_j = 0.5 * (lo + hi);
       }
 
-      const state_j = evaluate_at(alpha_j, direction);
+      const state_j = state_at(alpha_j);
       const f_j = state_j.total;
       const g_j = dot(state_j.gradient, direction);
 
@@ -419,7 +453,8 @@ export function optimize_lbfgs(
     }
 
     // Budget exhausted: return the lo side of the bracket — it always
-    // satisfies the Armijo condition.
-    return { alpha: lo, found: true, state: evaluate_at(lo, direction) };
+    // satisfies the Armijo condition. The cache already holds lo's
+    // state (it was evaluated when lo became a trial point).
+    return { alpha: lo, found: true, state: state_at(lo) };
   }
 }

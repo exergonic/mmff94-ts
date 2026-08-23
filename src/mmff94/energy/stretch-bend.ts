@@ -27,7 +27,7 @@ import {
   type StretchBendParams,
 } from '../parameters/index.js';
 import { distance, angle_in_radians, Vec3 } from '../../utils/vector.js';
-import { make_class_context, type ClassContext, strbnd_type, bond_parameters, angle_parameters } from '../parameters/parameter-classes.js';
+import { class_context_for, type ClassContext, strbnd_type, bond_parameters, angle_parameters } from '../parameters/parameter-classes.js';
 import { empirical_bond_length } from '../parameters/empirical.js';
 
 /**
@@ -162,7 +162,7 @@ export function calc_stretch_bend_energy(molecule: TypedMolecule): number {
     adj[bond.atom1].push(bond.atom2);
     adj[bond.atom2].push(bond.atom1);
   }
-  const ctx = make_class_context(molecule, adj);
+  const ctx = class_context_for(molecule, adj);
 
   // Iterate over all possible central atoms j
   for (let j = 0; j < molecule.atoms.length; j++) {

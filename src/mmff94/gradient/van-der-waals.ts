@@ -25,7 +25,7 @@
 
 import type { TypedMolecule } from '../../types.js';
 import { Vec3 } from '../../utils/vector.js';
-import { vdw_pair_parameters, vdw_parameters_for } from '../energy/van-der-waals.js';
+import { nonbonded_context_for } from '../nonbonded-context.js';
 import { bond_length_derivatives } from './derivatives.js';
 
 /**
@@ -35,64 +35,40 @@ import { bond_length_derivatives } from './derivatives.js';
 export function calc_vdw_gradient(molecule: TypedMolecule): number[][] {
   const gradient: number[][] = molecule.atoms.map(() => [0, 0, 0]);
 
-  // Build adjacency and 2-away sets for pair exclusions — same as the
-  // energy term.
-  const adj: number[][] = Array.from({ length: molecule.atoms.length }, () => []);
-  for (const bond of molecule.bonds) {
-    adj[bond.atom1].push(bond.atom2);
-    adj[bond.atom2].push(bond.atom1);
-  }
+  // Pair list + combined parameters come from the cached context —
+  // they are topology, not geometry (see nonbonded-context.ts).
+  const ctx = nonbonded_context_for(molecule);
 
-  // Build 1-3 pair map: atoms sharing a common neighbor (angle pairs)
-  const pairs_1_3: Set<number>[] = Array.from({ length: molecule.atoms.length }, () => new Set());
-  for (let i = 0; i < molecule.atoms.length; i++) {
-    for (const n1 of adj[i]) {
-      for (const n2 of adj[n1]) {
-        if (n2 !== i) pairs_1_3[i].add(n2);
-      }
-    }
-  }
+  for (let p = 0; p < ctx.n_pairs; p++) {
+    const epsilon_ij = ctx.pair_epsilon_ij[p];
+    if (isNaN(epsilon_ij)) continue; // an atom without vdW parameters
 
-  for (let i = 0; i < molecule.atoms.length; i++) {
-    const param_i = vdw_parameters_for(molecule, adj, i);
-    if (!param_i) continue;
-
+    const i = ctx.pair_i[p];
+    const j = ctx.pair_j[p];
     const posI: Vec3 = [molecule.atoms[i].x, molecule.atoms[i].y, molecule.atoms[i].z];
+    const posJ: Vec3 = [molecule.atoms[j].x, molecule.atoms[j].y, molecule.atoms[j].z];
 
-    for (let j = i + 1; j < molecule.atoms.length; j++) {
+    const r = Math.hypot(posI[0] - posJ[0], posI[1] - posJ[1], posI[2] - posJ[2]);
 
-      // Skip 1-2 (bonded) and 1-3 (share a common neighbor); 1-4 pairs
-      // are NOT scaled in MMFF94.
-      if (adj[i].includes(j)) continue;
-      if (pairs_1_3[i].has(j)) continue;
+    // Buffered 14-7 expression and its r-derivative, with the fused
+    // per-pair constants a/b/C/D from the context.
+    const a = ctx.pair_vdw_a[p];
+    const b = ctx.pair_vdw_b[p];
+    const C = ctx.pair_vdw_C[p];
+    const D = ctx.pair_vdw_D[p];
 
-      const param_j = vdw_parameters_for(molecule, adj, j);
-      if (!param_j) continue;
+    const r7 = Math.pow(r, 7);
+    const f_rep = Math.pow(a / (r + b), 7);
+    const f_att = C / (r7 + D) - 2;
+    const f_rep_prime = -7.0 * Math.pow(a, 7) / Math.pow(r + b, 8);
+    const f_att_prime = -7.0 * C * Math.pow(r, 6) / Math.pow(r7 + D, 2);
 
-      const posJ: Vec3 = [molecule.atoms[j].x, molecule.atoms[j].y, molecule.atoms[j].z];
+    const dE_dr = epsilon_ij * (f_rep_prime * f_att + f_rep * f_att_prime);
 
-      const { R_ij, epsilon_ij } = vdw_pair_parameters(param_i, param_j);
-      const r = Math.hypot(posI[0] - posJ[0], posI[1] - posJ[1], posI[2] - posJ[2]);
-
-      // Buffered 14-7 expression and its r-derivative
-      const a = 1.07 * R_ij;
-      const b = 0.07 * R_ij;
-      const C = 1.12 * Math.pow(R_ij, 7);
-      const D = 0.12 * Math.pow(R_ij, 7);
-
-      const r7 = Math.pow(r, 7);
-      const f_rep = Math.pow(a / (r + b), 7);
-      const f_att = C / (r7 + D) - 2;
-      const f_rep_prime = -7.0 * Math.pow(a, 7) / Math.pow(r + b, 8);
-      const f_att_prime = -7.0 * C * Math.pow(r, 6) / Math.pow(r7 + D, 2);
-
-      const dE_dr = epsilon_ij * (f_rep_prime * f_att + f_rep * f_att_prime);
-
-      const { d_dx_a, d_dx_b } = bond_length_derivatives(posI, posJ);
-      for (let axis = 0; axis < 3; axis++) {
-        gradient[i][axis] += dE_dr * d_dx_a[axis];
-        gradient[j][axis] += dE_dr * d_dx_b[axis];
-      }
+    const { d_dx_a, d_dx_b } = bond_length_derivatives(posI, posJ);
+    for (let axis = 0; axis < 3; axis++) {
+      gradient[i][axis] += dE_dr * d_dx_a[axis];
+      gradient[j][axis] += dE_dr * d_dx_b[axis];
     }
   }
 

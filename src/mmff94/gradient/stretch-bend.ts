@@ -21,7 +21,7 @@
 
 import type { TypedMolecule } from '../../types.js';
 import { Vec3, angle_in_radians } from '../../utils/vector.js';
-import { make_class_context } from '../parameters/parameter-classes.js';
+import { class_context_for } from '../parameters/parameter-classes.js';
 import {
   stretch_bend_angle_terms,
 } from '../energy/stretch-bend.js';
@@ -46,7 +46,7 @@ export function calc_stretch_bend_gradient(molecule: TypedMolecule): number[][] 
     adj[bond.atom1].push(bond.atom2);
     adj[bond.atom2].push(bond.atom1);
   }
-  const ctx = make_class_context(molecule, adj);
+  const ctx = class_context_for(molecule, adj);
 
   for (let j = 0; j < molecule.atoms.length; j++) {
     const neighbors = adj[j];

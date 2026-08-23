@@ -29,7 +29,7 @@
 
 import type { TypedMolecule } from '../../types.js';
 import { dihedral_angle, Vec3 } from '../../utils/vector.js';
-import { make_class_context, type ClassContext, torsion_class, lookup_torsion, get_bond_order, is_aromatic_bond } from '../parameters/parameter-classes.js';
+import { class_context_for, type ClassContext, torsion_class, lookup_torsion, get_bond_order, is_aromatic_bond } from '../parameters/parameter-classes.js';
 import { ATOM_TYPE_PROPERTIES } from '../parameters/index.js';
 import { empirical_torsion } from '../parameters/empirical.js';
 
@@ -96,7 +96,7 @@ export function calc_torsion_energy(molecule: TypedMolecule): number {
     adj[bond.atom1].push(bond.atom2);
     adj[bond.atom2].push(bond.atom1);
   }
-  const ctx = make_class_context(molecule, adj);
+  const ctx = class_context_for(molecule, adj);
 
   // Each bond is the central j-k of its dihedrals i-j-k-l
   for (const bond of molecule.bonds) {

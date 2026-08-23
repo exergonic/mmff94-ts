@@ -84,6 +84,31 @@ export function make_class_context(mol: TypedMolecule, adj: number[][]): ClassCo
   return { mol, adj, aromatic_rings: aromatic.rings_of };
 }
 
+// Class contexts are pure functions of TOPOLOGY (bonds → ring/aromatic
+// perception), never of coordinates. Every term rebuilds one per call —
+// seven energy + seven gradient perceptions per optimization oracle
+// step on data that cannot change while atoms move. Cache per molecule
+// object; the mutation contract is the optimizer's own (coordinates
+// move; chemistry does not — see nonbonded-context.ts). Keyed by the
+// adjacency IDENTITY as well: a caller may pass a freshly built adj
+// for an untyped variant, and the cache entry must not outlive the
+// molecule it was built from.
+const class_context_cache = new WeakMap<TypedMolecule, Map<number[][], ClassContext>>();
+
+export function class_context_for(mol: TypedMolecule, adj: number[][]): ClassContext {
+  let by_adj = class_context_cache.get(mol);
+  if (!by_adj) {
+    by_adj = new Map();
+    class_context_cache.set(mol, by_adj);
+  }
+  let ctx = by_adj.get(adj);
+  if (!ctx) {
+    ctx = make_class_context(mol, adj);
+    by_adj.set(adj, ctx);
+  }
+  return ctx;
+}
+
 /** Bond order of (i, j) — 0 when the pair is not bonded. */
 export function get_bond_order(ctx: ClassContext, i: number, j: number): number {
   const { mol } = ctx;

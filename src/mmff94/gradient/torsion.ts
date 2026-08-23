@@ -23,7 +23,7 @@
 
 import type { TypedMolecule } from '../../types.js';
 import { Vec3, dihedral_angle } from '../../utils/vector.js';
-import { make_class_context } from '../parameters/parameter-classes.js';
+import { class_context_for } from '../parameters/parameter-classes.js';
 import { torsion_terms } from '../energy/torsion.js';
 import { dihedral_derivatives } from './derivatives.js';
 
@@ -40,7 +40,7 @@ export function calc_torsion_gradient(molecule: TypedMolecule): number[][] {
     adj[bond.atom1].push(bond.atom2);
     adj[bond.atom2].push(bond.atom1);
   }
-  const ctx = make_class_context(molecule, adj);
+  const ctx = class_context_for(molecule, adj);
 
   // Each bond is the central j-k of its dihedrals i-j-k-l
   for (const bond of molecule.bonds) {

@@ -42,7 +42,8 @@
 
 import type { TypedMolecule } from '../../types.js';
 import { VDW_PARAMS } from '../parameters/index.js';
-import { distance, Vec3 } from '../../utils/vector.js';
+import { distance } from '../../utils/vector.js';
+import { nonbonded_context_for } from '../nonbonded-context.js';
 
 /**
  * The pair parameters for one vdW interaction: combined radius R*
@@ -158,54 +159,30 @@ export function vdw_pair_parameters(
 export function calc_vdw_energy(molecule: TypedMolecule): number {
   let total_energy = 0.0;
 
-  // Build adjacency and 2-away sets for pair exclusions
-  const adj: number[][] = Array.from({ length: molecule.atoms.length }, () => []);
-  for (const bond of molecule.bonds) {
-    adj[bond.atom1].push(bond.atom2);
-    adj[bond.atom2].push(bond.atom1);
-  }
+  // Pair list + combined parameters come from the cached context —
+  // they are topology, not geometry (see nonbonded-context.ts).
+  const ctx = nonbonded_context_for(molecule);
 
-  // Build 1-3 pair map: atoms sharing a common neighbor (angle pairs)
-  const pairs_1_3: Set<number>[] = Array.from({ length: molecule.atoms.length }, () => new Set());
-  for (let i = 0; i < molecule.atoms.length; i++) {
-    for (const n1 of adj[i]) {
-      for (const n2 of adj[n1]) {
-        if (n2 !== i) pairs_1_3[i].add(n2);
-      }
-    }
-  }
+  for (let p = 0; p < ctx.n_pairs; p++) {
+    const epsilon_ij = ctx.pair_epsilon_ij[p];
+    if (isNaN(epsilon_ij)) continue; // an atom without vdW parameters
 
-  for (let i = 0; i < molecule.atoms.length; i++) {
-    const param_i = vdw_parameters_for(molecule, adj, i);
-    if (!param_i) continue;
+    const i = ctx.pair_i[p];
+    const j = ctx.pair_j[p];
 
-    const posI: Vec3 = [molecule.atoms[i].x, molecule.atoms[i].y, molecule.atoms[i].z];
+    const r = distance(
+      [molecule.atoms[i].x, molecule.atoms[i].y, molecule.atoms[i].z],
+      [molecule.atoms[j].x, molecule.atoms[j].y, molecule.atoms[j].z],
+    );
 
-    for (let j = i + 1; j < molecule.atoms.length; j++) {
+    // Buffered 14-7 expression, Halgren1996 eq. (8), with the fused
+    // per-pair constants a/b/C/D from the context.
+    const r7 = Math.pow(r, 7);
 
-      // Skip 1-2 (bonded) and 1-3 (share a common neighbor)
-      if (adj[i].includes(j)) continue;
-      if (pairs_1_3[i].has(j)) continue;
+    const repulsive_term = Math.pow(ctx.pair_vdw_a[p] / (r + ctx.pair_vdw_b[p]), 7);
+    const attractive_term = ctx.pair_vdw_C[p] / (r7 + ctx.pair_vdw_D[p]) - 2;
 
-      const param_j = vdw_parameters_for(molecule, adj, j);
-      if (!param_j) continue;
-
-      const posJ: Vec3 = [molecule.atoms[j].x, molecule.atoms[j].y, molecule.atoms[j].z];
-      const r = distance(posI, posJ);
-
-      // Combined radius and well depth — the combination rules live
-      // in vdw_pair_parameters(), shared with the gradient.
-      const { R_ij, epsilon_ij } = vdw_pair_parameters(param_i, param_j);
-
-      // Buffered 14-7 expression, Halgren1996 eq. (8)
-      const r7 = Math.pow(r, 7);
-      const R_ij7 = Math.pow(R_ij, 7);
-
-      const repulsive_term = Math.pow(1.07 * R_ij / (r + 0.07 * R_ij), 7);
-      const attractive_term = 1.12 * R_ij7 / (r7 + 0.12 * R_ij7) - 2;
-
-      total_energy += epsilon_ij * repulsive_term * attractive_term;
-    }
+    total_energy += epsilon_ij * repulsive_term * attractive_term;
   }
 
   return total_energy;

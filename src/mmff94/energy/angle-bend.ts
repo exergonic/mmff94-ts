@@ -27,7 +27,7 @@
 
 import type { TypedMolecule } from '../../types.js';
 import { angle_in_radians, Vec3 } from '../../utils/vector.js';
-import { make_class_context, angle_parameters } from '../parameters/parameter-classes.js';
+import { class_context_for, angle_parameters } from '../parameters/parameter-classes.js';
 
 // Unit conversion (mdyn·Å/rad²) → (kcal/mol)/deg². The published
 // 0.043844 is the rounded form; BatchMin uses the exact product
@@ -55,7 +55,7 @@ export function calc_angle_bend_energy(molecule: TypedMolecule): number {
     adj[bond.atom1].push(bond.atom2);
     adj[bond.atom2].push(bond.atom1);
   }
-  const ctx = make_class_context(molecule, adj);
+  const ctx = class_context_for(molecule, adj);
 
   // Iterate over all possible central atoms j
   for (let j = 0; j < molecule.atoms.length; j++) {

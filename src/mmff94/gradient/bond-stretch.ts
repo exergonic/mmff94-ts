@@ -21,7 +21,7 @@
 
 import type { TypedMolecule } from '../../types.js';
 import { Vec3 } from '../../utils/vector.js';
-import { bond_parameters, make_class_context } from '../parameters/parameter-classes.js';
+import { bond_parameters, class_context_for } from '../parameters/parameter-classes.js';
 import { empirical_bond_parameters } from '../parameters/empirical.js';
 import { bond_length_derivatives } from './derivatives.js';
 
@@ -42,7 +42,7 @@ export function calc_bond_stretch_gradient(molecule: TypedMolecule): number[][] 
     adj[bond.atom1].push(bond.atom2);
     adj[bond.atom2].push(bond.atom1);
   }
-  const ctx = make_class_context(molecule, adj);
+  const ctx = class_context_for(molecule, adj);
 
   for (const bond of molecule.bonds) {
     const a1 = bond.atom1;

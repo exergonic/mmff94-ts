@@ -26,7 +26,7 @@
 import type { TypedMolecule } from '../../types.js';
 import { Vec3 } from '../../utils/vector.js';
 import { assign_bci_charges } from '../charges.js';
-import { is_1_4_pair } from '../energy/electrostatic.js';
+import { nonbonded_context_for } from '../nonbonded-context.js';
 import { bond_length_derivatives } from './derivatives.js';
 
 const S = 0.05; // the electrostatic buffering constant (Å)
@@ -44,54 +44,36 @@ export function calc_electrostatic_gradient(molecule: TypedMolecule): number[][]
   const charges =
     molecule.partial_charges ?? assign_bci_charges(molecule).partial_charges!;
 
-  // Adjacency: for the 1-2/1-3 exclusion and the 1-4 classification.
-  const adj: number[][] = Array.from({ length: molecule.atoms.length }, () => []);
-  for (const bond of molecule.bonds) {
-    adj[bond.atom1].push(bond.atom2);
-    adj[bond.atom2].push(bond.atom1);
-  }
+  // Pair list + 1-4 classification come from the cached context —
+  // they are topology, not geometry (see nonbonded-context.ts). The
+  // context's exactly-depth-3 flag is the same set is_1_4_pair
+  // returns (same BFS, same shortest-path-wins semantics); that
+  // function stays exported in energy/electrostatic.ts for callers
+  // holding only an adjacency list.
+  const ctx = nonbonded_context_for(molecule);
 
-  // 1-3 pair map: atoms sharing a common neighbor (angle pairs)
-  const pairs_1_3: Set<number>[] = Array.from({ length: molecule.atoms.length }, () => new Set());
-  for (let i = 0; i < molecule.atoms.length; i++) {
-    for (const n1 of adj[i]) {
-      for (const n2 of adj[n1]) {
-        if (n2 !== i) pairs_1_3[i].add(n2);
-      }
-    }
-  }
-
-  const n = molecule.atoms.length;
-  const positions: Vec3[] = molecule.atoms.map(a => [a.x, a.y, a.z]);
-
-  for (let i = 0; i < n; i++) {
+  for (let p = 0; p < ctx.n_pairs; p++) {
+    const i = ctx.pair_i[p];
+    const j = ctx.pair_j[p];
     const qi = charges[i];
-    if (qi === 0) continue;
-    for (let j = i + 1; j < n; j++) {
-      // Skip 1-2 (bonded) and 1-3 (share a common neighbor) pairs
-      if (adj[i].includes(j)) continue;
-      if (pairs_1_3[i].has(j)) continue;
+    const qj = charges[j];
+    if (qi === 0 || qj === 0) continue;
 
-      const qj = charges[j];
-      if (qj === 0) continue;
+    const posI: Vec3 = [molecule.atoms[i].x, molecule.atoms[i].y, molecule.atoms[i].z];
+    const posJ: Vec3 = [molecule.atoms[j].x, molecule.atoms[j].y, molecule.atoms[j].z];
 
-      const r = Math.hypot(
-        positions[i][0] - positions[j][0],
-        positions[i][1] - positions[j][1],
-        positions[i][2] - positions[j][2],
-      );
-      const r_buffered = r + S;
+    const r = Math.hypot(posI[0] - posJ[0], posI[1] - posJ[1], posI[2] - posJ[2]);
+    const r_buffered = r + S;
 
-      // dE/dr — derivative of eq. (6), with the 1-4 scaling applied
-      // to the SAME pairs the energy term scales.
-      let dE_dr = -ELEC_UNIT * qi * qj / (r_buffered * r_buffered);
-      if (is_1_4_pair(i, j, adj)) dE_dr *= SCALE_1_4;
+    // dE/dr — derivative of eq. (6), with the 1-4 scaling applied
+    // to the SAME pairs the energy term scales.
+    let dE_dr = -ELEC_UNIT * qi * qj / (r_buffered * r_buffered);
+    if (ctx.pair_is_14[p]) dE_dr *= SCALE_1_4;
 
-      const { d_dx_a, d_dx_b } = bond_length_derivatives(positions[i], positions[j]);
-      for (let axis = 0; axis < 3; axis++) {
-        gradient[i][axis] += dE_dr * d_dx_a[axis];
-        gradient[j][axis] += dE_dr * d_dx_b[axis];
-      }
+    const { d_dx_a, d_dx_b } = bond_length_derivatives(posI, posJ);
+    for (let axis = 0; axis < 3; axis++) {
+      gradient[i][axis] += dE_dr * d_dx_a[axis];
+      gradient[j][axis] += dE_dr * d_dx_b[axis];
     }
   }
 

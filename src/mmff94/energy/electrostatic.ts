@@ -31,8 +31,9 @@
  */
 
 import type { TypedMolecule } from '../../types.js';
-import { distance, Vec3 } from '../../utils/vector.js';
+import { distance } from '../../utils/vector.js';
 import { assign_bci_charges } from '../charges.js';
+import { nonbonded_context_for } from '../nonbonded-context.js';
 
 const S = 0.05; // the electrostatic buffering constant (Å)
 
@@ -46,47 +47,27 @@ export function calc_electrostatic_energy(molecule: TypedMolecule): number {
   const charges =
     molecule.partial_charges ?? assign_bci_charges(molecule).partial_charges!;
 
-  // Adjacency: for the 1-2/1-3 exclusion and the 1-4 classification.
-  const adj: number[][] = Array.from({ length: molecule.atoms.length }, () => []);
-  for (const bond of molecule.bonds) {
-    adj[bond.atom1].push(bond.atom2);
-    adj[bond.atom2].push(bond.atom1);
-  }
-
-  // 1-3 pair map: atoms sharing a common neighbor (angle pairs)
-  const pairs_1_3: Set<number>[] = Array.from({ length: molecule.atoms.length }, () => new Set());
-  for (let i = 0; i < molecule.atoms.length; i++) {
-    for (const n1 of adj[i]) {
-      for (const n2 of adj[n1]) {
-        if (n2 !== i) pairs_1_3[i].add(n2);
-      }
-    }
-  }
-
-  const n = molecule.atoms.length;
-  const positions: Vec3[] = molecule.atoms.map(a => [a.x, a.y, a.z]);
+  const ctx = nonbonded_context_for(molecule);
   let total_energy = 0.0;
 
-  for (let i = 0; i < n; i++) {
+  for (let p = 0; p < ctx.n_pairs; p++) {
+    const i = ctx.pair_i[p];
+    const j = ctx.pair_j[p];
     const qi = charges[i];
-    if (qi === 0) continue;
-    for (let j = i + 1; j < n; j++) {
-      // Skip 1-2 (bonded) and 1-3 (share a common neighbor) pairs
-      if (adj[i].includes(j)) continue;
-      if (pairs_1_3[i].has(j)) continue;
+    const qj = charges[j];
+    if (qi === 0 || qj === 0) continue; // zero-charge pairs contribute nothing
 
-      const qj = charges[j];
-      if (qj === 0) continue;
+    const r = distance(
+      [molecule.atoms[i].x, molecule.atoms[i].y, molecule.atoms[i].z],
+      [molecule.atoms[j].x, molecule.atoms[j].y, molecule.atoms[j].z],
+    ) + S;
 
-      const r = distance(positions[i], positions[j]) + S;
+    let energy = (332.0716 * qi * qj) / r; // D = 1.0 (in vacuo)
 
-      let energy = (332.0716 * qi * qj) / r; // D = 1.0 (in vacuo)
+    // 1-4 scaling: atoms exactly three bonds apart.
+    if (ctx.pair_is_14[p]) energy *= 0.75;
 
-      // 1-4 scaling: atoms exactly three bonds apart.
-      if (is_1_4_pair(i, j, adj)) energy *= 0.75;
-
-      total_energy += energy;
-    }
+    total_energy += energy;
   }
 
   return total_energy;
