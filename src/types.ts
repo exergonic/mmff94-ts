@@ -80,7 +80,7 @@ export interface OptimizationResult {
   molecule: TypedMolecule;
   energy: EnergyComponents;     // Final energy after optimization
   iterations: number;           // Number of optimization cycles
-  converged: boolean;           // True if max gradient fell below the threshold
+  converged: boolean;          // True if a convergence gate tripped (see the optimizer options)
   final_max_gradient: number;   // Largest force component (kcal/mol/Å) at finish
   /** RMS of the force components (kcal/mol/Å) at finish — the TINKER-style
    *  convergence signal; NaN when the molecule has no atoms. */

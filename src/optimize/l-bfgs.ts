@@ -25,11 +25,16 @@
  *         (discarding the oldest pair when m is exceeded; a pair
  *         with non-positive curvature yᵀs is skipped — it carries
  *         no usable information about the inverse Hessian).
- *   3. Stop when max |g_i| < gradient_tolerance (default 0.05
- *      kcal/mol/Å, the "well-minimized structure" threshold) or when
- *      the iteration cap hits. If the line search finds no acceptable
- *      step (e.g. a degenerate flat direction), the run ends
- *      unconverged rather than oscillating.
+ *   3. Stop when the convergence criterion trips: max |g_i| <
+ *      gradient_tolerance OR (default 'either') the RMS gradient <
+ *      rms_gradient_tolerance — see the options' docs for the 'max' /
+ *      'rms' / 'either' semantic. The default both-gates rule stops on
+ *      whichever comes first (the RMS gate cuts the max|g| polish
+ *      tail: a single stiff coordinate, usually an H stretch, keeps
+ *      max|g| above its gate long after the structure is converged).
+ *      The iteration cap always binds, and if the line search finds no
+ *      acceptable step (e.g. a degenerate flat direction), the run
+ *      ends unconverged rather than oscillating.
  *
  * The optimizer minimizes the total energy E; the returned gradient
  * is dE/dx, so the descent direction is −H·∇E.
@@ -43,17 +48,32 @@ import { create_fast_system, FastSystem } from './fast-system.js';
 
 export interface LbfgsOptions {
   max_iterations?: number;
-  gradient_tolerance?: number; // kcal/mol/Å — max |g_i| (default 0.05)
   /**
-   * Optional RMS-gradient convergence criterion (kcal/mol/Å). When set,
-   * the run stops once EITHER max |g_i| < gradient_tolerance OR the
-   * RMS gradient < this value. The RMS signal ignores a single stiff
-   * coordinate (an H stretch) that keeps max |g_i| far above the mean
-   * long after the structure is converged — nicotine's last ~40% of
-   * iterations polish max|g| 0.058 → 0.050 for 5e-3 kcal/mol. TINKER's
-   * minimize treats its gradient tolerance as an RMS criterion; this
-   * option restores that behavior without changing the default
-   * (pure max|g|) semantics.
+   * Gradient threshold (kcal/mol/Å). Its meaning depends on `criterion`:
+   * for 'max' it bounds the largest force component (legacy behavior);
+   * for 'rms' it bounds the RMS gradient, exactly as TINKER's minimize
+   * tolerance does. Default 0.05.
+   */
+  gradient_tolerance?: number;
+  /**
+   * Convergence criterion. Default 'either':
+   *  - 'max': stop when max |g_i| < gradient_tolerance (the legacy rule —
+   *    one stiff coordinate, usually an H stretch, keeps it running
+   *    long after the structure is converged);
+   *  - 'rms': stop when the RMS gradient < gradient_tolerance (TINKER
+   *    semantics — the tolerance applies to the RMS signal);
+   *  - 'either' (recommended): stop when EITHER gate trips, whichever
+   *    comes first. The RMS gate uses rms_gradient_tolerance below; it
+   *    can never iterate longer than either pure mode, and it drops the
+   *    polish tail (nicotine: 843 -> 520 iterations for 3e-3 kcal/mol).
+   */
+  criterion?: 'max' | 'rms' | 'either';
+  /**
+   * The RMS-gradient threshold for criterion 'either' (kcal/mol/Å).
+   * Default 0.02 — the RMS level a structure that just crossed the
+   * 0.05 max|g| gate typically has, so 'either' converges to the same
+   * quality class without the polish tail. Ignored unless `criterion`
+   * is 'either'.
    */
   rms_gradient_tolerance?: number;
   history_size?: number; // m in L-BFGS (default 10)
@@ -108,7 +128,14 @@ export function optimize_lbfgs(
   const opts = has_oracle ? options : (calc_energy_gradient_or_options ?? options);
   const max_iterations = opts?.max_iterations ?? 1000;
   const gradient_tolerance = opts?.gradient_tolerance ?? 0.05;
-  const rms_gradient_tolerance = opts?.rms_gradient_tolerance;
+  const criterion = opts?.criterion ?? 'either';
+  // The effective RMS gate: rms mode reuses the gradient tolerance
+  // (TINKER semantics); either mode has its own default (0.02 — the
+  // RMS level a 0.05-max-converged structure typically shows).
+  const rms_effective =
+    criterion === 'rms' ? (opts?.rms_gradient_tolerance ?? gradient_tolerance)
+    : criterion === 'either' ? (opts?.rms_gradient_tolerance ?? 0.02)
+    : undefined;
   const history_size = Math.max(1, Math.min(50, opts?.history_size ?? 10));
 
   // Simple path: a bare Molecule is typed and charged on demand (an
@@ -216,8 +243,11 @@ export function optimize_lbfgs(
   let final_rms_gradient = rms_norm(state.gradient);
 
   function converged_now(): boolean {
+    if (criterion === 'max') return final_max_gradient < gradient_tolerance;
+    if (criterion === 'rms') return final_rms_gradient < rms_effective!;
+    // 'either': whichever gate trips first
     if (final_max_gradient < gradient_tolerance) return true;
-    return rms_gradient_tolerance !== undefined && final_rms_gradient < rms_gradient_tolerance;
+    return final_rms_gradient < rms_effective!;
   }
 
   if (n === 0 || converged_now()) {

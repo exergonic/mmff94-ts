@@ -191,6 +191,9 @@ describe('optimizer behavior', () => {
     const charged = assign_bci_charges(assign_atom_types(raw));
     const result = optimize_lbfgs(charged, energy_gradient_fn(), {
       gradient_tolerance: 0.005,
+      // The max-gate contract is what this test pins — the default
+      // 'either' criterion would stop on the 0.02 RMS gate instead.
+      criterion: 'max',
     });
     expect(result.converged).toBe(true);
     expect(result.final_max_gradient).toBeLessThan(0.005);
@@ -208,16 +211,16 @@ describe('optimizer behavior', () => {
     // The max|g| criterion is hostage to one stiff coordinate (an H
     // stretch) long after the structure is converged — nicotine's
     // last ~40% of iterations polish max|g| 0.058 -> 0.050 for 5e-3
-    // kcal/mol. The RMS gate stops earlier; the energy must still sit
-    // inside the basin.
+    // kcal/mol. The 'either' default's RMS gate stops earlier; the
+    // energy must still sit inside the basin.
     const raw = parse_sdf(readFileSync(join(SDF_DIR, 'nicotine.sdf'), 'utf-8'));
     const charged = assign_bci_charges(assign_atom_types(raw));
     const strict = optimize_lbfgs(charged, energy_gradient_fn(), {
       gradient_tolerance: GRADIENT_TOL,
+      criterion: 'max', // the legacy gate, for comparison
     });
     const rms = optimize_lbfgs(charged, energy_gradient_fn(), {
       gradient_tolerance: GRADIENT_TOL,
-      rms_gradient_tolerance: 0.02,
     });
     expect(strict.converged).toBe(true);
     expect(rms.converged).toBe(true);
@@ -270,7 +273,7 @@ describe('optimizer behavior', () => {
           gradient,
         };
       },
-      { gradient_tolerance: 1e-8, max_iterations: 100 },
+      { gradient_tolerance: 1e-8, max_iterations: 100, criterion: 'max' },
     );
     expect(result.converged).toBe(true);
     expect(result.final_max_gradient).toBeLessThan(1e-8);

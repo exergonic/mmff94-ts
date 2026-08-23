@@ -32,10 +32,15 @@ import { create_fast_system, FastSystem } from './fast-system.js';
 
 export interface SteepestDescentOptions {
   max_iterations?: number;
-  gradient_tolerance?: number; // kcal/mol/Å — max |g_i| (default 0.05)
-  /** Optional RMS-gradient convergence criterion — see LbfgsOptions.
-   *  The run stops once EITHER max |g_i| OR the RMS gradient is below
-   *  its threshold. */
+  /** Gradient threshold (kcal/mol/Å) — meaning depends on `criterion`
+   *  (see LbfgsOptions: 'max' bounds max |g_i|, 'rms' bounds the RMS
+   *  gradient). Default 0.05. */
+  gradient_tolerance?: number;
+  /** Convergence criterion — 'max' | 'rms' | 'either' (default 'either',
+   *  see LbfgsOptions). */
+  criterion?: 'max' | 'rms' | 'either';
+  /** RMS threshold for criterion 'either' (default 0.02 — see
+   *  LbfgsOptions). */
   rms_gradient_tolerance?: number;
   initial_step_size?: number;  // first line-search trial (default 1.0)
 }
@@ -80,8 +85,21 @@ export function optimize_steepest_descent(
   const opts = has_oracle ? options : (calc_energy_gradient_or_options ?? options);
   const max_iterations = opts?.max_iterations ?? 1000;
   const gradient_tolerance = opts?.gradient_tolerance ?? 0.05;
-  const rms_gradient_tolerance = opts?.rms_gradient_tolerance;
+  const criterion = opts?.criterion ?? 'either';
+  const rms_effective =
+    criterion === 'rms' ? (opts?.rms_gradient_tolerance ?? gradient_tolerance)
+    : criterion === 'either' ? (opts?.rms_gradient_tolerance ?? 0.02)
+    : undefined;
   const initial_step_size = opts?.initial_step_size ?? 1.0;
+
+  /** The active convergence gates — mirrors L-BFGS's converged_now. */
+  function converged_at(g: Float64Array): boolean {
+    const mx = max_gradient_norm(g);
+    const rms = rms_gradient_norm(g);
+    if (criterion === 'max') return mx < gradient_tolerance;
+    if (criterion === 'rms') return rms < rms_effective!;
+    return mx < gradient_tolerance || rms < rms_effective!;
+  }
 
   // Simple path: type + charge on demand, built-in oracle by default
   // (same as L-BFGS). The built-in path runs on the compiled fast
@@ -135,9 +153,7 @@ export function optimize_steepest_descent(
 
   let state = evaluate_at_coords(x);
   let iterations = 0;
-  let converged =
-    max_gradient_norm(state.grad) < gradient_tolerance ||
-    (rms_gradient_tolerance !== undefined && rms_gradient_norm(state.grad) < rms_gradient_tolerance);
+  let converged = converged_at(state.grad);
 
   while (!converged && iterations < max_iterations) {
     iterations++;
@@ -176,9 +192,7 @@ export function optimize_steepest_descent(
       break;
     }
 
-    converged =
-      max_gradient_norm(state.grad) < gradient_tolerance ||
-      (rms_gradient_tolerance !== undefined && rms_gradient_norm(state.grad) < rms_gradient_tolerance);
+    converged = converged_at(state.grad);
   }
 
   // Sync the flat coordinates back into the returned molecule.
