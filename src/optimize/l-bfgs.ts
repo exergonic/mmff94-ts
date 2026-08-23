@@ -39,6 +39,7 @@ import type { Molecule, TypedMolecule, EnergyComponents, OptimizationResult } fr
 import { prepare_molecule } from '../mmff94/prepare.js';
 import { calc_energy } from '../mmff94/energy/total.js';
 import { calc_gradient } from '../mmff94/gradient/total.js';
+import { create_fast_system, FastSystem } from './fast-system.js';
 
 export interface LbfgsOptions {
   max_iterations?: number;
@@ -69,7 +70,7 @@ const MAX_TRIAL_STEP = 2.0; // Å — the first line-search trial never moves an
 interface EvalState {
   components: EnergyComponents;
   total: number;
-  gradient: number[]; // flat, 3·n_atoms
+  gradient: Float64Array; // flat, 3·n_atoms
 }
 
 /**
@@ -105,6 +106,14 @@ export function optimize_lbfgs(
     calc_energy_gradient ??
     ((m: TypedMolecule) => ({ energy: calc_energy(m), gradient: calc_gradient(m) }));
 
+  // When no custom oracle was supplied, the built-in path runs on the
+  // compiled fast system (see fast-system.ts): one-time parameter
+  // resolution, zero-allocation energy+gradient on flat coordinate
+  // buffers, and — critically — the working molecule's atom objects are
+  // never rebuilt per step; the coordinates are synced back only once,
+  // for the returned molecule.
+  const fast: FastSystem | null = calc_energy_gradient ? null : create_fast_system(prepared);
+
   // Working copy — the optimizer owns its coordinates and never
   // mutates the caller's molecule. The spread keeps atom_types and
   // partial_charges; only the atoms (positions) are cloned.
@@ -115,24 +124,41 @@ export function optimize_lbfgs(
 
   const n = 3 * work.atoms.length;
 
-  // Flat view of the working coordinates (x = [x₀,y₀,z₀, x₁,…]).
-  const x: number[] = new Array(n);
+  // Flat view of the working coordinates (x = [x₀,y₀,z₀, x₁,…]). A
+  // Float64Array: the fast path consumes it directly (no conversion).
+  const x: Float64Array = new Float64Array(n);
   for (let a = 0; a < work.atoms.length; a++) {
     x[3 * a] = work.atoms[a].x;
     x[3 * a + 1] = work.atoms[a].y;
     x[3 * a + 2] = work.atoms[a].z;
   }
 
-  // Evaluate energy + gradient at the flat coordinates, keeping the
-  // working molecule's coordinates in sync (the callback reads them).
-  function evaluate(coords: number[]): EvalState {
+  // The fast path writes flat coordinates directly (no atom-object
+  // round trip); the generic path syncs the working molecule from the
+  // TRIAL COORDS before every oracle call.
+  function sync_atoms_from(coords: Float64Array): void {
     for (let a = 0; a < work.atoms.length; a++) {
       work.atoms[a].x = coords[3 * a];
       work.atoms[a].y = coords[3 * a + 1];
       work.atoms[a].z = coords[3 * a + 2];
     }
+  }
+
+  // Evaluate energy + gradient at the flat coordinates, keeping the
+  // working molecule's coordinates in sync (the callback reads them).
+  function evaluate(coords: Float64Array): EvalState {
+    if (fast) {
+      const grad = new Float64Array(n);
+      fast.evaluate(coords, grad);
+      return {
+        components: { ...fast.components },
+        total: fast.total,
+        gradient: grad,
+      };
+    }
+    sync_atoms_from(coords);
     const { energy, gradient } = oracle(work);
-    const flat = new Array(n);
+    const flat = new Float64Array(n);
     for (let a = 0; a < work.atoms.length; a++) {
       flat[3 * a] = gradient[a][0];
       flat[3 * a + 1] = gradient[a][1];
@@ -142,23 +168,27 @@ export function optimize_lbfgs(
   }
 
   // ── helpers on flat arrays ──────────────────────────────────────
-  function dot(a: number[], b: number[]): number {
+  // Both plain arrays (the history/direction vectors) and Float64Array
+  // (the gradient) flow through these — type the helpers on the
+  // read-only intersection and let V8 monomorphize on the call sites.
+  type FlatVec = ArrayLike<number>;
+  function dot(a: FlatVec, b: FlatVec): number {
     let s = 0;
     for (let i = 0; i < a.length; i++) s += a[i] * b[i];
     return s;
   }
-  function max_abs(a: number[]): number {
+  function max_abs(a: FlatVec): number {
     let m = 0;
-    for (const v of a) m = Math.max(m, Math.abs(v));
+    for (let i = 0; i < a.length; i++) m = Math.max(m, Math.abs(a[i]));
     return m;
   }
-  function direction_norm(a: number[]): number {
+  function direction_norm(a: FlatVec): number {
     return Math.sqrt(dot(a, a));
   }
 
   // ── L-BFGS state ────────────────────────────────────────────────
-  const s_history: number[][] = []; // position changes, newest last
-  const y_history: number[][] = []; // gradient changes, newest last
+  const s_history: ArrayLike<number>[] = []; // position changes, newest last
+  const y_history: ArrayLike<number>[] = []; // gradient changes, newest last
   const rho_history: number[] = []; // 1 / yᵀs per pair
 
   let state = evaluate(x);
@@ -255,8 +285,10 @@ export function optimize_lbfgs(
 
   }
 
-  // The working molecule's coordinates were synced by the last
-  // evaluate() call, so `work` already holds the final geometry.
+  // The working molecule's coordinates are only synced from the flat
+  // buffer at the end (the fast path never materializes the atoms per
+  // step); the final `work` therefore carries the optimized geometry.
+  sync_atoms_from(x);
   return {
     molecule: work,
     energy: state.components,
@@ -273,7 +305,7 @@ export function optimize_lbfgs(
     direction: number[],
     start: EvalState,
     gamma: number,
-  ): { alpha: number; found: boolean; state_at_alpha: EvalState; gradient_before: number[] } {
+  ): { alpha: number; found: boolean; state_at_alpha: EvalState; gradient_before: FlatVec } {
     const phi0 = start.total;
     const phi0_prime = dot(start.gradient, direction);
 
@@ -361,7 +393,7 @@ export function optimize_lbfgs(
 
   /** Evaluate E(x + α·p) without moving the working coordinates. */
   function evaluate_at(alpha: number, direction: number[]): EvalState {
-    const coords = new Array<number>(n);
+    const coords = new Float64Array(n);
     for (let d = 0; d < n; d++) coords[d] = x[d] + alpha * direction[d];
     return evaluate(coords);
   }

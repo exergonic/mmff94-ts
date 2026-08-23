@@ -23,11 +23,12 @@
  * the default.
  */
 
-import type { Molecule, TypedMolecule, OptimizationResult } from '../types.js';
+import type { Molecule, TypedMolecule, EnergyComponents, OptimizationResult } from '../types.js';
 import type { EnergyGradientFn } from './l-bfgs.js';
 import { prepare_molecule } from '../mmff94/prepare.js';
 import { calc_energy } from '../mmff94/energy/total.js';
 import { calc_gradient } from '../mmff94/gradient/total.js';
+import { create_fast_system, FastSystem } from './fast-system.js';
 
 export interface SteepestDescentOptions {
   max_iterations?: number;
@@ -41,11 +42,9 @@ const MAX_TRIAL_STEP = 2.0; // Å — the first trial never moves an atom farthe
 const BACKTRACK = 0.5;      // halving factor on a rejected trial
 
 /** Largest |force component| over all atoms (kcal/mol/Å). */
-function max_gradient_norm(gradient: number[][]): number {
+function max_gradient_norm(gradient: ArrayLike<number>): number {
   let m = 0;
-  for (const g of gradient) {
-    for (const v of g) m = Math.max(m, Math.abs(v));
-  }
+  for (let i = 0; i < gradient.length; i++) m = Math.max(m, Math.abs(gradient[i]));
   return m;
 }
 
@@ -73,11 +72,15 @@ export function optimize_steepest_descent(
   const initial_step_size = opts?.initial_step_size ?? 1.0;
 
   // Simple path: type + charge on demand, built-in oracle by default
-  // (same as L-BFGS).
+  // (same as L-BFGS). The built-in path runs on the compiled fast
+  // system — never materializing atom objects for trials (the generic
+  // path below clones the atoms per trial; the fast path evaluates the
+  // flat coordinate buffer directly).
   const prepared = prepare_molecule(molecule);
   const oracle =
     calc_energy_gradient ??
     ((m: TypedMolecule) => ({ energy: calc_energy(m), gradient: calc_gradient(m) }));
+  const fast: FastSystem | null = calc_energy_gradient ? null : create_fast_system(prepared);
 
   // Working copy — the optimizer owns its coordinates and never
   // mutates the caller's molecule (same pattern as L-BFGS: the spread
@@ -86,42 +89,65 @@ export function optimize_steepest_descent(
     ...prepared,
     atoms: prepared.atoms.map(a => ({ ...a })),
   };
+  const n = 3 * work.atoms.length;
+  const x: Float64Array = new Float64Array(n);
+  for (let a = 0; a < work.atoms.length; a++) {
+    x[3 * a] = work.atoms[a].x;
+    x[3 * a + 1] = work.atoms[a].y;
+    x[3 * a + 2] = work.atoms[a].z;
+  }
 
-  let state = oracle(work);
+  /** Flat energy+gradient: fast path directly, generic path via work. */
+  function evaluate_at_coords(coords: Float64Array): {
+    total: number; grad: Float64Array; components: EnergyComponents;
+  } {
+    if (fast) {
+      const grad = new Float64Array(n);
+      fast.evaluate(coords, grad);
+      return { total: fast.total, grad, components: { ...fast.components } };
+    }
+    for (let a = 0; a < work.atoms.length; a++) {
+      work.atoms[a].x = coords[3 * a];
+      work.atoms[a].y = coords[3 * a + 1];
+      work.atoms[a].z = coords[3 * a + 2];
+    }
+    const s = oracle(work);
+    const grad = new Float64Array(n);
+    for (let a = 0; a < work.atoms.length; a++) {
+      grad[3 * a] = s.gradient[a][0];
+      grad[3 * a + 1] = s.gradient[a][1];
+      grad[3 * a + 2] = s.gradient[a][2];
+    }
+    return { total: s.energy.total, grad, components: s.energy };
+  }
+
+  let state = evaluate_at_coords(x);
   let iterations = 0;
-  let converged = max_gradient_norm(state.gradient) < gradient_tolerance;
+  let converged = max_gradient_norm(state.grad) < gradient_tolerance;
 
   while (!converged && iterations < max_iterations) {
     iterations++;
 
-    const g = state.gradient;
+    const g = state.grad;
     // The Armijo slope: ‖∇E‖² (the directional derivative along −g).
     let g2 = 0;
-    for (const grad of g) {
-      for (const v of grad) g2 += v * v;
-    }
+    for (let i = 0; i < n; i++) g2 += g[i] * g[i];
     // The first trial is capped in physical space: the 2-norm of the
     // step is at most MAX_TRIAL_STEP Å, so no atom moves farther than
     // that (smaller steps on steep slopes), and never larger than the
     // requested initial step size.
     let alpha = Math.min(initial_step_size, MAX_TRIAL_STEP / Math.sqrt(g2));
 
+    // Trial buffer — reused across backtracking scans (no per-trial
+    // atom cloning on the fast path).
+    const trial: Float64Array = new Float64Array(n);
     let accepted = false;
     for (let ls = 0; ls < MAX_LINE_SEARCH; ls++) {
-      const trial: TypedMolecule = {
-        ...work,
-        atoms: work.atoms.map((a, idx) => ({
-          ...a,
-          x: a.x - alpha * g[idx][0],
-          y: a.y - alpha * g[idx][1],
-          z: a.z - alpha * g[idx][2],
-        })),
-      };
-      const trial_state = oracle(trial);
-      if (trial_state.energy.total <= state.energy.total - C1 * alpha * g2) {
-        // Sufficient decrease: accept, commit the trial as the new
-        // working geometry (its atoms are already fresh copies).
-        work.atoms = trial.atoms;
+      for (let i = 0; i < n; i++) trial[i] = x[i] - alpha * g[i];
+      const trial_state = evaluate_at_coords(trial);
+      if (trial_state.total <= state.total - C1 * alpha * g2) {
+        // Sufficient decrease: accept, commit the trial coords.
+        for (let i = 0; i < n; i++) x[i] = trial[i];
         state = trial_state;
         accepted = true;
         break;
@@ -136,14 +162,21 @@ export function optimize_steepest_descent(
       break;
     }
 
-    converged = max_gradient_norm(state.gradient) < gradient_tolerance;
+    converged = max_gradient_norm(state.grad) < gradient_tolerance;
+  }
+
+  // Sync the flat coordinates back into the returned molecule.
+  for (let a = 0; a < work.atoms.length; a++) {
+    work.atoms[a].x = x[3 * a];
+    work.atoms[a].y = x[3 * a + 1];
+    work.atoms[a].z = x[3 * a + 2];
   }
 
   return {
     molecule: work,
-    energy: state.energy,
+    energy: state.components,
     iterations,
     converged,
-    final_max_gradient: max_gradient_norm(state.gradient),
+    final_max_gradient: max_gradient_norm(state.grad),
   };
 }
