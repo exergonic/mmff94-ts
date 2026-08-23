@@ -236,6 +236,11 @@ export function optimize_lbfgs(
   const y_history: ArrayLike<number>[] = []; // gradient changes, newest last
   const rho_history: number[] = []; // 1 / yᵀs per pair
 
+  // Stagnation guards (see the loop body): one history-reset escape
+  // from a failed line search, and a consecutive-noise-discard counter.
+  let stagnation_reset_used = false;
+  let consecutive_discards = 0;
+
   let state = evaluate(x);
   let iterations = 0;
   let converged = false;
@@ -297,11 +302,27 @@ export function optimize_lbfgs(
     const ls = line_search(direction, state, gamma);
 
     if (!ls.found) {
-      // No acceptable step (e.g. a degenerate flat direction): give
-      // up rather than oscillate. The geometry is left at the best
-      // point found.
+      // No acceptable step. On flexible drug-like surfaces this is
+      // almost always the STAGNATION signature, not a dead minimum:
+      // stale history keeps producing directions whose only descent is
+      // microscopic (measured: accepted moves shrinking geometrically
+      // 1e-4 → 1e-9 Å with E and max|g| frozen — ff-bench mol_005).
+      // A hard exit strands the structure far from any minimum.
+      // Instead: reset to steepest descent ONCE; if even a fresh −g
+      // direction cannot move, the point really is stationary and we
+      // stop for real.
+      if (!stagnation_reset_used) {
+        stagnation_reset_used = true;
+        s_history.length = 0;
+        y_history.length = 0;
+        rho_history.length = 0;
+        continue; // next iteration runs pure SD from a clean slate
+      }
+      // Second consecutive failure with no history in between: truly
+      // stuck — give up rather than oscillate.
       break;
     }
+    stagnation_reset_used = false;
 
     // Accept the step: x ← x + α·p
     const step = new Array<number>(n);
@@ -324,10 +345,20 @@ export function optimize_lbfgs(
     // than poisoning the next direction (the L-BFGS correction terms
     // from noise pairs can overwhelm the γ-scaled −g term and flip the
     // direction to non-descent on stiff surfaces).
+    //
+    // CONSECUTIVE-DISCARD WATCHDOG: when steps keep collapsing into the
+    // noise floor iteration after iteration (ff-bench stall: accepted
+    // moves decaying 1e-4 → 1e-9 Å while E and max|g| freeze), the two
+    // surviving stale pairs pin γ at a garbage value and every fresh
+    // direction is equally useless. Clearing the history forces an SD
+    // anchor into the next direction — the same medicine as the
+    // non-descent fallback above, delivered before the run burns its
+    // remaining iterations zombie-walking at 1e-8 Å/step.
     const y = new Array<number>(n);
     for (let d = 0; d < n; d++) y[d] = state.gradient[d] - ls.gradient_before[d];
     const sy = dot(step, y);
     if (sy > 1e-12 && max_abs(step) > 1e-4) {
+      consecutive_discards = 0;
       s_history.push(step);
       y_history.push(y);
       rho_history.push(1.0 / sy);
@@ -336,8 +367,12 @@ export function optimize_lbfgs(
         y_history.shift();
         rho_history.shift();
       }
+    } else if (++consecutive_discards >= 3) {
+      s_history.length = 0;
+      y_history.length = 0;
+      rho_history.length = 0;
+      consecutive_discards = 0;
     }
-
   }
 
   // The working molecule's coordinates are only synced from the flat
