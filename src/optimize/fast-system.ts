@@ -80,23 +80,35 @@ export interface FastSystem {
 }
 
 // Resolved interaction tables (parallel arrays; counts in _n fields).
+// Phase B: per-interaction constants are hoisted at build time. The
+// ENERGY constants keep the readable terms' exact multiplication order
+// (bitwise-stable where noted); the GRADIENT constants are free to
+// reassociate (gradients are differentially tested at ≤1e-8).
 interface FastTables {
-  // bonds: a1, a2, k_b, r0
+  // bonds: a1, a2, kE = 143.9325·(k/2) [energy eq. 2 harmonic], kG = 143.9325·k
   bond_n: number; bond_a1: Int32Array; bond_a2: Int32Array;
-  bond_k: Float64Array; bond_r0: Float64Array;
-  // angles (eq. 3/4): i-j-k, k_a, theta0(deg), linear flag
+  bond_kE: Float64Array; bond_kG: Float64Array; bond_r0: Float64Array;
+  // angles: i-j-k, kE = ANGLE_UNIT·(k_a/2), kG = ANGLE_UNIT·k_a,
+  // kL = LINEAR_UNIT·k_a (eq. 4), theta0(deg), linear flag
   ang_n: number; ang_i: Int32Array; ang_j: Int32Array; ang_k: Int32Array;
-  ang_ka: Float64Array; ang_t0: Float64Array; ang_lin: Uint8Array;
-  // stretch-bend (skips linear): i-j-k, k_ij, k_kj, r0_ij, r0_kj, theta0(deg)
+  ang_kE: Float64Array; ang_kG: Float64Array; ang_kL: Float64Array;
+  ang_t0: Float64Array; ang_lin: Uint8Array;
+  // stretch-bend (skips linear): i-j-k, k_ij, k_kj (energy keeps the
+  // readable expression SB·(k_ij·Δr₁ + k_kj·Δr₂)·Δθ bitwise), g_ij/g_kj
+  // = SB_UNIT·k (gradient side), r0_ij, r0_kj, theta0(deg)
   sb_n: number; sb_i: Int32Array; sb_j: Int32Array; sb_k: Int32Array;
   sb_kij: Float64Array; sb_kkj: Float64Array;
+  sb_gij: Float64Array; sb_gkj: Float64Array;
   sb_rij0: Float64Array; sb_rkj0: Float64Array; sb_t0: Float64Array;
-  // torsions: i-j-k-l, V1..V3
+  // torsions: i-j-k-l, half-V's for the Fourier energy (0.5·V_n),
+  // and the gradient multipliers g2 = V₂, g3 = 1.5·V₃
   tor_n: number; tor_i: Int32Array; tor_j: Int32Array; tor_k: Int32Array; tor_l: Int32Array;
-  tor_v1: Float64Array; tor_v2: Float64Array; tor_v3: Float64Array;
-  // out-of-plane centers: j with substituents a,c,d and constant k
+  tor_hv1: Float64Array; tor_hv2: Float64Array; tor_hv3: Float64Array;
+  tor_g2: Float64Array; tor_g3: Float64Array;
+  // out-of-plane centers: j with substituents a,c,d; kE = OOP_UNIT·(k/2)
+  // [energy], kG = OOP_UNIT·k [gradient]
   oop_n: number; oop_j: Int32Array; oop_a: Int32Array; oop_c: Int32Array; oop_d: Int32Array;
-  oop_k: Float64Array;
+  oop_kE: Float64Array; oop_kG: Float64Array;
 }
 
 const systems = new WeakMap<TypedMolecule, FastSystemImpl>();
@@ -117,9 +129,12 @@ class FastSystemImpl implements FastSystem {
   total = 0;
 
   private t: FastTables;
-  // nonbonded context (shared topology cache) + charge vector
+  // nonbonded context (shared topology cache) + charge vector +
+  // per-pair electrostatic numerators (332.0716·qi·qj — bitwise-safe:
+  // the readable terms recompute the same product per call)
   private nb: ReturnType<typeof nonbonded_context_for>;
   private q: Float64Array;
+  private qq: Float64Array;
 
   constructor(prepared: TypedMolecule) {
     this.n_atoms = prepared.atoms.length;
@@ -135,6 +150,15 @@ class FastSystemImpl implements FastSystem {
     this.q = Float64Array.from(
       prepared.partial_charges ?? assign_bci_charges(prepared).partial_charges!,
     );
+    // Per-pair numerators (see the field comment); 0 marks pairs with a
+    // zero charge on either atom (the readable loop skips those).
+    const np = this.nb.n_pairs;
+    this.qq = new Float64Array(np);
+    for (let p = 0; p < np; p++) {
+      const qi = this.q[this.nb.pair_i[p]];
+      const qj = this.q[this.nb.pair_j[p]];
+      if (qi !== 0 && qj !== 0) this.qq[p] = ELEC_UNIT * qi * qj;
+    }
   }
 
   evaluate(coords: Float64Array, grad: Float64Array | null, term_mask?: Uint8Array): void {
@@ -162,17 +186,17 @@ class FastSystemImpl implements FastSystem {
       const dx = x[3*a] - x[3*b], dy = x[3*a+1] - x[3*b+1], dz = x[3*a+2] - x[3*b+2];
       const r = Math.sqrt(dx*dx + dy*dy + dz*dz);
       const dr = r - t.bond_r0[p];
-      const k = t.bond_k[p];
-      const harmonic = BOND_UNIT * (0.5 * k) * dr * dr;
+      const harmonic = t.bond_kE[p] * dr * dr;   // kE = 143.9325·(k/2), hoisted
       const anharmonic = 1.0 + CS * dr + (7.0 / 12.0) * CS * CS * dr * dr;
       e += harmonic * anharmonic;
 
       if (g && r >= 1e-15) {
-        // dE/dr = UNIT·k·Δr·[1 + cs·Δr + 7/12·cs²·Δr²]
-        //         + UNIT·(k/2)·Δr²·[cs + 7/6·cs²·Δr];  dΔr/dx = ±r̂
+        // dE/dr = kG·Δr·[1 + cs·Δr + 7/12·cs²·Δr²] + kE·Δr²·[cs + 7/6·cs²·Δr]
+        // with kG = 143.9325·k, kE = 143.9325·(k/2) — hoisted; the sum
+        // order matches the readable gradient (bitwise).
         const d_anharmonic = CS + (7.0 / 6.0) * CS * CS * dr;
-        const dE_dr = BOND_UNIT * k * dr * anharmonic +
-                      BOND_UNIT * (k / 2.0) * dr * dr * d_anharmonic;
+        const dE_dr = t.bond_kG[p] * dr * anharmonic +
+                      t.bond_kE[p] * dr * dr * d_anharmonic;
         const ux = dx / r, uy = dy / r, uz = dz / r;
         g[3*a] += dE_dr * ux; g[3*a+1] += dE_dr * uy; g[3*a+2] += dE_dr * uz;
         g[3*b] -= dE_dr * ux; g[3*b+1] -= dE_dr * uy; g[3*b+2] -= dE_dr * uz;
@@ -198,23 +222,23 @@ class FastSystemImpl implements FastSystem {
       const theta_rad = Math.acos(dot);
 
       if (t.ang_lin[p]) {
-        // eq. (4): E = LINEAR_UNIT·k·(1 + cos θ);  dE/dθ = −LINEAR_UNIT·k·sin θ
-        const ka = t.ang_ka[p];
-        e += LINEAR_UNIT * ka * (1.0 + Math.cos(theta_rad));
+        // eq. (4): E = kL·(1 + cos θ) with kL = LINEAR_UNIT·k_a;
+        // dE/dθ = −kL·sin θ
+        const kL = t.ang_kL[p];
+        e += kL * (1.0 + Math.cos(theta_rad));
         if (g) {
-          const dE_dth = -LINEAR_UNIT * ka * Math.sin(theta_rad);
+          const dE_dth = -kL * Math.sin(theta_rad);
           add_angle_grad(g, i, j, k, li, lk, uix, uiy, uiz, ukx, uky, ukz, dot, dE_dth, x);
         }
       } else {
         const theta_deg = theta_rad * (180.0 / Math.PI);
         const dth = theta_deg - t.ang_t0[p];
-        const ka = t.ang_ka[p];
-        const harmonic = ANGLE_UNIT * (0.5 * ka) * dth * dth;
+        const harmonic = t.ang_kE[p] * dth * dth;   // kE = ANGLE_UNIT·(k_a/2)
         const anharmonic = 1.0 + CB * dth;
         e += harmonic * anharmonic;
         if (g) {
-          const dE_ddeg = ANGLE_UNIT * ka * dth * anharmonic +
-                          ANGLE_UNIT * (0.5 * ka) * dth * dth * CB;
+          const dE_ddeg = t.ang_kG[p] * dth * anharmonic +
+                          t.ang_kE[p] * dth * dth * CB;
           const dE_dth = dE_ddeg / RAD_PER_DEG;
           add_angle_grad(g, i, j, k, li, lk, uix, uiy, uiz, ukx, uky, ukz, dot, dE_dth, x);
         }
@@ -249,14 +273,15 @@ class FastSystemImpl implements FastSystem {
         // dE/dx = SB·[k_ij·dΔr_ij/dx·Δθ + k_kj·dΔr_kj/dx·Δθ
         //             + (k_ij·Δr_ij + k_kj·Δr_kj)·dΔθ_deg/dx]
         const dE_ddth_deg = SB_UNIT * (kij * dr_ij + kkj * dr_kj);
-        // bond-side pieces: dΔr/dx = ±r̂ (skip degenerate zero-length sides)
+        // bond-side pieces with the hoisted g_ij = SB_UNIT·k_ij
+        // (gradient tolerance covers the reassociation)
         if (lij >= 1e-15) {
-          const f = SB_UNIT * kij * dth;
+          const f = t.sb_gij[p] * dth;
           g[3*i] += f * uix; g[3*i+1] += f * uiy; g[3*i+2] += f * uiz;
           g[3*j] -= f * uix; g[3*j+1] -= f * uiy; g[3*j+2] -= f * uiz;
         }
         if (lkj >= 1e-15) {
-          const f = SB_UNIT * kkj * dth;
+          const f = t.sb_gkj[p] * dth;
           g[3*k] += f * ukx; g[3*k+1] += f * uky; g[3*k+2] += f * ukz;
           g[3*j] -= f * ukx; g[3*j+1] -= f * uky; g[3*j+2] -= f * ukz;
         }
@@ -295,17 +320,30 @@ class FastSystemImpl implements FastSystem {
         s = cx*hvx + cy*hvy + cz*hvz;
         tau = Math.atan2(s, cc);
       }
-      const v1 = t.tor_v1[p], v2 = t.tor_v2[p], v3 = t.tor_v3[p];
-      const cos1 = Math.cos(tau), cos2 = Math.cos(2.0*tau), cos3 = Math.cos(3.0*tau);
-      e += 0.5 * v1 * (1.0 + cos1) +
-           0.5 * v2 * (1.0 - cos2) +
-           0.5 * v3 * (1.0 + cos3);
+      const v1 = 2 * t.tor_hv1[p]; // keep V values used by the gradient below
+      const hv1 = t.tor_hv1[p], hv2 = t.tor_hv2[p], hv3 = t.tor_hv3[p];
+      const cos1 = Math.cos(tau);
+      // Double/triple-angle identities in place of the readable form's
+      // cos(2τ), cos(3τ) calls — ONE cos per torsion instead of six
+      // trig calls (sin is only paid when the gradient is requested).
+      // cos 2τ = 2c²−1, cos 3τ = 4c³−3c; the value differs from
+      // Math.cos(2τ) by ULPs only (differential-tested ≤1e-9).
+      const c2 = cos1 * cos1;
+      const cos2 = 2.0 * c2 - 1.0;
+      const cos3 = cos1 * (4.0 * c2 - 3.0);
+      e += hv1 * (1.0 + cos1) +
+           hv2 * (1.0 - cos2) +
+           hv3 * (1.0 + cos3);
 
       if (g && ok) {
-        const dE_dtau =
-          -0.5 * v1 * Math.sin(tau) +
-          v2 * Math.sin(2.0*tau) -
-          1.5 * v3 * Math.sin(3.0*tau);
+        // dE/dτ = −½V₁·sinτ + V₂·sin 2τ − 1.5·V₃·sin 3τ with
+        // sin 2τ = 2sc, sin 3τ = s(3−4s²) = s(4c²−1) — same one-trig
+        // trophy. (The s²→c² slip here is caught by the differential
+        // test's per-term gradient comparison.)
+        const sin1 = Math.sin(tau);
+        const dE_dtau = -0.5 * v1 * sin1 +
+                        t.tor_g2[p] * (2.0 * sin1 * cos1) -
+                        t.tor_g3[p] * (sin1 * (4.0 * c2 - 1.0));
         add_dihedral_grad(g, i, j, k, l, v1x, v1y, v1z, v2x, v2y, v2z, v3x, v3y, v3z,
                           n1x, n1y, n1z, n2x, n2y, n2z, l1, l2, lv, s, cc, dE_dtau);
       }
@@ -319,7 +357,6 @@ class FastSystemImpl implements FastSystem {
     let e = 0;
     for (let p = 0; p < t.oop_n; p++) {
       const j = t.oop_j[p], a = t.oop_a[p], c = t.oop_c[p], d = t.oop_d[p];
-      const k = t.oop_k[p];
       const jx = x[3*j], jy = x[3*j+1], jz = x[3*j+2];
       // the three Wilson angles, same turns as the readable term
       const xa = wilson_deg(x[3*d]-jx, x[3*d+1]-jy, x[3*d+2]-jz,
@@ -331,11 +368,11 @@ class FastSystemImpl implements FastSystem {
       const xd = wilson_deg(x[3*a]-jx, x[3*a+1]-jy, x[3*a+2]-jz,
                             x[3*c]-jx, x[3*c+1]-jy, x[3*c+2]-jz,
                             x[3*d]-jx, x[3*d+1]-jy, x[3*d+2]-jz);
-      e += OOP_UNIT * (k / 2.0) * (xa*xa + xc*xc + xd*xd);
+      e += t.oop_kE[p] * (xa*xa + xc*xc + xd*xd);   // kE = OOP_UNIT·(k/2)
 
       if (g) {
-        // dE/dx = OOP_UNIT·k·χ·dχ_deg/dx per turn (χ in degrees here)
-        const dE = OOP_UNIT * k;
+        // dE/dx = kG·χ·dχ_deg/dx per turn with kG = OOP_UNIT·k (hoisted)
+        const dE = t.oop_kG[p];
         add_oop_grad(g, d, j, c, a, xa * dE, x);
         add_oop_grad(g, a, j, d, c, xc * dE, x);
         add_oop_grad(g, a, j, c, d, xd * dE, x);
@@ -356,14 +393,23 @@ class FastSystemImpl implements FastSystem {
       const r = Math.sqrt(dx*dx + dy*dy + dz*dz);
       const a = nb.pair_vdw_a[p], b = nb.pair_vdw_b[p];
       const C = nb.pair_vdw_C[p], D = nb.pair_vdw_D[p];
-      const r7 = Math.pow(r, 7);
-      const f_rep = Math.pow(a / (r + b), 7);
+      // Phase B: r⁷, (a/(r+b))⁷ and the derivative powers are plain
+      // multiplication chains — Math.pow(r,7) is ~10× slower in V8 and
+      // differs from the chain by ULPs only (differential-tested ≤1e-9).
+      const r2 = r * r, r3 = r2 * r;
+      const r7 = r3 * r3 * r;
+      const t7 = a / (r + b);
+      const t2 = t7 * t7;
+      const f_rep = t2 * t2 * t2 * t7;
       const f_att = C / (r7 + D) - 2;
       e += eps * f_rep * f_att;
 
       if (g) {
-        const f_rep_p = -7.0 * Math.pow(a, 7) / Math.pow(r + b, 8);
-        const f_att_p = -7.0 * C * Math.pow(r, 6) / Math.pow(r7 + D, 2);
+        // f_rep' = −7a⁷/(r+b)⁸ = −7·f_rep/(r+b) — the exponent‑8 form
+        // collapses onto the already-computed f_rep
+        const f_rep_p = -7.0 * f_rep / (r + b);
+        const r6 = r3 * r3;
+        const f_att_p = -7.0 * C * r6 / ((r7 + D) * (r7 + D));
         const dE_dr = eps * (f_rep_p * f_att + f_rep * f_att_p);
         if (r >= 1e-15) {
           const ux = dx / r, uy = dy / r, uz = dz / r;
@@ -378,20 +424,20 @@ class FastSystemImpl implements FastSystem {
   // ── electrostatics (part III eq. 6, 1-4 ×0.75) ───────────────────
   private elec(x: Float64Array, g: Float64Array | null): number {
     const nb = this.nb;
-    const q = this.q;
+    const qq = this.qq;
     let e = 0;
     for (let p = 0; p < nb.n_pairs; p++) {
+      const product = qq[p];
+      if (product === 0) continue;
       const i = nb.pair_i[p], j = nb.pair_j[p];
-      const qi = q[i], qj = q[j];
-      if (qi === 0 || qj === 0) continue;
       const dx = x[3*i] - x[3*j], dy = x[3*i+1] - x[3*j+1], dz = x[3*i+2] - x[3*j+2];
       const rb = Math.sqrt(dx*dx + dy*dy + dz*dz) + ELEC_BUFFER;
-      let pair_e = (ELEC_UNIT * qi * qj) / rb;
+      let pair_e = product / rb;
       if (nb.pair_is_14[p]) pair_e *= SCALE_1_4;
       e += pair_e;
 
       if (g) {
-        let dE_dr = -ELEC_UNIT * qi * qj / (rb * rb);
+        let dE_dr = -product / (rb * rb);
         if (nb.pair_is_14[p]) dE_dr *= SCALE_1_4;
         const r = rb - ELEC_BUFFER;
         if (r >= 1e-15) {
@@ -420,14 +466,19 @@ function build_tables(mol: TypedMolecule): FastTables {
   // bonds (file order; empirical-rule fallback mirrors the readable term)
   const nb_bonds = mol.bonds.length;
   const b_a1 = new Int32Array(nb_bonds), b_a2 = new Int32Array(nb_bonds);
-  const b_k = new Float64Array(nb_bonds), b_r0 = new Float64Array(nb_bonds);
+  const b_kE = new Float64Array(nb_bonds), b_kG = new Float64Array(nb_bonds);
+  const b_r0 = new Float64Array(nb_bonds);
   let bn = 0;
   for (const bond of mol.bonds) {
     let params = bond_parameters(ctx, bond.atom1, bond.atom2);
     if (!params) params = empirical_bond_parameters(mol.atoms[bond.atom1], mol.atoms[bond.atom2]);
     if (!params) continue;
     b_a1[bn] = bond.atom1; b_a2[bn] = bond.atom2;
-    b_k[bn] = params.k_b; b_r0[bn] = params.r0;
+    // kE/kG hoist the unit factors with the readable multiplication
+    // order (bitwise-identical values, computed once instead of per call)
+    b_kE[bn] = BOND_UNIT * (0.5 * params.k_b);
+    b_kG[bn] = BOND_UNIT * params.k_b;
+    b_r0[bn] = params.r0;
     bn++;
   }
 
@@ -438,9 +489,11 @@ function build_tables(mol: TypedMolecule): FastTables {
     n_ang += nbrs.length * (nbrs.length - 1) / 2;
   }
   const a_i = new Int32Array(n_ang), a_j = new Int32Array(n_ang), a_k = new Int32Array(n_ang);
-  const a_ka = new Float64Array(n_ang), a_t0 = new Float64Array(n_ang), a_lin = new Uint8Array(n_ang);
+  const a_kE = new Float64Array(n_ang), a_kG = new Float64Array(n_ang), a_kL = new Float64Array(n_ang);
+  const a_t0 = new Float64Array(n_ang), a_lin = new Uint8Array(n_ang);
   const s_i = new Int32Array(n_ang), s_j = new Int32Array(n_ang), s_k = new Int32Array(n_ang);
   const s_kij = new Float64Array(n_ang), s_kkj = new Float64Array(n_ang);
+  const s_gij = new Float64Array(n_ang), s_gkj = new Float64Array(n_ang);
   const s_rij0 = new Float64Array(n_ang), s_rkj0 = new Float64Array(n_ang), s_t0 = new Float64Array(n_ang);
   let an = 0, sn = 0;
   for (let j = 0; j < n; j++) {
@@ -450,12 +503,16 @@ function build_tables(mol: TypedMolecule): FastTables {
         const i = nbrs[ii], k = nbrs[kk];
         const ap = angle_parameters(ctx, i, j, k);
         a_i[an] = i; a_j[an] = j; a_k[an] = k;
-        a_ka[an] = ap.k_a; a_t0[an] = ap.theta0; a_lin[an] = ap.linear ? 1 : 0;
+        a_kE[an] = ANGLE_UNIT * (0.5 * ap.k_a);  // energy harmonic (eq. 3)
+        a_kG[an] = ANGLE_UNIT * ap.k_a;          // gradient (eq. 3)
+        a_kL[an] = LINEAR_UNIT * ap.k_a;         // linear centers (eq. 4)
+        a_t0[an] = ap.theta0; a_lin[an] = ap.linear ? 1 : 0;
         an++;
         const sb = stretch_bend_angle_terms(ctx, mol, i, j, k);
         if (sb && !sb.linear) {
           s_i[sn] = i; s_j[sn] = j; s_k[sn] = k;
           s_kij[sn] = sb.k_ij; s_kkj[sn] = sb.k_kj;
+          s_gij[sn] = SB_UNIT * sb.k_ij; s_gkj[sn] = SB_UNIT * sb.k_kj;
           s_rij0[sn] = sb.r0_ij; s_rkj0[sn] = sb.r0_kj; s_t0[sn] = sb.theta0;
           sn++;
         }
@@ -464,10 +521,9 @@ function build_tables(mol: TypedMolecule): FastTables {
   }
 
   // torsions (central-bond order, then substituent adjacency order)
-  const n_tor_cap = mol.bonds.length * 9; // crude cap; grown via plain arrays then copied
   const t_i: number[] = [], t_j: number[] = [], t_k: number[] = [], t_l: number[] = [];
-  const t_v1: number[] = [], t_v2: number[] = [], t_v3: number[] = [];
-  void n_tor_cap;
+  const t_hv1: number[] = [], t_hv2: number[] = [], t_hv3: number[] = [];
+  const t_g2: number[] = [], t_g3: number[] = [];
   for (const bond of mol.bonds) {
     const j = bond.atom1, k = bond.atom2;
     const ins = adj[j].filter(nn => nn !== k);
@@ -479,37 +535,41 @@ function build_tables(mol: TypedMolecule): FastTables {
         const terms = torsion_terms(ctx, mol, i, j, k, l);
         if (!terms) continue;
         t_i.push(i); t_j.push(j); t_k.push(k); t_l.push(l);
-        t_v1.push(terms.v1); t_v2.push(terms.v2); t_v3.push(terms.v3);
+        t_hv1.push(0.5 * terms.v1); t_hv2.push(0.5 * terms.v2); t_hv3.push(0.5 * terms.v3);
+        t_g2.push(terms.v2); t_g3.push(1.5 * terms.v3);
       }
     }
   }
 
   // out-of-plane centers (exactly three neighbors)
   const oop_j: number[] = [], oop_a: number[] = [], oop_c: number[] = [], oop_d: number[] = [];
-  const oop_k: number[] = [];
+  const oop_kE: number[] = [], oop_kG: number[] = [];
   for (let j = 0; j < n; j++) {
     const nbrs = adj[j];
     if (nbrs.length !== 3) continue;
     const kc = oop_force_constant(mol, j, nbrs[0], nbrs[1], nbrs[2]);
     if (kc === undefined) continue;
     oop_j.push(j); oop_a.push(nbrs[0]); oop_c.push(nbrs[1]); oop_d.push(nbrs[2]);
-    oop_k.push(kc);
+    oop_kE.push(OOP_UNIT * (0.5 * kc));  // energy: (k/2) exactly as the readable term
+    oop_kG.push(OOP_UNIT * kc);          // gradient
   }
 
   return {
-    bond_n: bn, bond_a1: b_a1, bond_a2: b_a2, bond_k: b_k, bond_r0: b_r0,
+    bond_n: bn, bond_a1: b_a1, bond_a2: b_a2, bond_kE: b_kE, bond_kG: b_kG, bond_r0: b_r0,
     ang_n: an, ang_i: a_i, ang_j: a_j, ang_k: a_k,
-    ang_ka: a_ka, ang_t0: a_t0, ang_lin: a_lin,
+    ang_kE: a_kE, ang_kG: a_kG, ang_kL: a_kL, ang_t0: a_t0, ang_lin: a_lin,
     sb_n: sn, sb_i: s_i, sb_j: s_j, sb_k: s_k,
-    sb_kij: s_kij, sb_kkj: s_kkj, sb_rij0: s_rij0, sb_rkj0: s_rkj0, sb_t0: s_t0,
+    sb_kij: s_kij, sb_kkj: s_kkj, sb_gij: s_gij, sb_gkj: s_gkj,
+    sb_rij0: s_rij0, sb_rkj0: s_rkj0, sb_t0: s_t0,
     tor_n: t_i.length,
     tor_i: Int32Array.from(t_i), tor_j: Int32Array.from(t_j),
     tor_k: Int32Array.from(t_k), tor_l: Int32Array.from(t_l),
-    tor_v1: Float64Array.from(t_v1), tor_v2: Float64Array.from(t_v2), tor_v3: Float64Array.from(t_v3),
+    tor_hv1: Float64Array.from(t_hv1), tor_hv2: Float64Array.from(t_hv2), tor_hv3: Float64Array.from(t_hv3),
+    tor_g2: Float64Array.from(t_g2), tor_g3: Float64Array.from(t_g3),
     oop_n: oop_j.length,
     oop_j: Int32Array.from(oop_j), oop_a: Int32Array.from(oop_a),
     oop_c: Int32Array.from(oop_c), oop_d: Int32Array.from(oop_d),
-    oop_k: Float64Array.from(oop_k),
+    oop_kE: Float64Array.from(oop_kE), oop_kG: Float64Array.from(oop_kG),
   };
 }
 
@@ -609,11 +669,9 @@ function fd_angle_grad(
     const bx = x[3*k] - x[3*j], by = x[3*k+1] - x[3*j+1], bz = x[3*k+2] - x[3*j+2];
     const la = norm3(ax, ay, az), lb = norm3(bx, by, bz);
     if (la < 1e-15 || lb < 1e-15) return Math.acos(0);
-    let dd = (ax/la)*(bx/lb) + (ay/lb===0?0:ay/lb)*0; // placeholder, replaced below
-    void dd;
     const ux = ax/la, uy = ay/la, uz = az/la;
     const vx = bx/lb, vy = by/lb, vz = bz/lb;
-    dd = ux*vx + uy*vy + uz*vz;
+    let dd = ux*vx + uy*vy + uz*vz;
     if (dd > 1) dd = 1; else if (dd < -1) dd = -1;
     return Math.acos(dd);
   };

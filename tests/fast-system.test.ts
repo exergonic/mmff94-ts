@@ -5,9 +5,13 @@
  * — one-time parameter resolution into typed arrays, zero-allocation
  * evaluation. This test is the truth-discipline guard for that kernel:
  *
- *   - ENERGY: the fast total must equal the readable total BIT-FOR-BIT
- *     (same formulas, same parameter values, same enumeration order —
- *     only the expression's container changed).
+ *   - ENERGY, bit-for-bit: bond/angle/stretch-bend/OOP/electrostatic
+ *     (the fast kernel hoists their unit factors with the readable
+ *     multiplication order — identical doubles, computed once).
+ *   - ENERGY, ≤1e-9: torsion and van der Waals. Those two carry
+ *     deliberate arithmetic rewrites (double/triple-angle identities
+ *     replace cos(2τ)/cos(3τ); r⁷ is a multiplication chain instead of
+ *     Math.pow(r,7)) — mathematically equal, ULP-rounded differently.
  *   - GRADIENT: fast vs readable per term, |Δ| ≤ 1e-8 absolute. The
  *     angle/dihedral/OOP accumulators are scalar expansions of the
  *     readable axis-loop algebra; reassociation moves last-ULP rounding
@@ -84,16 +88,25 @@ function check(name: string, prepared: TypedMolecule): void {
 
   sys.evaluate(coords, grad, new Uint8Array(7).fill(1));
 
-  // 1. Total energy bit-for-bit.
+  // 1. Total energy: bit-for-bit where the kernel kept the readable
+//    multiplication order, ≤1e-9 for the two ULP-rewritten terms
+//    (torsion trig identities, vdW pow chains).
   const ref = calc_energy(prepared);
-  expect(sys.total, `${name}: total energy bitwise`).toBe(ref.total);
-  expect(sys.components.bond_stretch, `${name}: bond`).toBe(ref.bond_stretch);
-  expect(sys.components.angle_bend, `${name}: angle`).toBe(ref.angle_bend);
-  expect(sys.components.stretch_bend, `${name}: strbnd`).toBe(ref.stretch_bend);
-  expect(sys.components.torsion, `${name}: torsion`).toBe(ref.torsion);
-  expect(sys.components.out_of_plane, `${name}: oop`).toBe(ref.out_of_plane);
-  expect(sys.components.van_der_waals, `${name}: vdw`).toBe(ref.van_der_waals);
-  expect(sys.components.electrostatic, `${name}: elec`).toBe(ref.electrostatic);
+  const kit: [string, number][] = [
+    ['bond_stretch', ref.bond_stretch],
+    ['angle_bend', ref.angle_bend],
+    ['stretch_bend', ref.stretch_bend],
+    ['out_of_plane', ref.out_of_plane],
+    ['electrostatic', ref.electrostatic],
+  ];
+  for (const [key, rv] of kit) {
+    expect(sys.components[key as keyof typeof sys.components], `${name}: ${key} bitwise`).toBe(rv);
+  }
+  for (const [key, rv] of [['torsion', ref.torsion], ['van_der_waals', ref.van_der_waals]] as [string, number][]) {
+    const d = Math.abs(sys.components[key as keyof typeof sys.components] - rv);
+    expect(d, `${name}: ${key} ≤1e-9`).toBeLessThan(1e-9);
+  }
+  expect(Math.abs(sys.total - ref.total), `${name}: total`).toBeLessThan(1e-8);
 
   // 2. Per-term gradients within the reassociation tolerance.
   const one = new Uint8Array(7);

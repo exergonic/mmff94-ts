@@ -66,7 +66,11 @@ describe('simple path — a bare Molecule is enough', () => {
     // the simple path without re-doing anything.
     expect(result.molecule.atom_types).toBeDefined();
     expect(result.molecule.partial_charges).toBeDefined();
-    expect(calc_energy(result.molecule).total).toBe(result.energy.total);
+    // Re-computing on the returned molecule reproduces the reported
+    // total to the fast path's documented ULP band (≤1e-9: torsion
+    // trig identities + vdW pow chains round differently from the
+    // readable terms — see fast-system.test.ts).
+    expect(Math.abs(calc_energy(result.molecule).total - result.energy.total)).toBeLessThan(1e-9);
     // The input is untouched (the optimizer works on a prepared copy).
     expect((raw as TypedMolecule).atom_types).toBeUndefined();
   });
