@@ -273,3 +273,16 @@ per-interaction energy breakdowns.
 5. Deliverable: a triage table (finding → verdict → action) — the user decides
    what gets fixed. User report format: one actionable with its definite
    payoff at the end; hedge in docs, not in the reply.
+
+## Optimizer Phase A (fast path) — 2026-08-23 (commit 3696b71)
+
+- New src/optimize/fast-system.ts: compiled kernel (typed arrays, zero
+  per-call allocation) used by both optimizers on their default path.
+- Differential guard tests/fast-system.test.ts: energies bitwise-equal
+  to the readable terms; per-term gradients <=1e-8 absolute.
+- Measured speedups: nicotine 1925 -> 124 ms, butane 118 -> 9 ms,
+  ethane 41 -> 7 ms, water 13 -> 4 ms; trpcage oracle ~21.4 -> ~1.2 ms.
+- Iteration counts can shift on flat surfaces (ULP chaos) — same basin,
+  energies agree; the optimization series still converges every fixture.
+- Phase B (arithmetic micro-opts: pow->mults, hypot->sqrt) and Phase C
+  (RMS/max-step convergence criteria, warm-started α) remain.
