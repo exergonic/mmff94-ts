@@ -33,11 +33,13 @@ const TYPING_GAP_SKIPS: Record<string, string> = {};
 // would let future fixtures rot the same way. Generate the log with:
 //   bash tests/scripts/obenergy.sh tests/fixtures/sdf/<name>.sdf
 const INTENTIONALLY_UNREFERENCED: Record<string, string> = {
-  // Zwitterion electrostatics gap vs OpenBabel (~147 kcal/mol on elec):
-  // OB charges the N-terminal NH3+ / COOH differently from our BCI
-  // reading of types 34/57 — see docs/implementer-notes.md, open
-  // question 3. Every non-electrostatic term matches to <0.03.
-  trpcage: 'zwitterion electrostatics gap vs OpenBabel (open question 3)',
+  // RESOLVED 2026-08-23 by TINKER arbitration (tests/references/tinker/
+  // trpcage.log): TINKER matches us to <=0.001 on every term, including
+  // elec (-449.4932 vs our -449.49394). The ~147 kcal/mol OB elec gap
+  // is OpenBabel's own deviation at neutral-pH terminal groups (its BCI
+  // pipeline charges NH3+/COOH differently from both TINKER and this
+  // library) — see docs/implementer-notes.md, open question 3.
+  trpcage: 'OpenBabel deviates on zwitterion electrostatics; TINKER arbitrates in our favor',
 };
 
 function parse_reference_log(filePath: string): Record<string, number> {

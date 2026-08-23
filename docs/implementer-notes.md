@@ -101,11 +101,19 @@ and the opti log present.
    hydrate energies to ~1e-6; the historical question is which table Halgren
    *printed*, not which one the reference program uses.)
 2. **The type-76 q⁰**: Halgren's own caveat — no uniform primary charge reproduces the reference charges. Three implementations, three answers.
-3. **The zwitterion electrostatics gap vs OpenBabel** (found 2026-08-23,
-   trp-cage): OB evaluates the N-terminal NH₃⁺ (type 34) with q = +0.333
-   per H and the COOH carbon at +0.6; this library computes −0.844 on the
-   NH₃⁺ N and +1.2 on a carboxylic-acid C(57) — a ~147 kcal/mol elec gap on
-   trp-cage that the BatchMin suite never exposes (all 761 suite molecules
-   close to ≤1e-4). The BCI q⁰/α reading of types 34/57 for neutral-pH
-   terminal groups is the open question; see `tests/fixtures/sdf/trpcage.sdf`
-   (kept unreferenced in reference-comparison until resolved).
+3. **The zwitterion electrostatics gap vs OpenBabel** — RESOLVED 2026-08-23 by
+   TINKER arbitration (trp-cage, 304 atoms, .mmd-style single-point):
+   TINKER agrees with this library to ≤0.001 on every term (elec −449.4932
+   vs our −449.49394; bond/angle/strbnd/torsion/oop/vdW all match; log at
+   `tests/references/tinker/trpcage.log`). The ~147 kcal/mol elec gap is
+   OpenBabel's deviation: its BCI pipeline charges the neutral-pH N-terminal
+   NH₃⁺ (q = +⅓ per H) and the COOH carbon (+0.6) differently from both
+   TINKER and us. Mechanism in our stack: the trpcage SDF marks the N-term
+   N with a V2000 **valence override of 4** (not a charge — the file has no
+   M CHG block); the 4-coordinate sp³ N types as 34 (NR+, ammonium), whose
+   q⁰ = +1 flows through eq. (15) sharing. TINKER's `analyze M` confirms:
+   Total Electric Charge +1.00000 e⁻. The BatchMin suite never exercises
+   this pattern (all 761 suite molecules close to ≤1e-4 either way), which
+   is why the divergence stayed invisible until a real peptide was tried.
+   trpcage remains intentionally unreferenced in reference-comparison.test.ts
+   (`INTENTIONALLY_UNREFERENCED`) — OB is the outlier engine here.
