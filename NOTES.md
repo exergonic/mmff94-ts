@@ -49,6 +49,22 @@ _(Corrections and caveats about prior work — dated entries.)_
 
 _(Things to pick up next session.)_
 
+- **Dative-drawing normalization in our typer** (found 2026-08-23 during
+  the Tinker sulfone investigation): a SMILES-drawn dative dimethylsulfone
+  `C[S+2]([O-])([O-])C` types as S class 15 (THIOL/SULFIDE — wrong) with
+  net −1, while the hypervalent drawing `CS(=O)(=O)C` types correctly as
+  class 18 + two class-32 with net 0. The suite's own dative cases
+  (JALSOE, SO18A) pass because the `.mmd` files use BatchMin's "MMFF
+  dative" convention, which our typer reads. Question to settle: should a
+  raw formal-charge SMILES normalize identically (S⁺² with 4 single bonds
+  → class 18, O⁻ terminal on S(VI) → class 32)? If yes, the fix lives in
+  the sulfur/oxygen typing branches of assign-atom-types.ts and needs a
+  discriminating test pair like `tests/scripts/dms-two-drawings.ts` (the
+  throwaway probe from this session — rewrite it). Related context:
+  docs/tinker-sulfone-charge-bug.md documents Tinker's *separate* bug
+  (kcharge.f line 230 hard-codes −0.5 on type 107 with no sulfone
+  compensation), which is upstream's, not ours.
+
 ---
 
 ## REVIEW PREP — adversarial review brief (written 2026-08-13)
