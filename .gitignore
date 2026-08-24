@@ -5,8 +5,11 @@ node_modules/
 # Local development
 .vite/
 
-# Build and log files (but not tracked reference logs)
+# Build and log files (but not tracked reference + suite logs)
 *.log
+!tests/references/*.log
+!tests/references/tinker/*.log
+!tests/fixtures/validation-suite/*.log
 !tests/references/*.log
 !tests/references/tinker/*.log
 
