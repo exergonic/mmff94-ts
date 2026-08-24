@@ -88,9 +88,15 @@ QM-start geometries), minimizing to convergence:
 | Tinker 26.2 `minimize` (Fortran) | 29/29 | 296 ms |
 
 Same order as the canonical Fortran implementation — in interpreted
-JavaScript, with zero dependencies and no WASM. Energies on shared
-minima agree with RDKit's MMFF94 within ~0.5 kcal/mol; atom typing is
-761/761 identical to OpenBabel across the full validation suite.
+JavaScript, with zero dependencies and no WASM. On the eleven benchmark
+molecules where Tinker's charge derivation matches ours, the two
+implementations' final energies agree **to four decimal places**; on
+the rest, Tinker's internal MMFF94 charge step assigns spurious net
+charges (−0.5 to −1.5 e on formally neutral N/O/S-rich molecules),
+which the benchmark doc documents rather than averages away. Energies
+on shared minima agree with RDKit's MMFF94 within ~0.5 kcal/mol; atom
+typing is 761/761 identical to OpenBabel across the full validation
+suite.
 
 Benchmark details and per-molecule data: [docs/benchmark.md](docs/benchmark.md).
 The three unconverged molecules are flexible polyamines whose

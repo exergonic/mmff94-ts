@@ -42,19 +42,26 @@ converges all 29.)
   RMS-gradient-per-atom; this library's default stops on either max |g|
   or RMS gradient. The two are not strictly comparable — an RMS gate is
   systematically easier than a max gate on the same number.
-- **Different typing → different minima.** Each engine types molecules
-  with its own pipeline; where the types disagree, the *force fields*
-  disagree, and the minimizers legitimately land in different minima.
-  On the 26 molecules where our converged energies sit within ~0.5
-  kcal/mol of RDKit's independent MMFF94 (same typing lineage as ours),
-  the optimizer is landing in the right basins. Do not read the
-  per-molecule energy differences vs Tinker as optimizer error.
+- **Tinker's internal MMFF94 charge derivation assigns spurious net
+  charges on some N/O/S-rich molecules.** Fed our exact atom types,
+  Tinker reports net molecular charges of −0.5 to −1.5 e on seven
+  formally neutral molecules (`analyze` → Total Electric Charge), where
+  both this library and RDKit derive net 0 from the same BCI model. On
+  those molecules Tinker descends into artificial ion-stabilized basins
+  (up to 56 kcal/mol below any independent implementation). On the
+  eleven molecules where Tinker's derived charges match ours, the two
+  implementations agree on the final energy **to four decimal places**
+  — two independent codebases, same answer. Per-molecule charges and
+  deltas: see the ff-bench session data.
+- **Correctness anchor**: converged energies agree with RDKit's
+  independent MMFF94 within ~0.5 kcal/mol on comparable molecules, atom
+  typing is 761/761 identical to OpenBabel across the full validation
+  suite, and per-term energies match BatchMin ≤1e-4 on Halgren's
+  761-molecule suite.
 - The three unconverged molecules (`mol_013`, `mol_016`, `mol_019`) are
   flexible polyamines whose trajectories stall one gate-width short of
   the threshold after 3000 iterations — a known L-BFGS limitation on
-  flat, coupled torsion surfaces, not specific to this implementation
-  (Tinker's own leg dropped 4/30 molecules for segfaults or non-finite
-  energies).
+  flat, coupled torsion surfaces, not specific to this implementation.
 
 ## Per-molecule data
 
