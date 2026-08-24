@@ -71,6 +71,70 @@ _(Things to pick up next session.)_
   ff-bench energy comparison — the spurious-charge molecules should then
   agree with us too.
 
+## Future direction — what industrial-strength would add
+
+_(Mile-high gap list, written 2026-08-24 after the optimizer/benchmark
+round. Ordered by tier; each entry notes what implementation likely
+entails. The engine itself is complete — everything below is reach.)_
+
+### Tier 1 — claims not yet true (cheap, high-signal)
+
+- **CI (GitHub Actions).** No `.github/workflows/` exists today. A
+  workflow running `npm run typecheck && npm test` on push/PR converts
+  "tests pass on Billy's machine" into a durable property — during the
+  ERULE implementation a couple of broken pushes would have been caught
+  by this. Trivial to write (~20 lines); do first.
+- **npm publish.** README previously claimed `npm install mmff94-ts`
+  while the package was never published. Decision (2026-08-24): publish
+  AFTER Tier 2 lands so the first public release carries the real
+  feature set. When publishing: set final version, add
+  `files`/`exports`/`engines` fields, test the packed tarball.
+
+### Tier 2 — functional gaps real workflows hit
+
+- **Conformer generation.** THE missing capability — MMFF94's main
+  industrial use is conformational ensembles. Minimal respectable
+  version: rotatable-bond enumeration from the existing connectivity
+  graph → torsion grid/sampling → minimize each with the existing fast
+  oracle → RMSD-cluster → rank by energy. Everything it needs already
+  exists in src/ (fast evaluator, optimizer, dihedral utilities).
+  Estimated: one solid session.
+- **Constraints & restraints.** Freeze atoms, tether-to-reference,
+  distance restraints — required for ligand-in-pocket refinement.
+  Implementation: constraint projection after each optimizer step
+  (SHAKE-style for frozen atoms is simplest) plus penalty terms in the
+  fast evaluator for restraints.
+- **Geometry writers** (SDF at minimum). Pipelines can't round-trip
+  minimized structures today. parse_sdf exists; the writer is its
+  mirror. Small.
+- **Multi-record SDF read.** Verify whether parse_sdf reads record 1
+  only; libraries process ensembles. If single-record, split-and-loop
+  helper or parser extension. Small once confirmed.
+- **Cutoffs + neighbor lists (Phase D).** All-pairs O(N²) fine ≤~500
+  atoms, dead beyond. The nonbonded-context.ts pair cache from the perf
+  round is exactly the substrate: cell-list build per N steps, skin
+  margin, per-pair cutoff mask. Opt-in flag; exact mode stays default.
+
+### Tier 3 — input breadth
+
+- **MOL2 reader.** We already understand its dative/hypervalent pitfalls
+  (see Open threads above — the two conventions must normalize).
+- **PDB reader.** Proteins; pairs naturally with Tier 2 cutoffs if
+  protein-scale work is wanted.
+
+### Tier 4 — polish
+
+- Typed error classes (`ParseError`, `TypingError`) instead of generic
+  throws; parser fuzzing (malformed-SDF corpus); documented
+  worker-thread pattern for browser use.
+
+### Deliberately NOT planned
+
+Periodic boundaries, free-energy methods, polarizability — outside
+MMFF94's mission and each is project-sized. The library stays an
+excellent molecular-scale MMFF94 engine rather than a mediocre
+everything-tool.
+
 ---
 
 ## REVIEW PREP — adversarial review brief (written 2026-08-13)
