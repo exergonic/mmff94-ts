@@ -1,34 +1,39 @@
-# Tinker 26.2 MMFF94: spurious −1 e net charge on neutral sulfones
+# MMFF94: spurious −1 e net molecular charge on neutral sulfones (`kchargem` hard-codes −0.5 on type 107)
 
-Dear Dr. Ponder and Tinker developers,
+## Environment
 
-We maintain an independent TypeScript implementation of MMFF94
-([mmff94-ts](https://github.com/exergonic/mmff94-ts)), validated against
-Halgren's original 761-molecule validation suite (per-term energies ≤1e-4
-vs BatchMin, atom typing 761/761 identical to OpenBabel, BCI charges
-<1e-3 e vs the published reference charges). While benchmarking our
-geometry optimizer against `minimize`, we found that Tinker 26.2's MMFF94
-charge derivation appears to assign a spurious **net molecular charge of
-−1.0 e** to simple, formally **neutral sulfones**.
+- Tinker 26.2 (April 2026), stock `params/mmff94.prm`, no custom parameters
+- Linux x86_64
+- Observed through both `analyze` (net-charge report) and `minimize` (energies)
+
+## Summary
+
+MMFF94 reuses atom type 107 / class 32 (`O2CM`) for the terminal oxygens of
+sulfones and sulfonyl groups — that is per Halgren's published type table,
+and it is what both RDKit and our independent implementation assign.
+`kchargem` then gives every type-107 atom a hard-coded base partial charge
+of **−0.5 e** (`source/kcharge.f`):
+
+```fortran
+if (it .eq. 107)  pchg(i) = -0.5d0
+```
+
+Type 64 (`SO2` sulfur) receives no compensating base charge, so any
+molecule containing an S(VI)(=O)₂ group comes out with a **net molecular
+charge of −1.0 e**, even when it is formally neutral.
 
 ## Minimal reproduction
 
-`dimethylsulfone` (CS(=O)(=O)C), 10 atoms, SMILES `CS(=O)(=O)C`, no
-formal charges anywhere:
+Dimethylsulfone — 11 atoms, SMILES `CS(=O)(=O)C`, no formal charges anywhere.
 
-```
-$ obabel -:"CS(=O)(=O)C" -osdf --gen3d best > dimethylsulfone.sdf
-
-# Assign MMFF94 atom types with any correct typer. The relevant types:
-#   S hexavalent = class 18 -> Tinker type 64 ("SO2")
-#   sulfonyl O   = class 32 -> Tinker type 107 ("O2CM" — Halgren's
-#                 published typing for sulfone oxygens)
-#   C sp3 = class 1 (type 1), H = class 3 (type 23)
+```bash
+$ obabel -:CS(=O)(=O)C -osdf --gen3d best > dimethylsulfone.sdf
 ```
 
-`dimethylsulfone.txyz` (Tinker canonical numbering; S = type 64 "SO2",
-the two sulfonyl O = type 107, which is MMFF94 class 32 / `O2CM` —
-Halgren's published typing for sulfone oxygens):
+Assign MMFF94 atom types with any correct typer. Relevant types: S hexavalent
+→ 64 (`SO2`); sulfonyl O → 107 (`O2CM`); C sp3 → 1; H → 23.
+
+`dimethylsulfone.txyz`:
 
 ```
 11 dimethylsulfone
@@ -48,84 +53,80 @@ Halgren's published typing for sulfone oxygens):
 ```bash
 $ printf "parameters /path/to/mmff94.prm\nMMFF-PIBOND\n" > dimethylsulfone.key
 $ echo M | analyze dimethylsulfone
-
- Total Electric Charge :                 -1.00000 Electrons
 ```
 
-The molecule is neutral by construction; both the MMFF94 bond-charge-
-increment model as we implement it (and RDKit's independent MMFF94
-implementation, which lands at the same minima and energies on these
-molecules) derive a total charge of 0.000 for it.
+### Expected
+
+`Total Electric Charge : 0.00000 Electrons` — the molecule is neutral, and
+per Halgren part V eq. (15) the q⁰ of a type-32/107 oxygen is −(n−k)/n with
+n = number of terminal O's on the center and k = number of oxo oxygens in
+the *neutral parent oxyacid*. For tetracoordinate S(VI), k = 2, so q⁰ = 0;
+the strong S–O polarization lives in the BCI term instead.
+
+### Actual
+
+```
+Total Electric Charge :                 -1.00000 Electrons
+```
 
 ## Scope
 
-Reproduces on every small sulfone/sulfonyl we tried:
+Every sulfone/sulfonyl compound we tried reproduces it; controls without an
+S(VI)(=O)₂ group are clean:
 
-| molecule | true charge | Tinker `analyze [M]` net charge |
+| molecule | true charge | Tinker net charge |
 |---|---|---|
 | dimethylsulfone | 0 | **−1.00** |
 | methanesulfonamide | 0 | **−1.00** |
-| pyridine, imidazole, indole, aniline, urea, N-methylacetamide, acetophenone | 0 | 0 ✓ |
+| pyridine | 0 | 0 ✓ |
+| imidazole | 0 | 0 ✓ |
+| indole | 0 | 0 ✓ |
+| aniline | 0 | 0 ✓ |
+| N-methylacetamide | 0 | 0 ✓ |
+| urea | 0 | 0 ✓ |
+| acetophenone | 0 | 0 ✓ |
 
-In a larger benchmark (29 drug-like molecules from the OpenFF Industry
-set), every molecule containing a `S(=O)2` group showed the same −1 e
-phantom; the effect is large in practice — minimizing from an identical
-starting geometry with identical types, Tinker descends into an
-artificial ion-stabilized basin up to **56 kcal/mol deep** relative to
-our implementation and RDKit, purely because the electrostatics differ.
+On a 29-molecule drug-like benchmark (OpenFF Industry set, QM-start
+geometries), every molecule containing an S(VI)(=O)₂ group showed the same
+phantom −1 e. The practical effect is large: minimizing from an identical
+starting geometry with identical atom types, the artificial ion-stabilized
+surface leads `minimize` to basins up to **56 kcal/mol** below what RDKit's
+independent MMFF94 (and ours) reach for the same molecules. Sulfoxides (one
+terminal O) escape with −0.5; we would expect phosphine oxides and nitro
+groups to be mildly affected through the same type-reuse path.
 
-## Cause — verified in the Tinker 26.2 source
+## Cross-validation
 
-MMFF94 reuses atom type 32 (`O2CM`, "carboxylate anion O") for the
-terminal oxygens of sulfones/sulfonyl groups — that is per Halgren's
-published type table, and it is what both RDKit and this library
-assign. In a carboxylate, the −1 formal-charge contribution carried by
-the two type-32 oxygens is balanced by +1 on the carboxyl carbon. In a
-neutral sulfone there is no formal charge to distribute: per Halgren's
-eq. (15) (part V), q⁰ for a type-32 oxygen is −(n−k)/n with n = number
-of terminal O's on the center and k = number of oxo oxygens in the
-*neutral parent oxyacid* — k = 2 for tetracoordinate S(VI) — giving
-q⁰ = 0, with the strong polarization of the S–O bonds living in the BCI
-term instead.
+This is not a disagreement between two independent implementations about
+force-field conventions:
 
-Tinker's `source/kcharge.f` (`kchargem`, line 230 of the 26.2 source)
-instead hard-codes a base charge for the type:
+- On the 11 benchmark molecules whose chemistry does **not** trigger the
+  issue, `minimize` started *from our converged geometry* returns the final
+  energy identical to ours **to four decimal places** — same force field,
+  same answer.
+- On the affected molecules, RDKit's independent MMFF94 derives net 0 and
+  lands where we do (e.g. mol with SMILES containing a sulfonamide: ours
+  −27.51, RDKit −27.56, Tinker −83.75).
+- Our charge model reproduces BatchMin reference charges across Halgren's
+  761-molecule validation suite to <1e-3 e per atom, including all charged
+  species in the suite.
 
-```fortran
-if (it .eq. 107)  pchg(i) = -0.5d0
-```
+## Root cause
 
-with no compensating base charge on the sulfone sulfur (type 64) and no
-(n, k) environment logic. Two type-107 oxygens × −0.5 = the observed
-−1.0 e net; sulfoxides (one terminal O) escape with −0.5; the same
-logic presumably mis-charges phosphine oxides and nitro groups' nitro O
-(type 107's siblings in Halgren's table) by smaller amounts.
+`source/kcharge.f`, subroutine `kchargem` (26.2 source, ~line 230): the
+−0.5 base charge is applied unconditionally per type-107 atom. In a
+carboxylate this is balanced by +1 on the carboxyl carbon via its own
+q⁰/base contribution, but for the sulfone/sulfonyl/sulfonyl-imine uses of
+type 107 there is no such compensation anywhere, and no (n, k) environment
+logic distinguishes the two cases.
 
-For comparison, this library implements the full eq. (15) environment
-rule (`src/mmff94/charges.ts`, `q0_of`), reproducing the spec's own
-values: PO₄³⁻ −3/4, HPO₄²⁻ −2/3, sulfate −1/2, carboxylate −1/2, and
-net-zero neutral species — validated against BatchMin reference charges
-on the 761-molecule suite (<1e-3 e per atom).
+## Suggested fix
 
-## Relation to the dative/hypervalent input convention
+Compute q⁰ for type 107 (and its sibling reused types) by the eq. (15)
+environment rule — −(n−k)/n with the center-specific k — instead of a flat
+per-type constant. That reproduces carboxylate −½, sulfate −½, phosphate
+−¾ …, and 0 for neutral sulfones/sulfoxides/nitro/phosphine-oxide groups,
+matching the published spec values. Alternatively, a compensating base
+charge on type 64 would patch the sulfone case specifically.
 
-This is independent of the dative-vs-hypervalent drawing question (the
-`MMFF94_dative.mol2` / `MMFF94_hypervalent.mol2` suite pair): both
-drawings must normalize to identical types and charges, and the charge
-derivation above operates *after* normalization. The −1 e here appears
-for the standard hypervalent drawing of a plain neutral sulfone.
-
-## What we'd appreciate
-
-- A confirmation whether this reproduces on your end with the files
-  above (Tinker 26.2, Linux x86-64 build).
-- If confirmed, a pointer to the responsible routine so we can cite it
-  precisely, and any known workaround (explicit `CHARGE` directives do
-  not override the internally derived values in our testing).
-
-Happy to send more failing molecules or a fuller dataset. Everything
-above was produced with the stock `mmff94.prm` shipped with Tinker 26.2
-(April 2026), no custom parameters.
-
-— Billy Wayne McCann ([@exergonic](https://github.com/exergonic))
-  mmff94-ts: https://github.com/exergonic/mmff94-ts
+Happy to provide more failing molecules or fuller datasets if useful.
