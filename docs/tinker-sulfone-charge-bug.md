@@ -74,19 +74,46 @@ starting geometry with identical types, Tinker descends into an
 artificial ion-stabilized basin up to **56 kcal/mol deep** relative to
 our implementation and RDKit, purely because the electrostatics differ.
 
-## Guessing at the cause (from the outside)
+## Cause — verified in the Tinker 26.2 source
 
 MMFF94 reuses atom type 32 (`O2CM`, "carboxylate anion O") for the
 terminal oxygens of sulfones/sulfonyl groups — that is per Halgren's
 published type table, and it is what both RDKit and this library
 assign. In a carboxylate, the −1 formal-charge contribution carried by
-the two type-32 oxygens is balanced by +1 on the carboxyl carbon. Our
-suspicion is that Tinker's MMFF94 charge assignment applies that
-carboxylate formal-charge rule to type 32 without the compensating
-q⁰ for the sulfone/sulfonyl family, so every S(VI)(=O)₂ group ends up
-with a net −1 e. The `mmff94.prm` BCI table itself looks fine to us;
-we believe the issue sits in the formal-charge/q⁰ logic that runs
-before BCI summation when the MMFF94 force field is active.
+the two type-32 oxygens is balanced by +1 on the carboxyl carbon. In a
+neutral sulfone there is no formal charge to distribute: per Halgren's
+eq. (15) (part V), q⁰ for a type-32 oxygen is −(n−k)/n with n = number
+of terminal O's on the center and k = number of oxo oxygens in the
+*neutral parent oxyacid* — k = 2 for tetracoordinate S(VI) — giving
+q⁰ = 0, with the strong polarization of the S–O bonds living in the BCI
+term instead.
+
+Tinker's `source/kcharge.f` (`kchargem`, line 230 of the 26.2 source)
+instead hard-codes a base charge for the type:
+
+```fortran
+if (it .eq. 107)  pchg(i) = -0.5d0
+```
+
+with no compensating base charge on the sulfone sulfur (type 64) and no
+(n, k) environment logic. Two type-107 oxygens × −0.5 = the observed
+−1.0 e net; sulfoxides (one terminal O) escape with −0.5; the same
+logic presumably mis-charges phosphine oxides and nitro groups' nitro O
+(type 107's siblings in Halgren's table) by smaller amounts.
+
+For comparison, this library implements the full eq. (15) environment
+rule (`src/mmff94/charges.ts`, `q0_of`), reproducing the spec's own
+values: PO₄³⁻ −3/4, HPO₄²⁻ −2/3, sulfate −1/2, carboxylate −1/2, and
+net-zero neutral species — validated against BatchMin reference charges
+on the 761-molecule suite (<1e-3 e per atom).
+
+## Relation to the dative/hypervalent input convention
+
+This is independent of the dative-vs-hypervalent drawing question (the
+`MMFF94_dative.mol2` / `MMFF94_hypervalent.mol2` suite pair): both
+drawings must normalize to identical types and charges, and the charge
+derivation above operates *after* normalization. The −1 e here appears
+for the standard hypervalent drawing of a plain neutral sulfone.
 
 ## What we'd appreciate
 
