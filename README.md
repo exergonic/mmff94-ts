@@ -3,7 +3,7 @@
 **MMFF94 force field in pure TypeScript.** Runs in the browser and Node.js.
 Zero dependencies. Validated against Halgren's 761-molecule suite.
 
-[![tests](https://img.shields.io/badge/tests-245%20passed-brightgreen)](tests/)
+[![tests](https://img.shields.io/badge/tests-336%20passed-brightgreen)](tests/)
 [![validation](https://img.shields.io/badge/validation-761%2F761-blue)](docs/validation/report.md)
 [![license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
@@ -73,6 +73,30 @@ console.log(optimized.energy);    // energy at the minimum
 See [`examples/quickstart.ts`](examples/quickstart.ts) for a complete
 walkthrough — parsing SDF, assigning types, computing BCI charges,
 and printing per-term energies.
+
+## Performance
+
+The optimizer is a compiled fast path: all interaction parameters are
+resolved once per molecule into flat typed arrays, and every
+energy/gradient evaluation runs allocation-free over them. On a
+29-molecule drug-like benchmark (OpenFF Industry set, 25-70 atoms,
+QM-start geometries), minimizing to convergence:
+
+| engine | converged | median wall time |
+|---|---|---|
+| **mmff94-ts** (L-BFGS, JS) | **26/29** | **242 ms** |
+| Tinker 26.2 `minimize` (Fortran) | 29/29 | 296 ms |
+
+Same order as the canonical Fortran implementation — in interpreted
+JavaScript, with zero dependencies and no WASM. Energies on shared
+minima agree with RDKit's MMFF94 within ~0.5 kcal/mol; atom typing is
+761/761 identical to OpenBabel across the full validation suite.
+
+Benchmark details and per-molecule data: [docs/benchmark.md](docs/benchmark.md).
+The three unconverged molecules are flexible polyamines whose
+trajectories stall just short of the threshold after 3000 iterations —
+a known L-BFGS limitation on flat, coupled torsion surfaces, not
+specific to this implementation.
 
 ## What people use it for
 
