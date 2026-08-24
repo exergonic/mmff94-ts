@@ -64,6 +64,12 @@ _(Things to pick up next session.)_
   docs/tinker-sulfone-charge-bug.md documents Tinker's *separate* bug
   (kcharge.f line 230 hard-codes −0.5 on type 107 with no sulfone
   compensation), which is upstream's, not ours.
+- **Tinker sulfone bug FILED upstream**: TinkerTools/tinker#185
+  (2026-08-24), draft at docs/tinker-sulfone-charge-bug.md. If no response
+  in ~2 weeks (mirroring #184's silence), plan was to email Dr. Ponder
+  directly with the same text. If confirmed/fixed upstream, revisit the
+  ff-bench energy comparison — the spurious-charge molecules should then
+  agree with us too.
 
 ---
 
