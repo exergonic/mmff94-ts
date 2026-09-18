@@ -1,0 +1,4 @@
+#!/bin/sh
+# WebMO engine executable for mmff94-ts: runs the shim with an absolute
+# node path so it works under Apache/suexec's minimal environment.
+exec /usr/bin/node "$(dirname "$0")/../integrations/webmo/mmff94ts-run.mjs" "$@"
