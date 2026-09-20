@@ -268,7 +268,7 @@ stays a pure evaluation of geometry × resolved parameters.
 | `van-der-waals.ts` | VDW per-atom: R*, α_i, N_i, G_i, DA flag | atom type number | ~95 |
 | `bci.ts` | Bond charge increments | `"c-t1-t2"` + per-atom defaults | ~600 |
 | `out-of-plane.ts` | OOP bending: k_oop | `"t1-t2-t3-t4"` | ~120 |
-| `parameters/atom-types.ts` | Type definitions: symbol, element, valence | atom type number | ~95 |
+| `atom-types.ts` | Type definitions: symbol, element, valence | atom type number | ~95 |
 | `atom-type-properties.ts` | Per-type flags: crd, val, pilp, mltb, arom, lin, sbmb + EqLvl3/4/5 | atom type number | ~95 |
 | `default-stretch-bend.ts` | Element-row default k_sb values (mmffdfsb.par) | `"row-row-row"` | 30 |
 | `parameter-classes.ts` | BTij/ATijk/TTijkl/STijk class selection + class-scoped resolution (hand-written) | — | — |
@@ -568,7 +568,7 @@ terms. Two rules keep them honest:
 
 1. **Same computational path** — every derivative goes through the chain rule on
    the exact expression the energy term evaluates (the shared helpers in
-   `gradient/derivatives.ts` mirror `utils/vector.ts`'s normalization order and
+   `src/mmff94/gradient/derivatives.ts` mirror `src/utils/vector.ts`'s normalization order and
    handedness). A mathematically equal but differently-ordered derivative would
    still agree with finite differences, but floating-point rounding would show up
    as test noise.

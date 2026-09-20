@@ -6,8 +6,9 @@ not instruction.
 
 ## Current status
 
-- Suite status: GREEN (261 passed, 1 intentional skip), typecheck clean —
-  2026-08-23 adversarial-review session (see Errata).
+- Suite status: GREEN (344 passed, 2 intentional skips), typecheck clean —
+  2026-09-20 (the skips are the intentionally unreferenced fixtures; see
+  Errata).
 - Geometry pipeline details live in the valence-orbital-visualization skill;
   mmff94-ts carries the rigor.
 
@@ -89,8 +90,8 @@ _(Things to pick up next session.)_
   raw formal-charge SMILES normalize identically (S⁺² with 4 single bonds
   → class 18, O⁻ terminal on S(VI) → class 32)? If yes, the fix lives in
   the sulfur/oxygen typing branches of assign-atom-types.ts and needs a
-  discriminating test pair like `tests/scripts/dms-two-drawings.ts` (the
-  throwaway probe from this session — rewrite it). Related context:
+  discriminating test pair in `tests/scripts/` (the session's throwaway
+  dative-vs-hypervalent probe was not kept — write the test). Related context:
   docs/tinker-sulfone-charge-bug.md documents Tinker's *separate* bug
   (kcharge.f line 230 hard-codes −0.5 on type 107 with no sulfone
   compensation), which is upstream's, not ours.

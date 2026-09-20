@@ -68,7 +68,7 @@ molecule's atom types are assigned independently and compared:
 
 The full census — per-term residuals at ≤1e-5/≤5e-5/≤1e-4, total
 energies, partial charges, and the documented anomaly exclusions —
-lives in the generated **[Validation report](../validation/report.md)**
+lives in the generated **[Validation report](validation/report.md)**
 (`npm run docs` regenerates it). The per-term gate is enforced in
 `npm run test` (`tests/compliance-gate.test.ts`); the report is the
 evidence behind it.
