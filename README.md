@@ -9,7 +9,6 @@ against the original 761-molecule validation suite, and fast enough to
 hold its own against the canonical Fortran.
 
 [![CI](https://github.com/exergonic/mmff94-ts/actions/workflows/tests.yml/badge.svg)](https://github.com/exergonic/mmff94-ts/actions/workflows/tests.yml)
-[![tests](https://img.shields.io/badge/tests-344%20passed%20%2F%202%20documented%20skips-brightgreen)](tests/)
 [![typing](https://img.shields.io/badge/atom_typing-761%2F761%20exact-blue)](docs/validation/report.md)
 [![energies](https://img.shields.io/badge/per--term_%E2%89%A41e--4-759%2B%2F761-blue)](docs/validation/report.md)
 [![license](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
