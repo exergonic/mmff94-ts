@@ -131,6 +131,22 @@ molecules (δ = 1e-6 Å; relative error < 1e-5; worst observed 8e-8).
    fixes), and the 3- and 4-ring class parameters follow the published
    class scheme.
 
+7. **Carbocations (outside the paper's coverage)**: MMFF94 defines no
+   carbocation type. A three-coordinate carbon bearing a +1 formal
+   charge is an sp² center with an empty p orbital and takes the
+   vinylic class (type 2) — the convention RDKit's MMFF94 typing
+   follows. The charge must reach the typer: the SDF `M CHG` block, a
+   caller-set `formal_charge`, or (through the WebMO engine) the
+   editor's per-atom charge field. Without it the atom falls back to
+   the alkyl type 1, and a conjugated cation such as the α-imino
+   carbocation of a five-membered ring minimises bent (C–N–C 105°,
+   α-carbon pyramidal, 5.37 kcal/mol) instead of flat. Reference
+   minimum: RDKit 2026.03 MMFF94, 10.6240 kcal/mol; this library
+   10.6244. The 761-suite has no carbocations and cannot arbitrate
+   this class; fixture and gates:
+   `tests/fixtures/sdf/pyrrolinium-carbocation.sdf` and
+   `tests/carbocation.test.ts`.
+
 ## 6. Dependencies
 
 Zero runtime dependencies. The library compiles to ESM in `dist/` and

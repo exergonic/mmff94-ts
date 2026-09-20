@@ -40,6 +40,12 @@ const INTENTIONALLY_UNREFERENCED: Record<string, string> = {
   // pipeline charges NH3+/COOH differently from both TINKER and this
   // library) — see docs/implementer-notes.md, open question 3.
   trpcage: 'OpenBabel deviates on zwitterion electrostatics; TINKER arbitrates in our favor',
+  // MMFF94 defines no carbocation type (compliance §5 item 7); the
+  // reference for the class is RDKit's MMFF94 typing, pinned in
+  // tests/carbocation.test.ts (10.6240 vs our 10.6244). An obenergy
+  // log would compare against OpenBabel's own treatment of a class the
+  // paper does not cover.
+  'pyrrolinium-carbocation': 'carbocations are outside MMFF94; RDKit MMFF94 is the pinned reference (tests/carbocation.test.ts)',
 };
 
 function parse_reference_log(filePath: string): Record<string, number> {

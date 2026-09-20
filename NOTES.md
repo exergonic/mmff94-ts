@@ -15,6 +15,19 @@ not instruction.
 
 _(Corrections and caveats about prior work — dated entries.)_
 
+- **2026-09-20 — carbocations: typed as the vinylic class, and the SDF
+  charge path repaired** (a WebMO differential on the 1-pyrrolinium
+  cation): MMFF94 has no carbocation type, so a three-coordinate carbon
+  bearing +1 stayed type 1 (alkyl) — and the conjugated C–N–C could not
+  flatten (105° at the N, α-carbon pyramidal, 5.37 kcal/mol). The typer
+  now places such a carbon in the vinylic class (2) when the formal
+  charge is +1 (RDKit's MMFF94 convention); `parse_sdf` now reads the
+  `M CHG` block (it read only the atom-line field, so RDKit-written
+  SDFs lost their charges); and the WebMO shim passes the editor's
+  per-atom charges through. Result: the flat conjugated minimum,
+  10.6244 against RDKit's 10.6240 — the reference for a class the
+  761-suite cannot arbitrate. Statement: compliance §5 item 7; fixture
+  and gates: `tests/carbocation.test.ts`.
 - **2026-09-18 — the vinyl-phosphine C–P torsion divergence is quantified**
   (the last number-less item of the 2026-08-06 three-way arbitration): our
   minimum is 6.5716 kcal/mol, Tinker's from the identical start 10.4515;

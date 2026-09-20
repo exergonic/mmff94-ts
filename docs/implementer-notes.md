@@ -58,6 +58,7 @@ cannot drift:
 | Empirical-rule closures (OHMW1 bond, θ₀ protocol, torsion rules, BCI fallback) | `empirical.ts` and `charges.ts` code comments + their commit messages |
 | Reference anomalies (FE2PW3 vdW, AN11A/DOZNIP elec, JALSOE/SO18A charges, FAPLUD q⁰) | `docs/validation/report.md` (generated) + code comments that closed them |
 | P=N phosphine imide typing + both-pilp torsion fix | `empirical.ts` comments + `tests/phosphine-imide.test.ts` + `tests/torsion-empirical.test.ts` |
+| Carbocation typing (3-coordinate C⁺ → vinylic class 2; `M CHG` parsing) | `assign-atom-types.ts` and `sdf.ts` code comments + `tests/carbocation.test.ts` + compliance §5 item 7 |
 | Parameter-resolution subtleties (TAJSUS, step-down chains, OOP pins) | `parameter-classes.ts` and `out-of-plane.ts` code comments |
 
 When investigating a discrepancy, read the code comment in the

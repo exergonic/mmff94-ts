@@ -96,4 +96,27 @@ M  END
     expect(mol.bonds.map(b => [b.atom1, b.atom2]).sort((a, b) => a[0] - b[0] || a[1] - b[1]))
       .toEqual([[0, 1], [0, 2], [1, 4]]);
   });
+
+  it('reads the M CHG property block (the CTfile charge record most toolkits write)', () => {
+    // RDKit and OpenBabel write formal charges into M CHG and leave the
+    // atom-line charge field at 0; the parser used to read only the
+    // latter, so external SDFs lost their charges — a carbocation
+    // reached the typer neutral (tests/carbocation.test.ts).
+    const CHARGED = `charged
+  test
+
+  3  2  0  0  0  0  0  0  0  0999 V2000
+    0.0000    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    1.5000    0.0000    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0
+    0.0000    1.0000    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  1  0
+  2  3  2  0
+M  CHG  2   1   1   3  -1
+M  END
+`;
+    const mol = parse_sdf(CHARGED);
+    expect(mol.atoms[0].formal_charge).toBe(1);
+    expect(mol.atoms[1].formal_charge ?? 0).toBe(0);
+    expect(mol.atoms[2].formal_charge).toBe(-1);
+  });
 });

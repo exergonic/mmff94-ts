@@ -1,6 +1,6 @@
 # MMFF94 Validation Report
 
-> **Generated:** 2026-08-23 from the 761-molecule MMFF94 validation suite (November 1998 revision).
+> **Generated:** 2026-09-20 from the 761-molecule MMFF94 validation suite (November 1998 revision).
 > **Regenerate:** `npm run docs` — this file is the single source of truth; all prose docs point at it.
 
 ---

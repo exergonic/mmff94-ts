@@ -257,8 +257,16 @@ export function assign_atom_types(molecule: Molecule): TypedMolecule {
 
           // 3 neighbors, no double, no aromatic (should be rare for C)
           // — the protonated guanidinium core C(NH₂)₃ is type 57 (CGD+)
-          // even without the C=N double bond.
-          atom_types[i] = n3_neighbor_count(i, adj, molecule) === 3 ? 57 : 1;
+          // even without the C=N double bond. A carbocation — a
+          // 3-coordinate carbon bearing a +1 formal charge — is an sp²
+          // center with an empty p orbital: it takes the vinylic class
+          // (2) so its angles are planar and its conjugation with a
+          // neighbouring C=N is expressible. MMFF94 defines no
+          // carbocation type; this follows RDKit's MMFF94 typing (the
+          // 761-suite has no carbocations and cannot arbitrate it).
+          atom_types[i] = n3_neighbor_count(i, adj, molecule) === 3 ? 57
+                        : molecule.atoms[i].formal_charge === 1 ? 2
+                        : 1;
           break;
         }
 

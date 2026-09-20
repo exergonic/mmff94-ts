@@ -106,6 +106,24 @@ export function parse_sdf(sdf_text: string): Molecule {
     bonds.push({ atom1: s1, atom2: s2, bond_order: order });
   }
 
+  // The M CHG property block — the CTfile's authoritative charge record,
+  // and what most toolkits (RDKit, OpenBabel) actually write; the
+  // atom-line field above is frequently left at 0. Format:
+  //   M  CHG  n  atom1  charge1  atom2  charge2 ...      (≤ 8 pairs/line)
+  // Atom numbers are 1-based DECLARED positions, remapped through
+  // atom_slot like the bond block; a charge later in the file wins.
+  for (let i = bond_start + num_bonds; i < lines.length; i++) {
+    const line = lines[i];
+    if (!line || !/^M\s+CHG\b/.test(line)) continue;
+    const fields = line.trim().split(/\s+/);
+    const pairs = Math.min(parseInt(fields[2], 10) || 0, 8);
+    for (let p = 0; p < pairs; p++) {
+      const slot = atom_slot[parseInt(fields[3 + 2 * p], 10) - 1];
+      const charge = parseInt(fields[4 + 2 * p], 10);
+      if (slot >= 0 && Number.isFinite(charge)) atoms[slot].formal_charge = charge;
+    }
+  }
+
   // First line of the SDF is typically the molecule name
   const name = lines[0]?.trim() || undefined;
 

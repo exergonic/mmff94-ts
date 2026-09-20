@@ -68,6 +68,32 @@ function read_connections(path, atom_count) {
   return bonds;
 }
 
+/**
+ * The editor's per-atom formal charges: one line per atom, in input.xyz
+ * order, the first column being the charge (the total is the job's net
+ * charge). The typer needs them — a three-coordinate carbon carrying +1
+ * is a carbocation, and MMFF94's typing only places it in the vinylic
+ * sp2 class when the charge is visible. A missing file (older jobs)
+ * leaves every atom neutral, exactly as before.
+ */
+function read_charges(path, atoms) {
+  let text;
+  try {
+    text = readFileSync(path, 'utf-8');
+  } catch {
+    return 0;
+  }
+  const lines = text.split('\n').filter((line) => line.trim() !== '');
+  let total = 0;
+  for (let i = 0; i < Math.min(lines.length, atoms.length); i++) {
+    const q = parseInt(lines[i].trim().split(/\s+/)[0], 10);
+    if (!Number.isInteger(q) || q === 0) continue;
+    atoms[i].formal_charge = q;
+    total += q;
+  }
+  return total;
+}
+
 function banner() {
   const bar = '#' .repeat(66);
   return [
@@ -141,9 +167,13 @@ function main() {
 
   const atoms = read_xyz('input.xyz');
   const bonds = read_connections('connections', atoms.length);
+  const net_charge = read_charges('charges', atoms);
   const molecule = { atoms, bonds, name: 'WebMO job' };
 
   const out = [banner()];
+  if (net_charge !== 0) {
+    out.push(` Net Formal Charge :                    ${net_charge > 0 ? '+' : ''}${net_charge} e`);
+  }
 
   if (mode === 'energy') {
     const e = calc_energy(molecule);
