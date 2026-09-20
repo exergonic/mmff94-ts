@@ -16,4 +16,4 @@ ref_dir="$script_dir/../references"
 mkdir -p "$ref_dir"
 output="$ref_dir/${base}.mmff94.log"
 
-obabel "$input" -otxt --ff mmff94 --energy --log > "$output" 2>&1
+obabel "$input" -otxt --ff mmff94 --energy --log 2>&1 | tr -d '\r' > "$output"
