@@ -61,7 +61,7 @@ every test run; nothing here is transcribed by hand.
 | Gradient correctness | finite-difference verified on every fixture and the 304-atom trp-cage; `tests/gradient.test.ts` prints the current worst |
 | Independent implementations | final energies match RDKit MMFF94 to ~0.5 kcal/mol and Tinker 26.2 to four decimals on shared minima |
 
-Four details worth knowing, because they're where hand-waved
+Five details worth knowing, because they're where hand-waved
 implementations hide:
 
 - Two suite entries (**AN11A**, **DOZNIP**) are *excluded* — Halgren
@@ -80,6 +80,12 @@ implementations hide:
   neither exists, it leaves the energy. `diagnose_molecule()` counts all
   three outcomes and warns by default; the suite's own accounting is the
   Parameter diagnostics section of the validation report.
+- **Drawings are normalized, not trusted.** A sulfone written with dative
+  S(+2)–O(−) bonds — what a SMILES round-trip can hand you — types as the
+  same molecule as the double-bonded drawing, where MMFF94's charge-neutral
+  S(IV)/S(VI) classes actually live (70.15 kcal/mol wrong before this, 4.90
+  after). The rule is narrow: N-oxides and Wittig ylides keep the
+  charge-separated forms MMFF94 has types for.
 
 The complete census — every residual, every exception, every exclusion
 with its reason — lives in the

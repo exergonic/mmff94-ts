@@ -20,6 +20,7 @@
  */
 
 import type { Molecule, TypedMolecule } from '../types.js';
+import { normalize_dative_sulfur } from './normalize-dative.js';
 
 /**
  * Assign an MMFF94 atom type to every atom in the molecule.
@@ -28,6 +29,11 @@ import type { Molecule, TypedMolecule } from '../types.js';
  * Unrecognized environments get a safe fallback (type 1 for C, 5 for H, etc.).
  */
 export function assign_atom_types(molecule: Molecule): TypedMolecule {
+  // A sulfone drawn with dative S(+2)–O(−) bonds is the same molecule as
+  // the double-bonded drawing, and only the latter has MMFF94 types; see
+  // normalize-dative.ts. Every decision below reads the normalized
+  // molecule, and the returned TypedMolecule carries it.
+  molecule = normalize_dative_sulfur(molecule);
   const n = molecule.atoms.length;
   const atom_types = new Array<number>(n);
 

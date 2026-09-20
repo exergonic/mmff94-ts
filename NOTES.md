@@ -6,7 +6,7 @@ not instruction.
 
 ## Current status
 
-- Suite status: GREEN (350 passed, 2 intentional skips), typecheck clean —
+- Suite status: GREEN (367 passed, 2 intentional skips), typecheck clean —
   2026-09-20 (the skips are the intentionally unreferenced fixtures; see
   Errata).
 - Geometry pipeline details live in the valence-orbital-visualization skill;
@@ -41,6 +41,18 @@ _(Corrections and caveats about prior work — dated entries.)_
   diffs — the tables' "do not edit by hand" header is enforced, not asserted.
   (c) *Tinker #185*: no email note; the open pull requests (#186, #187) are
   the escalation.
+  (d) *Dative sulfones.* `C[S+2]([O-])([O-])C` — a sulfone with the S–O
+  bonds drawn singly — typed as the sulfide class with a net −1 e charge and
+  scored 70.15 kcal/mol against the correct 4.90, because MMFF94's S(IV)/S(VI)
+  classes are charge-neutral. `normalize_dative_sulfur()` in
+  `src/mmff94/normalize-dative.ts` now rewrites S(+n)–O(−) singles to S=O
+  before typing, and is deliberately narrow: N-oxides and ylides keep the
+  charge-separated forms MMFF94 has types for (the ylide fixture is asserted
+  untouched). Pair: `tests/fixtures/sdf/dimethyl-sulfone{,-dative}.sdf` +
+  `tests/dative-sulfone.test.ts`; OpenBabel's logs for the two drawings are
+  byte-identical. Also repaired `tests/scripts/obenergy.sh`: its
+  `BABEL_DATADIR` was an MSYS path handed to the native obabel, so it found no
+  parameter files — reference logs now regenerate.
 - **2026-09-20 — carbocations: typed as the vinylic class, and the SDF
   charge path repaired** (a WebMO differential on the 1-pyrrolinium
   cation): MMFF94 has no carbocation type, so a three-coordinate carbon

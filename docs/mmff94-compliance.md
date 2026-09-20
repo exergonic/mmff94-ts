@@ -168,6 +168,22 @@ molecules (δ = 1e-6 Å; relative error < 1e-5 — the current worst is printed 
    declaring the interaction absent, not missing parameters; the
    reference omits the same paths.
 
+9. **Dative drawings of hypervalent sulfur are normalized**: a sulfone
+   written `C[S+2]([O-])([O-])C` (dative single bonds) is the same molecule
+   as `CS(=O)(=O)C`, but MMFF94's S(IV)/S(VI) classes are charge-neutral
+   and no type carries a positive sulfur. Typed as drawn, the sulfur took
+   the thiol/sulfide class (15) with a −1 e net charge and 70.1491 kcal/mol
+   against the correct 4.8984. `assign_atom_types()` now rewrites each
+   S(+n)–O(−) single bond to S=O and moves both charges one step toward
+   neutral before any typing decision reads a bond order or a charge
+   (`src/mmff94/normalize-dative.ts`). The rule is narrow on principle —
+   normalize only where MMFF94 has no type for the charge-separated
+   drawing — so N-oxides (N⁺–O⁻, dedicated types) and Wittig ylides
+   (P⁺–C⁻, the ylide types) are left exactly as drawn. Pair and gates:
+   `tests/fixtures/sdf/dimethyl-sulfone{,-dative}.sdf` and
+   `tests/dative-sulfone.test.ts`; OpenBabel's reference logs for the two
+   drawings are byte-identical, and our energies match both.
+
 ## 6. Dependencies
 
 Zero runtime dependencies. The library compiles to ESM in `dist/` and

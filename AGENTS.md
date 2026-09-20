@@ -75,7 +75,10 @@ This code is written for **chemists who code**, not software engineers.
   `tests/references/tinker/*.log` (Tinker). A fixture without a reference
   fails loudly unless listed in `INTENTIONALLY_UNREFERENCED` with a reason.
 - Windows dev box: OpenBabel reference generation needs an explicit
-  `BABEL_DATADIR` (see `tests/scripts/` recipes). Tinker lives on lenovo
+  `BABEL_DATADIR` written as a native `C:/...` path — this shell does not
+  translate MSYS paths in the environment, so a `/c/...` value reaches the
+  native obabel as a literal string and it finds no parameter files (see
+  `tests/scripts/` recipes). Tinker lives on lenovo
   (`ssh lenovo`), reachable per the tinker-running skill.
 - Two gates keep the claims honest. `tests/parameter-tables.test.ts` runs
   `scripts/check-parameter-tables.sh`, which regenerates every parameter
