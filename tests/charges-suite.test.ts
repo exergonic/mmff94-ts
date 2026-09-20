@@ -31,26 +31,9 @@ import { join } from 'path';
 import { parse_mmd } from '../src/utils/mmd-parser';
 import { assign_atom_types } from '../src/mmff94/assign-atom-types';
 import { assign_bci_charges } from '../src/mmff94/charges';
+import { reference_charges } from './scripts/suite-charges';
 
 const suiteDir = join(__dirname, 'fixtures', 'validation-suite');
-
-/** The per-atom reference partial charges (the .mmd pchg column). */
-function reference_charges(mmdText: string, name: string, nAtoms: number): number[] {
-  const pchg: number[] = new Array(nAtoms).fill(0);
-  let inMol = false;
-  for (const line of mmdText.split('\n')) {
-    const head = line.match(/^\s*\d+\s+\[(\w+),/);
-    if (head) { inMol = head[1] === name; continue; }
-    if (!inMol) continue;
-    const p = line.trim().split(/\s+/);
-    // atom line: bmin_type + 6 neighbor pairs + x y z label idx fchg pchg name subname serial
-    if (p.length >= 20) {
-      const serial = parseInt(p[p.length - 1], 10);
-      if (!isNaN(serial)) pchg[serial - 1] = parseFloat(p[p.length - 4]);
-    }
-  }
-  return pchg;
-}
 
 describe('partial charges vs the validation-suite reference (pchg)', () => {
   it('reproduces the reference per-atom charges for every typing-exact molecule', () => {
