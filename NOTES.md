@@ -50,6 +50,10 @@ _(Corrections and caveats about prior work — dated entries.)_
 
 ## Decisions worth remembering
 
+- `mmff94-workbench` (draft GUI design, deleted 2026-09-20; never
+  committed): superseded by the WebMO engine integration — one molecule,
+  our engine and Tinker, one UI. Uncovered residual: per-step path
+  inspection (gradient arrows, nudge/drag, convergence plot); no plan.
 - The order-1 C–P torsion stays paper-based (rule (g), V2 = 1.423); the
   references' 3.795 is their deviation — do not "fix" toward it, the gap
   is quantified (vinyl-phosphine-divergence.md).
