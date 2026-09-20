@@ -91,8 +91,9 @@ describe('partial charges vs the validation-suite reference (pchg)', () => {
           .toBeLessThan(1e-3);
       }
     }
-    // The model is exact on the clean set: the worst deviation across
-    // all atoms is far below the 1e-3 assertion (measured ~1e-4).
+    // The model is exact on the clean set: at the reference's own print
+    // precision the deviation is 0 (the generated census reports
+    // 0.00e+0 over all 757 typed molecules).
     expect(checked).toBeGreaterThan(100);
     expect(worst).toBeLessThan(1e-3);
   });
