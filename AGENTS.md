@@ -77,6 +77,14 @@ This code is written for **chemists who code**, not software engineers.
 - Windows dev box: OpenBabel reference generation needs an explicit
   `BABEL_DATADIR` (see `tests/scripts/` recipes). Tinker lives on lenovo
   (`ssh lenovo`), reachable per the tinker-running skill.
+- Two gates keep the claims honest. `tests/parameter-tables.test.ts` runs
+  `scripts/check-parameter-tables.sh`, which regenerates every parameter
+  table from the OpenBabel `.par` sources into a temp directory and diffs
+  against the committed files (it skips with a note when `temp_ob/data` is
+  absent — that data is a local working copy, not part of the repo).
+  `tests/parameter-diagnostics.test.ts` pins the parameter-resolution
+  accounting. Both sets of numbers belong in `docs/validation/report.md`
+  via `npm run docs`; never hand-copy them into prose.
 
 ## Where things are
 
@@ -89,6 +97,10 @@ This code is written for **chemists who code**, not software engineers.
   `total.ts` sums. Ground truth for the fast path.
 - `src/optimize/l-bfgs.ts`, `steepest-descent.ts`, `fast-system.ts` — the
   optimizers and the compiled kernel they run on.
+- `src/mmff94/diagnostics.ts` with `resolution-counters.ts` — the
+  parameter-resolution report (`diagnose_molecule`): coordination gaps,
+  empirical-rule use, and omitted interactions. The counters are no-ops
+  unless armed, so the energy hot path pays nothing.
 - `NOTES.md` — errata, open threads, future direction. Read when relevant;
   update freely.
 - `docs/validation/report.md` — the census. `docs/mmff94-compliance.md` —

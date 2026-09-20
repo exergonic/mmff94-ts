@@ -17,7 +17,7 @@
  * Tinker layout WebMO's parser expects (index, element, x, y, z, type).
  */
 import { readFileSync, writeFileSync } from 'node:fs';
-import { calc_energy, optimize_lbfgs } from '../../dist/index.js';
+import { calc_energy, diagnose_molecule, optimize_lbfgs } from '../../dist/index.js';
 
 const VERSION = '0.1.0-alpha.1';
 
@@ -156,6 +156,37 @@ function final_geometry(molecule) {
   return lines.join('\n') + '\n';
 }
 
+/** The parameter-gap disclosure, in the report the user actually reads.
+ *  diagnose_molecule() costs one extra energy evaluation; on a WebMO job
+ *  that is the right trade — a silently dropped interaction would
+ *  otherwise leave the results page looking complete. */
+function diagnostics_block(d) {
+  const empirical = Object.entries(d.empirical)
+    .filter(([, n]) => n > 0)
+    .map(([k, n]) => `${n} ${k.replace(/_/g, '-')}`)
+    .join(', ');
+  const lines = ['', ' Parameter Diagnostics :', ''];
+  lines.push(
+    ` ${'Coordination gaps'.padEnd(20)} ${d.atoms.length === 0 ? 'none' : `${d.atoms.length} atom(s): ` + d.atoms.map((a) => `${a.element}${a.index + 1} (type ${a.type}, ${a.coordination} neighbours)`).join(', ')}`,
+  );
+  lines.push(
+    ` ${'Empirical rules'.padEnd(20)} ${empirical === '' ? 'none' : `${empirical} (part V, expected behaviour)`}`,
+  );
+  const omitted = Object.entries(d.dropped).filter(([k, n]) => k !== 'torsion' && n > 0);
+  const strictDropped = omitted.reduce((a, [, n]) => a + n, 0);
+  lines.push(
+    ` ${'Omitted by rules'.padEnd(20)} ${d.dropped.torsion === 0 ? 'none' : `${d.dropped.torsion} torsion path(s) (linear centres / unsaturated-sp2)`}`,
+  );
+  lines.push(
+    ` ${'Dropped (no rule)'.padEnd(20)} ${strictDropped === 0 ? 'none' : omitted.map(([k, n]) => `${n} ${k.replace(/_/g, '-')}`).join(', ')}`,
+  );
+  if (d.atoms.length > 0 || strictDropped > 0) {
+    lines.push('');
+    lines.push(' ***  PARAMETER GAPS ABOVE: the result is not fully parameterized  ***');
+  }
+  return lines.join('\n');
+}
+
 function main() {
   let stdin_text = '';
   try {
@@ -193,6 +224,7 @@ function main() {
     fail(`unknown mode '${mode}' in input.stdin (expected 'energy' or 'optimize')`);
   }
 
+  out.push(diagnostics_block(diagnose_molecule(molecule, { quiet: true })));
   out.push('');
   out.push(' mmff94-ts -- MMFF94 (Halgren J. Comput. Chem. 1996) in pure TypeScript');
   out.push('');

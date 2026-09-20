@@ -61,7 +61,7 @@ every test run; nothing here is transcribed by hand.
 | Gradient correctness | finite-difference verified on every fixture and the 304-atom trp-cage; `tests/gradient.test.ts` prints the current worst |
 | Independent implementations | final energies match RDKit MMFF94 to ~0.5 kcal/mol and Tinker 26.2 to four decimals on shared minima |
 
-Three details worth knowing, because they're where hand-waved
+Four details worth knowing, because they're where hand-waved
 implementations hide:
 
 - Two suite entries (**AN11A**, **DOZNIP**) are *excluded* — Halgren
@@ -75,6 +75,11 @@ implementations hide:
   charge on type 107 with no sulfone compensation). We filed it
   upstream ([TinkerTools/tinker#185](https://github.com/TinkerTools/tinker/issues/185))
   rather than quietly absorbing it into our comparison tables.
+- **Nothing is dropped silently.** Every interaction resolves through the
+  stored parameter tables, then the part V empirical rules — and when
+  neither exists, it leaves the energy. `diagnose_molecule()` counts all
+  three outcomes and warns by default; the suite's own accounting is the
+  Parameter diagnostics section of the validation report.
 
 The complete census — every residual, every exception, every exclusion
 with its reason — lives in the
@@ -145,9 +150,11 @@ pipeline documented end-to-end in the [walkthrough](docs/walkthrough.md).
 | `optimize_lbfgs(mol, opts?)` | Limited-memory BFGS with strong-Wolfe line search |
 | `optimize_steepest_descent(mol, opts?)` | Robust fallback minimizer |
 | `parameter_gap_report(typed)` | Atoms outside MMFF94's parameter space (hypervalent centers, untyped elements) — diagnostic, never silently wrong |
+| `diagnose_molecule(mol, opts?)` | Full parameter-resolution report: coordination gaps, empirical-rule use, omitted interactions. One extra energy evaluation; warns by default |
 
 Everything is plain data in and plain data out: no classes to instantiate,
-no state to manage, every function pure over its inputs.
+no state to manage, every function pure over its inputs — with one deliberate
+exception, `diagnose_molecule`, whose entire purpose is to speak up.
 
 ## Documentation
 

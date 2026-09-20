@@ -153,6 +153,21 @@ molecules (δ = 1e-6 Å; relative error < 1e-5 — the current worst is printed 
    `tests/fixtures/sdf/pyrrolinium-carbocation.sdf` and
    `tests/carbocation.test.ts`.
 
+8. **Parameter resolution is reported, not silent**: every interaction is
+   resolved by a stored table row, then by the part V empirical rules.
+   When neither supplies parameters the term leaves the energy — and
+   before this change that outcome was completely silent. `diagnose_molecule()`
+   now measures all three outcomes in one energy evaluation and reports
+   anything non-standard through a warning handler (`console.warn` by
+   default; `set_parameter_warning_handler` to redirect). The optimizer
+   calls it once per run, and the WebMO engine prints the same block in
+   its report. The suite's own accounting — how many interactions came
+   from the empirical rules, how many were omitted, and by which rule —
+   is generated in the Parameter diagnostics section of
+   `validation/report.md`. Torsion omissions are rules (a)/(e)/(f)
+   declaring the interaction absent, not missing parameters; the
+   reference omits the same paths.
+
 ## 6. Dependencies
 
 Zero runtime dependencies. The library compiles to ESM in `dist/` and

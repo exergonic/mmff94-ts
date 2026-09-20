@@ -29,6 +29,7 @@ import {
 import { distance, angle_in_radians, Vec3 } from '../../utils/vector.js';
 import { class_context_for, type ClassContext, strbnd_type, bond_parameters, angle_parameters } from '../parameters/parameter-classes.js';
 import { empirical_bond_length } from '../parameters/empirical.js';
+import { note_dropped } from '../resolution-counters.js';
 
 /**
  * All parameters a stretch-bend angle i-j-k needs: the two coupling
@@ -178,7 +179,8 @@ export function calc_stretch_bend_energy(molecule: TypedMolecule): number {
         // All parameter resolution lives in stretch_bend_angle_terms —
         // shared with the gradient so the two can never drift apart.
         const terms = stretch_bend_angle_terms(ctx, molecule, i, j, k);
-        if (!terms || terms.linear) continue;
+        if (!terms) { note_dropped('stretch_bend'); continue; }
+        if (terms.linear) continue;
 
         // 4. Compute current geometry
         const posI: Vec3 = [molecule.atoms[i].x, molecule.atoms[i].y, molecule.atoms[i].z];

@@ -45,6 +45,7 @@
 import type { TypedMolecule } from '../../types.js';
 import { OOP_PARAMS, lookup_param, ATOM_TYPE_PROPERTIES } from '../parameters/index.js';
 import { wilson_oop_angle, Vec3 } from '../../utils/vector.js';
+import { note_dropped } from '../resolution-counters.js';
 
 const OOP_UNIT = 143.9325 * (Math.PI / 180) ** 2; // exact form of the published 0.043844 (see angle-bend.ts)
 
@@ -157,7 +158,7 @@ export function calc_oop_energy(molecule: TypedMolecule): number {
     // applies to all three Wilson angles at the center (resolved by
     // the shared oop_force_constant() helper, same for the gradient).
     const k_oop = oop_force_constant(molecule, j, a, c, d);
-    if (k_oop === undefined) continue;
+    if (k_oop === undefined) { note_dropped('out_of_plane'); continue; }
 
     const posJ: Vec3 = [molecule.atoms[j].x, molecule.atoms[j].y, molecule.atoms[j].z];
     const posA: Vec3 = [molecule.atoms[a].x, molecule.atoms[a].y, molecule.atoms[a].z];

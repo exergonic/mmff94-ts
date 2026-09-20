@@ -19,6 +19,7 @@ import type { TypedMolecule } from '../../types.js';
 import { distance, Vec3 } from '../../utils/vector.js';
 import { class_context_for, bond_parameters } from '../parameters/parameter-classes.js';
 import { empirical_bond_parameters } from '../parameters/empirical.js';
+import { note_dropped, note_empirical } from '../resolution-counters.js';
 
 /**
  * Calculate the total bond stretching energy for all bonds in a molecule.
@@ -53,7 +54,8 @@ export function calc_bond_stretch_energy(molecule: TypedMolecule): number {
       // OHMW1's stretch now matches the reference to 6e-5 (the two
       // measured constants live in empirical.ts).
       params = empirical_bond_parameters(molecule.atoms[bond.atom1], molecule.atoms[bond.atom2]);
-      if (!params) continue;
+      if (!params) { note_dropped('bond'); continue; }
+      note_empirical('bond');
     }
 
     const { k_b, r0 } = params;

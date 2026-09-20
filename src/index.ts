@@ -28,6 +28,12 @@ export { parse_sdf } from './sdf.js';
 
 // MMFF94 force field
 export {
+  diagnose_molecule,
+  set_parameter_warning_handler,
+  type ParameterDiagnostics,
+  type ParameterWarningHandler,
+} from './mmff94/diagnostics.js';
+export {
   assign_atom_types,
   assign_bci_charges,
   calc_energy,

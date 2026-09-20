@@ -22,6 +22,8 @@ import { assign_bci_charges } from '../../src/mmff94/charges';
 import { calc_energy } from '../../src/mmff94/energy/total';
 import { load_bmin_log } from './bmin-log';
 import { reference_charges } from './suite-charges';
+import { arm_resolution_counters, disarm_resolution_counters } from '../../src/mmff94/resolution-counters.js';
+import { parameter_gap_report } from '../../src/mmff94/parameter-gaps.js';
 
 const suiteDir = 'tests/fixtures/validation-suite';
 const outDir = 'docs/validation';
@@ -102,6 +104,16 @@ const refTypes = JSON.parse(
 
 const results: MolResult[] = [];
 
+// Parameter-resolution accounting: the counters are armed around the same
+// calc_energy() call the gates use, so these counts are measured from the
+// evaluations this report is built on — no separate model of the field.
+const EMPTY_KINDS = () => ({ bond: 0, angle: 0, stretch_bend: 0, torsion: 0, out_of_plane: 0 });
+const suiteEmpirical = EMPTY_KINDS();
+const suiteDropped = EMPTY_KINDS();
+let suiteGapAtoms = 0;
+let worstStrictDropMol = '';
+let worstStrictDropCount = 0;
+
 for (const mol of molecules) {
   const code = mol.name!;
   const ref = bmin.get(code);
@@ -110,7 +122,24 @@ for (const mol of molecules) {
 
   const typed = assign_atom_types(mol);
   const charged = assign_bci_charges(typed);
-  const got = calc_energy(charged);
+  const counters = arm_resolution_counters();
+  let got: ReturnType<typeof calc_energy>;
+  try {
+    got = calc_energy(charged);
+  } finally {
+    disarm_resolution_counters();
+  }
+  for (const k of Object.keys(EMPTY_KINDS()) as (keyof ReturnType<typeof EMPTY_KINDS>)[]) {
+    suiteEmpirical[k] += counters.empirical[k];
+    suiteDropped[k] += counters.dropped[k];
+  }
+  const droppedHere =
+    Object.values(counters.dropped).reduce((a, b) => a + b, 0) - counters.dropped.torsion;
+  if (droppedHere > worstStrictDropCount) {
+    worstStrictDropCount = droppedHere;
+    worstStrictDropMol = code;
+  }
+  suiteGapAtoms += parameter_gap_report(mol).atoms.length;
 
   const termDelta: Record<string, number | null> = {};
   for (const [label, gk, rk] of TERMS) {
@@ -232,6 +261,17 @@ for (const mol of molecules) {
 
 // --- Emit: report.md ---------------------------------------------------
 
+const empTotal = Object.values(suiteEmpirical).reduce((a, b) => a + b, 0);
+const dropTotal = Object.values(suiteDropped).reduce((a, b) => a + b, 0);
+const empBreakdown =
+  Object.entries(suiteEmpirical)
+    .filter(([, n]) => n > 0)
+    .map(([k, n]) => `${k.replace('_', '-')} ${n}`)
+    .join(', ') || 'none';
+
+const torsionOmitted = suiteDropped.torsion;
+const strictDropped = dropTotal - torsionOmitted;
+
 const report: string[] = [
   '# MMFF94 Validation Report',
   '',
@@ -246,6 +286,29 @@ const report: string[] = [
   '|---|---|',
   `| Typing-exact molecules | ${pct(typingExactN, results.length)} vs OpenBabel |`,
   `| Molecules in suite | ${results.length} |`,
+  '',
+  '## Parameter diagnostics',
+  '',
+  'Counted in the same energy evaluations as the gates above: the resolution',
+  'counters are armed around each calc_energy call, so these measure the field',
+  'rather than model it. Every interaction is resolved by a stored parameter row',
+  '(the normal path), by the part V empirical rules (the designed fallback), or',
+  'by neither — and then it is not in the energy.',
+  '',
+  '| Resolution | Interactions |',
+  '|---|---|',
+  `| Built by the part V empirical rules | ${empTotal} (${empBreakdown}) |`,
+  `| Omitted by the rules themselves (torsion rules (a)/(e)/(f): linear centres, unsaturated-sp2) | ${torsionOmitted} |`,
+  `| Dropped outright: no stored row and no rule | ${strictDropped}${strictDropped > 0 ? ` (${worstStrictDropMol})` : ''} |`,
+  `| Atoms exceeding their type's coordination | ${suiteGapAtoms} |`,
+  '',
+  'The torsion omissions are MMFF94 declaring the interaction absent, not a',
+  'missing parameter — the reference omits the same paths, which is why the',
+  'torsion gate above still passes 761/761. The single outright drop is an',
+  'out-of-plane centre with no stored row (SURDOX02), where the reference\'s own',
+  'term is zero to its print precision. Anything dropped outright, and any',
+  'coordination gap, reaches the caller through `diagnose_molecule()`',
+  '(console.warn by default; the WebMO engine prints the same block in its report).',
   '',
   '---',
   '',
@@ -443,3 +506,6 @@ for (const [label] of TERMS) {
 }
 console.log(`totals |Δ|<=1e-3: ${totalLe3}/${totalN}  worst ${exp(totalMax)} (${totalMaxMol})`);
 console.log(`charges max|Δq|<=1e-3: ${chargeLe3}/${chargeN}`);
+console.log(
+  `diagnostics: empirical ${empTotal} (${empBreakdown})  omitted-by-rules ${torsionOmitted}  dropped-outright ${strictDropped}  coordination gaps ${suiteGapAtoms}`,
+);

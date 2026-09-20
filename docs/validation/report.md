@@ -12,6 +12,29 @@
 | Typing-exact molecules | 761/761 (100.0%) vs OpenBabel |
 | Molecules in suite | 761 |
 
+## Parameter diagnostics
+
+Counted in the same energy evaluations as the gates above: the resolution
+counters are armed around each calc_energy call, so these measure the field
+rather than model it. Every interaction is resolved by a stored parameter row
+(the normal path), by the part V empirical rules (the designed fallback), or
+by neither — and then it is not in the energy.
+
+| Resolution | Interactions |
+|---|---|
+| Built by the part V empirical rules | 76 (bond 3, angle 62, torsion 11) |
+| Omitted by the rules themselves (torsion rules (a)/(e)/(f): linear centres, unsaturated-sp2) | 133 |
+| Dropped outright: no stored row and no rule | 1 (SURDOX02) |
+| Atoms exceeding their type's coordination | 0 |
+
+The torsion omissions are MMFF94 declaring the interaction absent, not a
+missing parameter — the reference omits the same paths, which is why the
+torsion gate above still passes 761/761. The single outright drop is an
+out-of-plane centre with no stored row (SURDOX02), where the reference's own
+term is zero to its print precision. Anything dropped outright, and any
+coordination gap, reaches the caller through `diagnose_molecule()`
+(console.warn by default; the WebMO engine prints the same block in its report).
+
 ---
 
 ## Per-term energy residuals

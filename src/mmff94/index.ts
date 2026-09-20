@@ -9,6 +9,12 @@
  */
 
 export {
+  diagnose_molecule,
+  set_parameter_warning_handler,
+  type ParameterDiagnostics,
+  type ParameterWarningHandler,
+} from './diagnostics.js';
+export {
   assign_atom_types,
 } from './assign-atom-types.js';
 

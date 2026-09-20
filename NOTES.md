@@ -6,7 +6,7 @@ not instruction.
 
 ## Current status
 
-- Suite status: GREEN (344 passed, 2 intentional skips), typecheck clean —
+- Suite status: GREEN (350 passed, 2 intentional skips), typecheck clean —
   2026-09-20 (the skips are the intentionally unreferenced fixtures; see
   Errata).
 - Geometry pipeline details live in the valence-orbital-visualization skill;
@@ -16,6 +16,31 @@ not instruction.
 
 _(Corrections and caveats about prior work — dated entries.)_
 
+- **2026-09-20 — parameter resolution now reports itself, and the parameter
+  tables are provably generated** (an outside review, then decisions #4/#5):
+  (a) *Silence was the real gap.* Every term resolved table → part V
+  empirical rules → nothing, and the "nothing" case left the energy with no
+  trace. `diagnose_molecule()` (`src/mmff94/diagnostics.ts`) arms resolution
+  counters, runs one readable energy evaluation, and reports coordination
+  gaps, empirical-rule use, and omissions — through `console.warn` by
+  default (`set_parameter_warning_handler` to redirect) and as a block in
+  the WebMO engine report, with the suite's own accounting generated in
+  `docs/validation/report.md`. Gates: `tests/parameter-diagnostics.test.ts`.
+  Measured across the 761: 0 coordination gaps, 76 empirical-rule
+  interactions, 133 torsion paths omitted by rules (a)/(e)/(f) — the rules
+  declaring the interaction absent, matching the reference's own term list —
+  and one out-of-plane centre with no stored row (SURDOX02), where the
+  reference's term is zero to its print precision.
+  (b) *The extractor now owns the bridges.* The sulfinate S=O rows
+  (`0-1-73-7`, `0-7-73-72`, `0-7-73`) and the metal-cation note existed only
+  in the committed tables, so the documented regeneration recipe would have
+  deleted them silently. They are emitted by
+  `scripts/extract-mmff94-par.py` now, and
+  `scripts/check-parameter-tables.sh` (driven by
+  `tests/parameter-tables.test.ts`) regenerates into a temp directory and
+  diffs — the tables' "do not edit by hand" header is enforced, not asserted.
+  (c) *Tinker #185*: no email note; the open pull requests (#186, #187) are
+  the escalation.
 - **2026-09-20 — carbocations: typed as the vinylic class, and the SDF
   charge path repaired** (a WebMO differential on the 1-pyrrolinium
   cation): MMFF94 has no carbocation type, so a three-coordinate carbon

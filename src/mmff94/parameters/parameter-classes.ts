@@ -54,6 +54,7 @@ import {
   find_ring_atoms,
   type AromaticRing,
 } from '../assign-atom-types.js';
+import { note_empirical } from '../resolution-counters.js';
 
 /** Per-term call context: molecule, adjacency, and the aromatic-ring
  *  perception shared by every class query in one energy pass. The
@@ -397,6 +398,7 @@ export function angle_parameters(
         bond_parameters(ctx, j, k)?.r0 ??
         empirical_bond_length(mol.atoms[j], mol.atoms[k]) ??
         1.5;
+      note_empirical('angle');
       k_a = empirical_ka(mol.atoms[i], mol.atoms[j], mol.atoms[k], r0ab, r0bc, theta0, cls);
     } else {
       k_a = params.k_a;
@@ -407,6 +409,7 @@ export function angle_parameters(
     // (empirical.ts). The eq. (20) reference bond lengths fall back
     // from the par to the eq. (18) empirical values (the Tinker
     // behavior) before the 1.5 Å stand-in.
+    note_empirical('angle');
     theta0 = empirical_theta0(ATOM_TYPE_PROPERTIES[tj], mol.atoms[j].element, cls);
     const r0ab =
       bond_parameters(ctx, i, j)?.r0 ??

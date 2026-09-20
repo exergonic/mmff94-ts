@@ -32,6 +32,7 @@ import { dihedral_angle, Vec3 } from '../../utils/vector.js';
 import { class_context_for, type ClassContext, torsion_class, lookup_torsion, get_bond_order, is_aromatic_bond } from '../parameters/parameter-classes.js';
 import { ATOM_TYPE_PROPERTIES } from '../parameters/index.js';
 import { empirical_torsion } from '../parameters/empirical.js';
+import { note_dropped, note_empirical } from '../resolution-counters.js';
 
 /**
  * The three Fourier barrier heights for the dihedral i-j-k-l, resolved
@@ -80,7 +81,11 @@ export function torsion_terms(
     get_bond_order(ctx, j, k),
     is_aromatic_bond(ctx, j, k),
   );
-  if (emp.skip) return undefined;
+  if (emp.skip) {
+    note_dropped('torsion');
+    return undefined;
+  }
+  note_empirical('torsion');
   return { v1: emp.v1, v2: emp.v2, v3: emp.v3 };
 }
 

@@ -45,6 +45,7 @@ import { prepare_molecule } from '../mmff94/prepare.js';
 import { calc_energy } from '../mmff94/energy/total.js';
 import { calc_gradient } from '../mmff94/gradient/total.js';
 import { create_fast_system, FastSystem } from './fast-system.js';
+import { diagnose_molecule } from '../mmff94/diagnostics.js';
 
 export interface LbfgsOptions {
   max_iterations?: number;
@@ -141,6 +142,11 @@ export function optimize_lbfgs(
   // Simple path: a bare Molecule is typed and charged on demand (an
   // already-prepared TypedMolecule passes through untouched), and the
   // energy-and-gradient oracle defaults to the built-in one.
+  // Loud by default: one diagnostics pass per optimization (one extra
+  // energy evaluation, ~0.2% of a typical run) reports coordination gaps
+  // and dropped interactions instead of leaving them silent.
+  diagnose_molecule(molecule);
+
   const prepared = prepare_molecule(molecule);
   const oracle =
     calc_energy_gradient ??
