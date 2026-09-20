@@ -15,6 +15,16 @@ not instruction.
 
 _(Corrections and caveats about prior work — dated entries.)_
 
+- **2026-09-18 — the vinyl-phosphine C–P torsion divergence is quantified**
+  (the last number-less item of the 2026-08-06 three-way arbitration): our
+  minimum is 6.5716 kcal/mol, Tinker's from the identical start 10.4515;
+  overriding only V2 (1.423 → 3.795) on the two C–P dihedrals reproduces
+  the reference torsion at the fixture geometry to five decimals and the
+  reference minimum to 0.0056 kcal/mol, with the reference geometry
+  (H–P–H 101.1° vs our 96.7°). The angle k=0 policy from the same
+  arbitration is applied in the current build (fixture angle term 0.64645
+  vs the references' 0.6464). Table + measurement route:
+  docs/mmff94-compliance.md §5.1.
 - **2026-08-23 review session closed the remaining open threads**: B11
   (validation artifacts confirmed 761-row/current), B12 (silent fixture skip
   → loud MISSING-reference failure + `INTENTIONALLY_UNREFERENCED` registry),
@@ -40,6 +50,9 @@ _(Corrections and caveats about prior work — dated entries.)_
 
 ## Decisions worth remembering
 
+- The order-1 C–P torsion stays paper-based (rule (g), V2 = 1.423); the
+  references' 3.795 is their deviation — do not "fix" toward it, the gap
+  is quantified (compliance §5.1).
 - WS2+WS3 closed 2026-08-07: empirical rules arbitrated by ERULE rows.
 - FAPLUD q⁰(72) split over terminal chalcogens (P(=O)(S⁻) −0.5/−0.5).
 - Optimization-test fixtures are user-authored (`*_non-optimized.sdf` from

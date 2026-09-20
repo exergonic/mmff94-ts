@@ -117,7 +117,8 @@ molecules (δ = 1e-6 Å; relative error < 1e-5; worst observed 8e-8).
    order-1 cases flow to rules (d)–(h), whose values the suite's
    generated rows pin exactly. OpenBabel and Tinker apply eq. (21) to
    order-1 bonds (e.g. the vinyl-phosphine C–P: 3.795 vs our
-   paper-based 1.423) — a documented deviation from the reference.
+   paper-based 1.423) — a documented deviation from the reference. The
+   vinyl-phosphine case is quantified in §5.1.
 5. **OpenBabel divergences on phosphorus bonds**: on the vinyl
    phosphine C–P bond, OpenBabel's empirical bond length (its χ(P)
    is the posted 2.06), stretch-bend constants, and torsion constant
@@ -129,6 +130,25 @@ molecules (δ = 1e-6 Å; relative error < 1e-5; worst observed 8e-8).
    and out-of-plane guards return the true limit values (the 2026-08
    fixes), and the 3- and 4-ring class parameters follow the published
    class scheme.
+
+### 5.1 The vinyl-phosphine C–P torsion, quantified (2026-09-18)
+
+The order-1 C–P dihedrals of vinyl phosphine resolve through rule (g)
+(π = 0.15, V2 = 1.423); the references resolve the same bond to V2 =
+3.795 in their per-interaction output. This single difference accounts
+for the whole energy gap:
+
+| build | torsion at the fixture | minimized total | H–P–H |
+|---|---|---|---|
+| this library | 2.29399 | 6.5716 | 96.7° |
+| this library, V2 = 3.795 override | 6.11020 | 10.4571 | 101.1° |
+| Tinker | 6.1102 | 10.4515 | ≈101° |
+
+The override reproduces the reference torsion at the fixture geometry to
+five decimals and the reference minimum to 0.0056 kcal/mol — the residual
+is the bond/angle/stretch-bend transposition drift (≤0.06 at the fixture)
+plus the convergence tolerance. Measured through the WebMO engine
+integration (`integrations/webmo/`).
 
 ## 6. Dependencies
 
