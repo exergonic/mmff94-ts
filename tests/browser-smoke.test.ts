@@ -11,11 +11,14 @@
  * the Node path computes (same V8 engine, same code), which are in turn
  * pinned against the reference logs.
  *
- * On a machine without Edge, swap the launch channel to 'chromium' and
- * run `npx playwright install chromium` once.
+ * The launch channel is resolved up front: BROWSER_CHANNEL (e.g.
+ * 'chromium' after `npx playwright install chromium`) wins, else the
+ * system Edge, else the test SKIPS with a printed reason - a missing
+ * browser is an environment gap, not a library defect (an outside run
+ * failed here purely for that reason, 2026-09-20).
  */
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { readFileSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
 import { spawnSync } from 'child_process';
 import http from 'http';
@@ -113,7 +116,28 @@ function serve(): http.Server {
   });
 }
 
-describe('browser smoke — the built dist/ in headless Chromium', () => {
+const EDGE_PATHS: string[] = process.platform === 'win32'
+  ? [
+      join(process.env['PROGRAMFILES(X86)'] ?? 'C:', 'Microsoft', 'Edge', 'Application', 'msedge.exe'),
+      join(process.env['PROGRAMFILES'] ?? 'C:', 'Microsoft', 'Edge', 'Application', 'msedge.exe'),
+      join(process.env['LOCALAPPDATA'] ?? 'C:', 'Microsoft', 'Edge', 'Application', 'msedge.exe'),
+    ]
+  : process.platform === 'darwin'
+    ? ['/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge']
+    : ['/usr/bin/microsoft-edge', '/usr/bin/microsoft-edge-stable', '/opt/microsoft/msedge/msedge'];
+
+/** The launch channel: BROWSER_CHANNEL override, else the system Edge,
+ *  else null (the browser target is not exercised on this machine). */
+const CHANNEL: string | null =
+  process.env.BROWSER_CHANNEL ?? (EDGE_PATHS.some((p) => existsSync(p)) ? 'msedge' : null);
+if (!CHANNEL) {
+  console.warn(
+    'browser smoke: no Edge found - the browser target is NOT being exercised. ' +
+    'Set BROWSER_CHANNEL=chromium after `npx playwright install chromium` to force it.',
+  );
+}
+
+describe.skipIf(!CHANNEL)('browser smoke — the built dist/ in a real browser', () => {
   let server: http.Server;
   let baseUrl: string;
   let browser: Browser;
@@ -131,7 +155,7 @@ describe('browser smoke — the built dist/ in headless Chromium', () => {
     await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
     baseUrl = `http://127.0.0.1:${(server.address() as { port: number }).port}`;
 
-    browser = await chromium.launch({ channel: 'msedge', headless: true });
+    browser = await chromium.launch({ channel: CHANNEL ?? 'msedge', headless: true });
     page = await browser.newPage();
     await page.goto(baseUrl + '/');
   }, 180_000);

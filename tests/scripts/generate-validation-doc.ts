@@ -21,6 +21,7 @@ import { assign_atom_types } from '../../src/mmff94/assign-atom-types';
 import { assign_bci_charges } from '../../src/mmff94/charges';
 import { calc_energy } from '../../src/mmff94/energy/total';
 import { load_bmin_log } from './bmin-log';
+import { reference_charges } from './suite-charges';
 
 const suiteDir = 'tests/fixtures/validation-suite';
 const outDir = 'docs/validation';
@@ -93,7 +94,8 @@ interface MolResult {
 const energies = parse_energies(readFileSync(join(suiteDir, 'MMFF94.energies'), 'utf-8'));
 const byCode = new Map(energies.map((e) => [e.code, e]));
 const bmin = load_bmin_log(suiteDir);
-const molecules = parse_mmd(readFileSync(join(suiteDir, 'MMFF94.mmd'), 'utf-8'));
+const mmdText = readFileSync(join(suiteDir, 'MMFF94.mmd'), 'utf-8');
+const molecules = parse_mmd(mmdText);
 const refTypes = JSON.parse(
   readFileSync(join(suiteDir, 'mmff94-atom-types.json'), 'utf-8'),
 ) as { molecules: Record<string, number[]> };
@@ -125,13 +127,25 @@ for (const mol of molecules) {
     refTypesList.length === mol.atoms.length &&
     typed.atom_types.every((t, i) => t === refTypesList[i]);
   if (typingExact && !CHARGE_EXCLUDED.has(code) && charged.partial_charges) {
-    chargeExact = true;
+    // The reference charges live in the .mmd's pchg column, extracted the
+    // same way the charges gate does. The earlier source
+    // (atoms[].partial_charge) was undefined across the suite, so every
+    // deviation came out NaN, the NaN never advanced `worst`, and the
+    // report printed "Worst 0.00e+0 ()" over a 100% pass rate — an
+    // unmeasured block masquerading as a perfect one (fixed 2026-09-20).
+    const ref = reference_charges(mmdText, code, mol.atoms.length);
     let worst = 0;
+    let measured = false;
     for (let i = 0; i < mol.atoms.length; i++) {
-      const dev = Math.abs(charged.partial_charges[i] - (mol.atoms[i].partial_charge ?? 0));
+      const dev = Math.abs(charged.partial_charges[i] - ref[i]);
+      if (!Number.isFinite(dev)) continue;
+      measured = true;
       if (dev > worst) worst = dev;
     }
-    chargeWorst = worst;
+    if (measured) {
+      chargeExact = true;
+      chargeWorst = worst;
+    }
   }
 
   results.push({
@@ -191,10 +205,10 @@ for (const r of results) {
     if (ad <= 1e-4) s.le4++;
     if (ad > s.max) { s.max = ad; s.maxMol = r.code; }
   }
-  if (r.chargeExact) {
+  if (r.chargeExact && r.chargeWorst !== null && Number.isFinite(r.chargeWorst)) {
     chargeN++;
-    if (r.chargeWorst! <= 1e-3) chargeLe3++;
-    if (r.chargeWorst! > chargeMax) { chargeMax = r.chargeWorst!; chargeMaxMol = r.code; }
+    if (r.chargeWorst <= 1e-3) chargeLe3++;
+    if (r.chargeWorst > chargeMax) { chargeMax = r.chargeWorst; chargeMaxMol = r.code; }
   }
 }
 
@@ -301,8 +315,8 @@ report.push(
   '',
   '| Gate | Count |',
   '|---|---|',
-  `| max|Δq| ≤ 1e-3 e⁻ | ${pct(chargeLe3, chargeN)} |`,
-  `| Worst | ${exp(chargeMax)} (${chargeMaxMol}) |`,
+  `| max|Δq| ≤ 1e-3 e⁻ | ${chargeN ? pct(chargeLe3, chargeN) : '— (not measured)'} |`,
+  `| Worst | ${chargeMax > 0 ? `${exp(chargeMax)} (${chargeMaxMol})` : chargeN ? `0.00e+0 e⁻ — exact at the reference's print precision (${chargeN} molecules)` : '— (not measured)'} |`,
   '',
   'Gated on typing-exactness; JALSOE/SO18A/AN11A/DOZNIP excluded',
   '(dative-adjusted or delocalized-anion references).',
@@ -313,7 +327,7 @@ report.push(
   '',
   'Analytical gradients for all seven terms are finite-difference checked',
   'on every fixture and the pinned suite molecules (δ = 1e-6 Å; relative',
-  'error < 1e-5; worst observed 8e-8).',
+  'error < 1e-5; tests/gradient.test.ts prints the current worst).',
   '',
   '---',
   '',

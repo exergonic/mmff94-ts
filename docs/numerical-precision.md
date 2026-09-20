@@ -117,13 +117,19 @@ thresholds against Halgren's validation suite:
 
 | Comparison | Tolerance | Rationale |
 |---|---|---|
-| Total energy vs OPTIMOL | 0.001 kcal/mol | 10× below Halgren's 0.0001 kcal/mol to leave room for FMA/ordering differences |
+| Total energy vs OPTIMOL | 0.001 kcal/mol | 10× above Halgren's 0.0001 kcal/mol, leaving room for FMA/ordering differences |
 | Per-component energy vs OPTIMOL | 0.01 kcal/mol | Individual terms cancel in the total; looser tolerance accounts for partial cancellation |
 | Per-term breakdown vs OPTIMOL log | 0.001 kcal/mol | Individual interactions are smaller and more sensitive to rounding |
 | Gradient vs finite difference | 1 × 10⁻⁵ relative | δ = 10⁻⁶ Å, limited by the geometry perturbation, not arithmetic |
 | Cross-engine (Node.js ↔ Chrome) | 1 × 10⁻¹² | Both V8; OS math library the only variable |
 | Cross-engine (Chrome ↔ Firefox) | 1 × 10⁻¹⁰ | Different math libraries (V8 fdlibm vs SpiderMonkey) |
 | Cross-engine (Chrome ↔ Safari) | 1 × 10⁻¹⁰ | Different math libraries (V8 fdlibm vs JavaScriptCore) |
+
+These are design-time comparison tolerances against OPTIMOL. The gates
+actually enforced in CI are tighter and live in the generated census —
+per-term ≤1e-4, totals ≤1e-3, charges ≤1e-3, gradient bound 1e-5
+(`docs/validation/report.md`); this table is the looser OPTIMOL-level
+evidence behind them, not a substitute for them.
 
 These tolerances are achievable with IEEE 754 doubles and straightforward
 JavaScript code. No WebAssembly, no native addons, no special precision
@@ -132,7 +138,7 @@ libraries are needed.
 The cross-engine rows above are expected bounds, not measured results:
 no second-engine comparison is part of the validation suite (the suite
 runs on Node.js only). The measured evidence is the finite-difference
-gradient check (worst relative error 8.5e-8) and the reference-energy
+gradient check (within the 1e-5 bound; the test prints the current worst) and the reference-energy
 agreement at the 0.0001 kcal/mol level.
 
 ---

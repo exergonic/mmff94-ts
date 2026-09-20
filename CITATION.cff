@@ -15,3 +15,78 @@ keywords:
   - computational-chemistry
   - force-field
   - typescript
+references:
+  - type: article
+    title: "Merck Molecular Force Field. I. Basis, Form, Scope, Parameterization, and Performance of MMFF94"
+    authors:
+      - family-names: Halgren
+        given-names: Thomas A.
+    journal: Journal of Computational Chemistry
+    volume: 17
+    issue: "5-6"
+    start: 490
+    end: 519
+    year: 1996
+    doi: 10.1002/(sici)1096-987x(199604)17:5/6<490::aid-jcc1>3.0.co;2-p
+  - type: article
+    title: "Merck Molecular Force Field. II. MMFF94 van der Waals and Electrostatic Parameters for Intermolecular Interactions"
+    authors:
+      - family-names: Halgren
+        given-names: Thomas A.
+    journal: Journal of Computational Chemistry
+    volume: 17
+    issue: "5-6"
+    start: 520
+    end: 552
+    year: 1996
+    doi: 10.1002/(sici)1096-987x(199604)17:6<520::aid-jcc2>3.3.co;2-w
+  - type: article
+    title: "Merck Molecular Force Field. III. Molecular Geometries and Vibrational Frequencies for MMFF94"
+    authors:
+      - family-names: Halgren
+        given-names: Thomas A.
+    journal: Journal of Computational Chemistry
+    volume: 17
+    issue: "5-6"
+    start: 553
+    end: 586
+    year: 1996
+    doi: 10.1002/(sici)1096-987x(199604)17:5/6<553::aid-jcc3>3.0.co;2-t
+  - type: article
+    title: "Merck Molecular Force Field. IV. Conformational Energies and Geometries for MMFF94"
+    authors:
+      - family-names: Halgren
+        given-names: Thomas A.
+      - family-names: Nachbar
+        given-names: Robert B.
+    journal: Journal of Computational Chemistry
+    volume: 17
+    issue: "5-6"
+    start: 587
+    end: 615
+    year: 1996
+    doi: 10.1002/(sici)1096-987x(199604)17:5/6<587::aid-jcc4>3.0.co;2-q
+  - type: article
+    title: "Merck Molecular Force Field. V. Extension of MMFF94 Using Experimental Data, Additional Computational Data, and Empirical Rules"
+    authors:
+      - family-names: Halgren
+        given-names: Thomas A.
+    journal: Journal of Computational Chemistry
+    volume: 17
+    issue: "5-6"
+    start: 616
+    end: 641
+    year: 1996
+    doi: 10.1002/(sici)1096-987x(199604)17:5/6<616::aid-jcc5>3.0.co;2-x
+  - type: article
+    title: "MMFF VI. MMFF94s Option for Energy Minimization Studies"
+    authors:
+      - family-names: Halgren
+        given-names: Thomas A.
+    journal: Journal of Computational Chemistry
+    volume: 20
+    issue: "7"
+    start: 720
+    end: 729
+    year: 1999
+    doi: 10.1002/(sici)1096-987x(199905)20:7<720::aid-jcc7>3.0.co;2-x

@@ -52,6 +52,11 @@ tables. The extraction script converts format only — it implements no
 force-field logic. The values are committed as TypeScript tables, so
 the build needs no Python and no external data.
 
+The empirical rules (`empirical.ts` — the generated bonds, angles,
+and torsion defaults) come from part V of the series (Halgren 1996,
+17, 616–641); the full series is listed in the README's Citation
+section.
+
 The parameter tables are cross-checked against Tinker's
 `mmff94.prm`, an independent transcription of the same originals.
 
@@ -73,10 +78,11 @@ lives in the generated **[Validation report](validation/report.md)**
 `npm run test` (`tests/compliance-gate.test.ts`); the report is the
 evidence behind it.
 
-The two stretch/strbnd rows above 1e-4 are the empirical-rule
-generated P–Si and F–N bonds of the ERULE fragments, whose reference
-values are printed to three decimals — our generated rows sit within
-that print precision.
+The rows above 1e-4 — the empirical-rule generated P–Si and F–N
+bonds of the ERULE fragments, whose reference values are printed to
+three decimals — are listed individually in the generated report's
+"Coarse-precision exceptions" section; our rows sit within that print
+precision.
 
 We do **not** claim the Wavefun-level ±5e-5 on totals; the per-term
 residuals accumulate to the ~2.5e-4 mean.
@@ -85,7 +91,7 @@ residuals accumulate to the ~2.5e-4 mean.
 
 Analytical gradients exist for all seven terms and are
 finite-difference checked on every fixture and the pinned suite
-molecules (δ = 1e-6 Å; relative error < 1e-5; worst observed 8e-8).
+molecules (δ = 1e-6 Å; relative error < 1e-5 — the current worst is printed by `tests/gradient.test.ts`).
 
 ## 5. Known deviations and limitations
 

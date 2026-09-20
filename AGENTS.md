@@ -134,12 +134,13 @@ the commit that introduced them; `docs/implementer-notes.md` maps to them.
 ## References
 
 1. Halgren, T. A. *J. Comput. Chem.* **1996**, *17*, 490–519 — definition, energy terms.
-2. Halgren, T. A. *J. Comput. Chem.* **1996**, *17*, 520–552 — atom/bond/angle/stretch-bend parameters.
-3. Halgren, T. A. *J. Comput. Chem.* **1996**, *17*, 553–586 — vdW parameters and BCI electrostatics.
-4. Halgren, T. A. *J. Comput. Chem.* **1996**, *17*, 616–641 — MMFF94s.
-5. Halgren, T. A. *J. Comput. Chem.* **1999**, *20*, 720–729 — torsion parameters.
-6. Nocedal & Wright, *Numerical Optimization*, 2nd ed., Springer 2006 — L-BFGS.
-7. MMFF94 Validation Suite — <https://server.ccl.net/cca/data/MMFF94/> (Nov 1998 revision, 761 structures).
+2. Halgren, T. A. *J. Comput. Chem.* **1996**, *17*, 520–552 — vdW and electrostatic parameters.
+3. Halgren, T. A. *J. Comput. Chem.* **1996**, *17*, 553–586 — geometries and vibrations (bond/angle/stretch-bend parameters).
+4. Halgren, T. A.; Nachbar, R. B. *J. Comput. Chem.* **1996**, *17*, 587–615 — conformational energies (torsion parameters).
+5. Halgren, T. A. *J. Comput. Chem.* **1996**, *17*, 616–641 — the extension: additional data and the empirical rules.
+6. Halgren, T. A. *J. Comput. Chem.* **1999**, *20*, 720–729 — MMFF94s and the delocalized-nitrogen torsion refinements.
+7. Nocedal & Wright, *Numerical Optimization*, 2nd ed., Springer 2006 — L-BFGS.
+8. MMFF94 Validation Suite — <https://server.ccl.net/cca/data/MMFF94/> (Nov 1998 revision, 761 structures).
 
 ## License
 

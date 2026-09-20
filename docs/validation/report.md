@@ -68,7 +68,7 @@ charge sharing — up to 0.0035 kcal/mol).
 | Gate | Count |
 |---|---|
 | max|Δq| ≤ 1e-3 e⁻ | 757/757 (100.0%) |
-| Worst | 0.00e+0 () |
+| Worst | 0.00e+0 e⁻ — exact at the reference's print precision (757 molecules) |
 
 Gated on typing-exactness; JALSOE/SO18A/AN11A/DOZNIP excluded
 (dative-adjusted or delocalized-anion references).
@@ -79,7 +79,7 @@ Gated on typing-exactness; JALSOE/SO18A/AN11A/DOZNIP excluded
 
 Analytical gradients for all seven terms are finite-difference checked
 on every fixture and the pinned suite molecules (δ = 1e-6 Å; relative
-error < 1e-5; worst observed 8e-8).
+error < 1e-5; tests/gradient.test.ts prints the current worst).
 
 ---
 

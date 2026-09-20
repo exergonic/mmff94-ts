@@ -40,7 +40,7 @@ A three-layer strategy (full detail in the report):
    chemistry the suite was never stressed on.
 
 Partial charges: 0.001 e per atom. Gradients: finite-difference
-checked (δ = 1e-6 Å; relative error < 1e-5; worst 8.5e-8).
+checked (δ = 1e-6 Å; relative error < 1e-5 — `tests/gradient.test.ts` prints the current worst).
 
 ## Outliers
 

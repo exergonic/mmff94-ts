@@ -88,7 +88,9 @@ _(Things to pick up next session.)_
   (JALSOE, SO18A) pass because the `.mmd` files use BatchMin's "MMFF
   dative" convention, which our typer reads. Question to settle: should a
   raw formal-charge SMILES normalize identically (S⁺² with 4 single bonds
-  → class 18, O⁻ terminal on S(VI) → class 32)? If yes, the fix lives in
+  → class 18, O⁻ terminal on S(VI) → class 32)? **Priority raised
+  2026-09-20** (outside review): any SMILES-derived structure hits this,
+  not just the suite's dative cases. If yes, the fix lives in
   the sulfur/oxygen typing branches of assign-atom-types.ts and needs a
   discriminating test pair in `tests/scripts/` (the session's throwaway
   dative-vs-hypervalent probe was not kept — write the test). Related context:
@@ -96,11 +98,12 @@ _(Things to pick up next session.)_
   (kcharge.f line 230 hard-codes −0.5 on type 107 with no sulfone
   compensation), which is upstream's, not ours.
 - **Tinker sulfone bug FILED upstream**: TinkerTools/tinker#185
-  (2026-08-24), draft at docs/tinker-sulfone-charge-bug.md. If no response
-  in ~2 weeks (mirroring #184's silence), plan was to email Dr. Ponder
-  directly with the same text. If confirmed/fixed upstream, revisit the
-  ff-bench energy comparison — the spurious-charge molecules should then
-  agree with us too.
+  (2026-08-24), draft at docs/tinker-sulfone-charge-bug.md. The ~2-week
+  deadline (2026-09-07, mirroring #184's silence) passed with no upstream
+  response; the planned direct email to Dr. Ponder is superseded for now by
+  the PR route — #186 (the type-107 charge fix) and #187 (the CMake source
+  list) — both still open. If either lands, revisit the ff-bench energy
+  comparison: the spurious-charge molecules should then agree with us.
 
 ## Future direction — what industrial-strength would add
 

@@ -192,8 +192,9 @@ q⁰ shares half of itself with the bonded atoms — q_i = (1 − α_i·crd_i)·
 the neighbor sum uses the NEIGHBOR's α. Type 32 is environment-dependent: −0.5
 on a carboxylate oxygen, 0 on sulfone/nitro/nitrate oxygens. The suite's
 reference per-atom charges (the `.mmd` pchg column) pin the model:
-138/140 typing-exact molecules reproduce them to < 1e-3 (`charges-suite.test.ts`);
-the two thiosulfinate anions are excluded (BatchMin's dative adjustment). The
+the typing-exact molecules reproduce them to < 1e-3 (`charges-suite.test.ts`,
+which prints its counts); the dative-adjusted thiosulfinate pair and the two
+delocalized-anion N⁻ cases are excluded (see the test header). The
 fixture logs' per-atom charges are pinned in `charges.test.ts`.
 
 ---
@@ -589,7 +590,7 @@ the negative of the force on each atom: F_i = −∇_i E.
 ## 10. Optimization — `src/optimize/`
 
 Geometry optimization finds the nearest local minimum of the energy surface by
-iteratively adjusting atomic coordinates. Two algorithms are planned:
+iteratively adjusting atomic coordinates. Two algorithms are implemented:
 
 ### 10.1 L-BFGS (primary — implemented)
 
@@ -857,8 +858,8 @@ Every energy term is tested **in isolation** before it is tested in combination.
 | Out-of-plane | ✅ Implemented | 12 tests |
 | 1-4 scaling | ✅ Applied inside the electrostatic term | — |
 | Total energy | ✅ Sums all seven terms | 8 tests (reference + suite comparison) |
-| Gradients | ✅ Analytical (all 7 terms, shared helpers with the energy terms) | 9 tests (FD-verified, worst error 8×10⁻⁸) |
+| Gradients | ✅ Analytical (all 7 terms, shared helpers with the energy terms) | finite-difference verified — `gradient.test.ts` prints the worst |
 | L-BFGS | ✅ Implemented (Nocedal & Wright Alg. 7.5 + strong-Wolfe) | 16 tests (3/3 fixtures at max\|g\| < 0.05) |
 | Steepest descent | ✅ Implemented (Armijo line search, wall-guarded) | same suite (3/3 fixtures at max\|g\| < 0.05) |
 | MMD parser (Halgren suite) | ✅ Complete | 4 tests |
-| **All tests** | **213 passing (4 skipped)** | **23 files** |
+| **All tests** | **passing — see CI** | **vitest suite** |

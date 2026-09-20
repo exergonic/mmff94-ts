@@ -58,7 +58,7 @@ every test run; nothing here is transcribed by hand.
 | Per-term energies | all seven terms ≤1e-4 kcal/mol vs BatchMin (759/761 within that gate; the rest are documented ERULE print-precision artifacts) |
 | Partial charges | ≤1e-3 e⁻ on **757/757** comparable molecules |
 | Total energies | 758/761 within 1e-3 kcal/mol |
-| Gradient correctness | finite-difference worst relative error 4e-8 over drug-like fixtures (5e-7 on the 304-atom trp-cage) |
+| Gradient correctness | finite-difference verified on every fixture and the 304-atom trp-cage; `tests/gradient.test.ts` prints the current worst |
 | Independent implementations | final energies match RDKit MMFF94 to ~0.5 kcal/mol and Tinker 26.2 to four decimals on shared minima |
 
 Three details worth knowing, because they're where hand-waved
@@ -172,10 +172,32 @@ perception, hypervalent-center diagnostics. 344 tests, 2 intentional skips.
   atoms), not protein scale. Cutoffs + neighbor lists are designed-for
   but not built.
 - Single-geometry minimization; no conformer ensemble generation yet.
+- MMFF94 only: the MMFF94s variant (planarized delocalized trigonal
+  nitrogen, Halgren 1999) is not implemented.
 - Reads V2000 SDF/MOL; MOL2 and PDB readers not yet provided.
 
 ## License
 
-MIT. The MMFF94 functional forms are those published by Thomas A.
-Halgren in J. Comput. Chem. 17, 490–641 (1996); if you use this library
-for scientific work, please cite those papers alongside this repository.
+## Citation
+
+MMFF94 is Thomas A. Halgren's force field, published as the Merck
+Molecular Force Field series. If you use this library in scientific
+work, cite the papers whose content it implements, alongside the
+repository (see `CITATION.cff` for machine-readable metadata):
+
+1. Halgren, T. A. *J. Comput. Chem.* **1996**, *17*, 490–519 – Basis, form,
+   scope, parameterization, and performance of MMFF94.
+2. Halgren, T. A. *J. Comput. Chem.* **1996**, *17*, 520–552 – MMFF94 van der
+   Waals and electrostatic parameters for intermolecular interactions.
+3. Halgren, T. A. *J. Comput. Chem.* **1996**, *17*, 553–586 – Molecular
+   geometries and vibrational frequencies (bond, angle, stretch-bend
+   parameters).
+4. Halgren, T. A.; Nachbar, R. B. *J. Comput. Chem.* **1996**, *17*, 587–615 -
+   Conformational energies and geometries (torsion parameters).
+5. Halgren, T. A. *J. Comput. Chem.* **1996**, *17*, 616–641 – Extension of
+   MMFF94: the empirical rules this library's `empirical.ts` implements.
+6. Halgren, T. A. *J. Comput. Chem.* **1999**, *20*, 720–729 – MMFF VI: the
+   MMFF94s option (not implemented here; see the limitations above).
+
+The 761-molecule validation suite is Halgren's own, from
+<https://server.ccl.net/cca/data/MMFF94/> (November 1998 revision).
