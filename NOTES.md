@@ -23,8 +23,8 @@ _(Corrections and caveats about prior work — dated entries.)_
   reference minimum to 0.0056 kcal/mol, with the reference geometry
   (H–P–H 101.1° vs our 96.7°). The angle k=0 policy from the same
   arbitration is applied in the current build (fixture angle term 0.64645
-  vs the references' 0.6464). Table + measurement route:
-  docs/mmff94-compliance.md §5.1.
+  vs the references' 0.6464). Full account:
+  docs/vinyl-phosphine-divergence.md.
 - **2026-08-23 review session closed the remaining open threads**: B11
   (validation artifacts confirmed 761-row/current), B12 (silent fixture skip
   → loud MISSING-reference failure + `INTENTIONALLY_UNREFERENCED` registry),
@@ -52,7 +52,7 @@ _(Corrections and caveats about prior work — dated entries.)_
 
 - The order-1 C–P torsion stays paper-based (rule (g), V2 = 1.423); the
   references' 3.795 is their deviation — do not "fix" toward it, the gap
-  is quantified (compliance §5.1).
+  is quantified (vinyl-phosphine-divergence.md).
 - WS2+WS3 closed 2026-08-07: empirical rules arbitrated by ERULE rows.
 - FAPLUD q⁰(72) split over terminal chalcogens (P(=O)(S⁻) −0.5/−0.5).
 - Optimization-test fixtures are user-authored (`*_non-optimized.sdf` from

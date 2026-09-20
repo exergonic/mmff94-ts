@@ -445,8 +445,9 @@ export function empirical_torsion(
         // The second-row 0.15 default is the order-1 C–P path of
         // vinyl phosphine and its relatives: the paper's rule (g) is what
         // we implement (V2 = 1.423). The references resolve that bond to
-        // 3.795 — their deviation, quantified in docs/mmff94-compliance.md
-        // §5.1. Do not "fix" it toward the reference value.
+        // 3.795 — their deviation, quantified in
+        // docs/vinyl-phosphine-divergence.md. Do not "fix" it toward the
+        // reference value.
         let pi_bc = 0.15;
         if (pj?.pilp && pk?.mltb) { // case (2)
           // π = 0.5 when the PILP atom (j) is itself a strongly
