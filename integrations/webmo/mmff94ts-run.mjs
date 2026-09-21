@@ -19,7 +19,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { calc_energy, diagnose_molecule, optimize_lbfgs } from '../../dist/index.js';
 
-const VERSION = '0.1.0-alpha.1';
+const VERSION = '0.1.0-alpha.2';
 
 function fail(msg) {
   console.error(`mmff94-ts: ${msg}`);

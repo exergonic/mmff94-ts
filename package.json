@@ -1,6 +1,6 @@
 {
   "name": "mmff94-ts",
-  "version": "0.1.0-alpha.1",
+  "version": "0.1.0-alpha.2",
   "description": "Merck Molecular Force Field (MMFF94) in pure TypeScript — energy, gradients, and geometry optimization for the browser and Node.js",
   "type": "module",
   "main": "./dist/index.js",
